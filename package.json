@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "commit": "cz"
   },
   "dependencies": {
     "@chakra-ui/react": "^3.19.1",
@@ -21,8 +22,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "commitizen": "^4.3.1",
+    "cz-conventional-changelog": "^3.3.0",
     "eslint": "^9",
     "eslint-config-next": "15.1.8",
     "typescript": "^5"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
   }
 }
