@@ -5,9 +5,10 @@ import { signOut, signIn, useSession } from "next-auth/react";
 
 interface Props extends ButtonProps {
     authenticator?: string;
+    label?: string;
 }
 export const SignInButton: React.FC<Props> = (props) => {
-    const { authenticator } = props;
+    const { authenticator, label } = props;
     const { data: session } = useSession();
 
     return (
@@ -21,7 +22,7 @@ export const SignInButton: React.FC<Props> = (props) => {
             }}
             {...props}
         >
-            Sign In with {authenticator || "Credentials"}
+            {label}
         </Button>
     );
 };
