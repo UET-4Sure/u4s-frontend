@@ -95,6 +95,7 @@ const config = defineConfig({
     globalCss: {
         body: {
             bg: "bg",
+            color: "fg",
         },
     }
 });

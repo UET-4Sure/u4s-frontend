@@ -9,9 +9,7 @@ export default function Layout({
 }>) {
     return (
         <Provider>
-            <VStack>
-                {children}
-            </VStack>
+            {children}
         </Provider>
     );
 }

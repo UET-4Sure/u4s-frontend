@@ -1,6 +1,67 @@
-import { Center, For, Image, VStack } from "@chakra-ui/react";
-import { ConnectWalletButton, SignInButton } from "./_components/AuthenticateButton";
-import NextImage from "next/image";
+"use client"
+
+import {
+    Center,
+    Heading,
+    HStack,
+    Text,
+    VStack,
+} from "@chakra-ui/react"
+import { ConnectWalletButton, SignInButton } from "./_components/AuthenticateButton"
+import NextImage from "next/image"
+import { motion } from "framer-motion"
+
+const MotionVStack = motion(VStack)
+const MotionImage = motion(NextImage)
+const MotionText = motion(Text)
+
+const AuthOptionCard = ({ label, logoSrc, children }: {
+    label: string
+    logoSrc: string
+    children?: React.ReactNode
+}) => {
+    return (
+        <MotionVStack
+            align="center"
+            whileHover="hover"
+            initial="rest"
+            animate="rest"
+            w="120px"
+            h="140px"
+            justify="center"
+            position="relative"
+            _hover={{
+                cursor: "pointer",
+            }}
+        >
+            <MotionImage
+                src={logoSrc}
+                alt={`${label} logo`}
+                width={48}
+                height={48}
+                variants={{
+                    rest: { scale: 1, y: 0 },
+                    hover: { scale: 1.4, y: -20 },
+                }}
+                transition={{ type: "spring", stiffness: 300 }}
+            />
+
+            <MotionText
+                fontWeight="medium"
+                fontSize="sm"
+                variants={{
+                    rest: { opacity: 0, y: 10 },
+                    hover: { opacity: 1, y: 0 },
+                }}
+                transition={{ duration: 0.3 }}
+            >
+                {label}
+            </MotionText>
+
+            {children}
+        </MotionVStack>
+    )
+}
 
 export default function GetStartedPage() {
     const supportAuthenticator = [
@@ -22,34 +83,23 @@ export default function GetStartedPage() {
     }
 
     return (
-        <Center>
-            <h1>Get Started</h1>
-            <p>Welcome to the Get Started page! Here you can find resources and guides to help you begin your journey.</p>
-            <For each={supportAuthenticator}>
-                {({ label, logoSrc, authenticator }) => (
-                    <VStack key={authenticator}>
-                        <Image asChild>
-                            <NextImage
-                                src={logoSrc}
-                                alt={`${label} logo`}
-                                width={48}
-                                height={48}
-                            />
-                        </Image>
-                        <SignInButton key={authenticator} authenticator={authenticator} label={label} />
-                    </VStack>
-                )}
-            </For>
-            <VStack key={connectWallet.label}>
-                <Image asChild>
-                    <NextImage
-                        src={connectWallet.logoSrc}
-                        alt={`${connectWallet.label} logo`}
-                        width={48}
-                        height={48}
-                    />
-                </Image>
-                <ConnectWalletButton />
+        <Center w={"full"} h={"full"}>
+            <VStack>
+                <VStack p={"8"}>
+                    <Heading>Đăng nhập</Heading>
+                    <Text>Chọn phương thức đăng nhập</Text>
+                </VStack>
+                <HStack gap={"8"}>
+                    {supportAuthenticator.map(({ label, logoSrc, authenticator }) => (
+                        <AuthOptionCard key={authenticator} label={label} logoSrc={logoSrc}>
+                            <SignInButton authenticator={authenticator} label={label} />
+                        </AuthOptionCard>
+                    ))}
+
+                    <AuthOptionCard label={connectWallet.label} logoSrc={connectWallet.logoSrc}>
+                        <ConnectWalletButton />
+                    </AuthOptionCard>
+                </HStack>
             </VStack>
         </Center>
     )

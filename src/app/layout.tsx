@@ -23,7 +23,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${sora.className}`}>
+      <body
+        className={`${sora.className}`}
+        style={{
+          width: "100vw",
+          height: "100vh",
+        }}>
         <Provider>
           <Toaster />
           {children}
