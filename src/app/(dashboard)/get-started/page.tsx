@@ -1,5 +1,5 @@
 import { Center, For, Image, VStack } from "@chakra-ui/react";
-import { SignInButton } from "./_components/SignInButton";
+import { ConnectWalletButton, SignInButton } from "./_components/AuthenticateButton";
 import NextImage from "next/image";
 
 export default function GetStartedPage() {
@@ -9,13 +9,18 @@ export default function GetStartedPage() {
             logoSrc: "/assets/logo-google.svg",
             authenticator: "google",
         },
-        // facebook
         {
             label: "Facebook",
             logoSrc: "/assets/logo-facebook.svg",
             authenticator: "facebook",
         },
     ]
+
+    const connectWallet = {
+        label: "Connect Wallet",
+        logoSrc: "/assets/logo-connect-wallet.svg",
+    }
+
     return (
         <Center>
             <h1>Get Started</h1>
@@ -35,6 +40,17 @@ export default function GetStartedPage() {
                     </VStack>
                 )}
             </For>
+            <VStack key={connectWallet.label}>
+                <Image asChild>
+                    <NextImage
+                        src={connectWallet.logoSrc}
+                        alt={`${connectWallet.label} logo`}
+                        width={48}
+                        height={48}
+                    />
+                </Image>
+                <ConnectWalletButton />
+            </VStack>
         </Center>
     )
 }
