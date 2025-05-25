@@ -1,5 +1,7 @@
-export const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID || "";
-export const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET || "";
-export const FACEBOOK_CLIENT_ID = process.env.FACEBOOK_CLIENT_ID || "";
-export const FACEBOOK_CLIENT_SECRET = process.env.FACEBOOK_CLIENT_SECRET || "";
-export const NEXTAUTH_SECRET = process.env.NEXTAUTH_SECRET || "";
+export const APP_VERSION = process.env.NEXT_PUBLIC_APP_VERSION || "__VERSION__";
+
+export const AUTH_GOOGLE_ID = process.env.AUTH_GOOGLE_ID || "";
+export const AUTH_GOOGLE_SECRET = process.env.AUTH_GOOGLE_SECRET || "";
+export const AUTH_FACEBOOK_ID = process.env.AUTH_FACEBOOK_ID || "";
+export const AUTH_FACEBOOK_SECRET = process.env.AUTH_FACEBOOK_SECRET || "";
+export const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "";

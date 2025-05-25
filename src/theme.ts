@@ -59,6 +59,22 @@ const semanticTokens = defineSemanticTokens({
             muted: { value: "#6C291B" },
             inverted: { value: "#FCEDEA" },
         },
+        primary: {
+            contrast: { value: "#1D1200" },
+            fg: { value: "#AA6C10" },
+            subtle: { value: "#FFE7C6" },
+            muted: { value: "#FFD7A0" },
+            emphasized: { value: "#FFC373" },
+            solid: { value: "#FFA103" },
+        },
+        secondary: {
+            contrast: { value: "#FAE2DD" },
+            fg: { value: "#7B231E" },
+            subtle: { value: "#F5CAC1" },
+            muted: { value: "#ECA79A" },
+            emphasized: { value: "#DD7E6F" },
+            solid: { value: "#AB2B26" },
+        },
     },
 });
 
