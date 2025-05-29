@@ -3,6 +3,8 @@
 import { siteConfig } from "@/config/site";
 import { chakra, For, HStack, HtmlProps, Image, Link } from "@chakra-ui/react"
 import NextImage from "next/image";
+import { Tag } from "../ui/tag";
+import { APP_VERSION } from "@/config/constants";
 const ChakraHeader = chakra.header;
 
 interface LandingNavbarProps extends HtmlProps { }
@@ -41,6 +43,9 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
                 <Brand />
                 <NavLinks />
+                <Tag rounded={"full"} colorPalette={"secondary"} variant={"solid"}>
+                    {APP_VERSION}
+                </Tag>
             </HStack>
         </ChakraHeader>
     );
