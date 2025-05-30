@@ -69,7 +69,7 @@ const semanticTokens = defineSemanticTokens({
         fg: {
             DEFAULT: { value: "#280B05" },
             subtle: { value: "#9D594A" },
-            muted: { value: "#6C291B" },
+            muted: { value: "#AFA19E" },
             inverted: { value: "#FCEDEA" },
         },
         primary: {
