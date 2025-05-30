@@ -1,6 +1,7 @@
 "use client"
 
 import { Button, ButtonProps } from "@/components/ui/button";
+import { walletConnectConnector } from "@/utils/wagmi";
 import { signOut, signIn, useSession } from "next-auth/react";
 import { useConnect } from "wagmi";
 import { injected } from 'wagmi/connectors'

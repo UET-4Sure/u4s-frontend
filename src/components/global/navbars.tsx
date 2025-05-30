@@ -5,21 +5,28 @@ import { chakra, For, HStack, HtmlProps, Image, Link } from "@chakra-ui/react"
 import NextImage from "next/image";
 import { Tag } from "../ui/tag";
 import { APP_VERSION } from "@/config/constants";
+import { ProfileMenu } from "@/app/(dashboard)/_components/ProfileMenu";
 const ChakraHeader = chakra.header;
+
+const Brand = () => (
+    <Image asChild>
+        <NextImage
+            src="/RootFaviconLight.png"
+            alt="Brand Logo"
+            width={48}
+            height={48}
+        />
+    </Image>
+);
+
+const VersionTag = () => (
+    <Tag size={"lg"} rounded={"full"} colorPalette={"secondary"} variant={"solid"}>
+        {APP_VERSION}
+    </Tag>
+);
 
 interface LandingNavbarProps extends HtmlProps { }
 export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
-    const Brand = () => (
-        <Image asChild>
-            <NextImage
-                src="/RootFaviconLight.png"
-                alt="Brand Logo"
-                width={48}
-                height={48}
-            />
-        </Image>
-    );
-
     const NavLinks = () => (
         <HStack flex={"1"} as={"nav"} justify={"space-between"}>
             <For each={Object.entries(siteConfig.paths)}>
@@ -43,9 +50,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
                 <Brand />
                 <NavLinks />
-                <Tag rounded={"full"} colorPalette={"secondary"} variant={"solid"}>
-                    {APP_VERSION}
-                </Tag>
+                <VersionTag />
             </HStack>
         </ChakraHeader>
     );
@@ -56,17 +61,18 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     return (
         <ChakraHeader
             as="nav"
-            position="fixed"
+            position="sticky"
             top={0}
             left={0}
             right={0}
-            zIndex={1000}
-            bg="gray.800"
-            color="white"
-            boxShadow="md"
+            zIndex={"sticky"}
             {...props}
         >
-            {/* Navbar content goes here */}
+            <Brand />
+            <HStack align={"center"}>
+                <ProfileMenu />
+                <VersionTag />
+            </HStack>
         </ChakraHeader>
     );
 }

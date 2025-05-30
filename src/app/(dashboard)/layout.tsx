@@ -1,5 +1,6 @@
 import { VStack } from "@chakra-ui/react";
 import { Provider } from "./provider";
+import { DashboardNavbar } from "@/components/global/navbars";
 
 
 export default function Layout({
@@ -9,7 +10,10 @@ export default function Layout({
 }>) {
     return (
         <Provider>
-            {children}
+            <VStack>
+                <DashboardNavbar />
+                {children}
+            </VStack>
         </Provider>
     );
 }
