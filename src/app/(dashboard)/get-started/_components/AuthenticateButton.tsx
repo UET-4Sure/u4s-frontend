@@ -2,8 +2,7 @@
 
 import { Button, ButtonProps } from "@/components/ui/button";
 import { signOut, signIn, useSession } from "next-auth/react";
-import { useConnect } from "wagmi";
-import { injected } from 'wagmi/connectors'
+import { useAppKit } from "@reown/appkit/react";
 
 interface Props extends ButtonProps {
     authenticator?: string;
@@ -32,14 +31,13 @@ export const SignInButton: React.FC<Props> = (props) => {
 interface ConnectWalletButtonProps extends ButtonProps {
 }
 export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = (props) => {
-    const { connect } = useConnect();
-
+    const {open, } = useAppKit();
     return (
         <Button
             onClick={() => {
-                connect({
-                    connector: injected(),
-                });
+                open({
+                    view: "Connect"
+                })
             }}
             {...props}
         >
