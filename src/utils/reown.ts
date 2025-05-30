@@ -27,7 +27,7 @@ const appKit: CreateAppKit = {
         "--w3m-font-family": "Sora, sans-serif",
         "--w3m-color-mix": "rgb(246, 238, 217)",
         "--w3m-accent": "rgb(255, 161, 3)",
-        "--w3m-color-mix-strength": 75,
+        "--w3m-color-mix-strength": 50,
     },
     metadata: {
         name: siteConfig.name,
