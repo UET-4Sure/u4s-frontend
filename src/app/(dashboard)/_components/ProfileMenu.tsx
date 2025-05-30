@@ -5,20 +5,30 @@ import { useAccount, useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import NextImage from "next/image";
 import { useMemo } from "react";
+import { formatAddress } from "@/libs";
 
 interface Props extends StackProps { }
 export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
     const { disconnect } = useDisconnect()
     const { open } = useAppKit();
     const { address, isConnected, caipAddress, status, embeddedWalletInfo } = useAppKitAccount();
+
     const isConnecting = useMemo(() => status === "reconnecting" || status === "connecting", [status]);
 
-    // const { data: ensName } = useEnsName({ address })
-    // const { data: ensAvatar } = useEnsAvatar({ name: ensName! })
+    const { data: ensName } = useEnsName({
+        address: address as `0x${string}`,
+        query: {
+            enabled: isConnected && !!address,
+        }
+    })
+    const { data: ensAvatar } = useEnsAvatar({
+        name: ensName!,
+        query: { enabled: !!ensName }
+    });
 
     const ProfileAvatar = () => (
         <AvatarRoot size={"2xs"}>
-            <AvatarImage alt="ENS Avatar" src={""} />
+            <AvatarImage alt="ENS Avatar" src={ensAvatar!} />
             <AvatarFallback asChild>
                 <NextImage
                     src="/BgLogoDark.png"
@@ -28,6 +38,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
             </AvatarFallback>
         </AvatarRoot>
     );
+    if (!isConnected && !isConnecting) return null;
 
     return (
         <HStack
@@ -39,7 +50,8 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
             onClick={() => open({
                 view: "Account"
             })}
-            {...props}>
+            {...props}
+        >
             <ProfileAvatar />
             {isConnecting &&
                 <>
@@ -47,7 +59,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
                     <Spinner color={"fg.muted"} size={"sm"} />
                 </>
             }
-            <Text fontSize={"sm"} fontWeight={"semibold"} truncate>{address}</Text>
+            <Text fontSize={"sm"} fontWeight={"medium"}>{formatAddress(address)}</Text>
         </HStack>
     );
 };
