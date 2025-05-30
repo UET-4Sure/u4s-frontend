@@ -60,18 +60,19 @@ interface DashboardNavbarProps extends HtmlProps { }
 export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     return (
         <ChakraHeader
-            as="nav"
+            w={"full"}
             position="sticky"
             top={0}
             left={0}
             right={0}
-            zIndex={"sticky"}
             {...props}
         >
-            <Brand />
-            <HStack align={"center"}>
-                <ProfileMenu />
-                <VersionTag />
+            <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
+                <Brand />
+                <HStack align={"center"}>
+                    <ProfileMenu />
+                    <VersionTag />
+                </HStack>
             </HStack>
         </ChakraHeader>
     );
