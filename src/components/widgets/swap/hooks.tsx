@@ -1,5 +1,5 @@
 import { useState, useCallback, useMemo } from 'react';
-import { SwapState, SwapQuote, Token } from './type';
+import { SwapState, SwapQuote, Token } from '../type';
 import { debounce } from 'lodash';
 import { useQuery } from '@tanstack/react-query';
 

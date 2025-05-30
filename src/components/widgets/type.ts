@@ -5,6 +5,8 @@ export interface Token {
     decimals: number;
     logoURI?: string;
     balance?: string;
+    price?: string;
+    chainId?: number;
 }
 
 export interface SwapState {

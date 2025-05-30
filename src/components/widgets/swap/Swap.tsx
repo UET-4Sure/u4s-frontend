@@ -2,7 +2,7 @@
 
 import { DialogRootProps, HStack, Input, InputProps, StackProps, Text, VStack } from "@chakra-ui/react";
 import { NumericFormat } from 'react-number-format';
-import { SwapState, Token } from "./type";
+import { SwapState, Token } from "../type";
 import { useSwapQuote, useSwapState, useTokenBalance } from "./hooks";
 import { useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
@@ -156,14 +156,5 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
                 />
             </HStack>
         </VStack>
-    );
-}
-
-interface SelectTokenDialogProps extends DialogRootProps {
-
-}
-export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({ children, ...props }) => {
-    return (
-        <></>
     );
 }
