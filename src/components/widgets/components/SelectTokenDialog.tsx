@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DialogBackdrop, DialogBody, DialogCloseTrigger, DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
 import { IoChevronDownOutline } from "react-icons/io5";
 
-import { Button } from "@/components/ui/button";
+import { Button, ButtonProps } from "@/components/ui/button";
 import { InputGroup } from "@/components/ui/input-group";
 
 import { Token } from "../type";
@@ -23,7 +23,7 @@ export interface TokenListConfig {
     groupByChain?: boolean;
 }
 
-interface SelectTokenDialogProps extends Omit<DialogRootProps, 'children'> {
+export interface SelectTokenDialogProps extends Omit<DialogRootProps, 'children'> {
     // Core props
     tokenList: Token[];
     selectedToken?: Token | null;
@@ -58,6 +58,9 @@ interface SelectTokenDialogProps extends Omit<DialogRootProps, 'children'> {
     renderToken?: (token: Token, isSelected: boolean) => React.ReactNode;
     renderHeader?: () => React.ReactNode;
     renderEmptyState?: () => React.ReactNode;
+
+    // Dialog props
+    triggerProps?: ButtonProps;
 }
 
 const defaultConfig: TokenListConfig = {
@@ -126,7 +129,6 @@ const TokenItem: React.FC<TokenItemProps> = ({
                 )}
             </Box>
 
-            {/* Token Info */}
             <Box flex="1" minW="0">
                 <Flex align="center" gap={2}>
                     <Text fontWeight="semibold" fontSize="md">
@@ -138,7 +140,6 @@ const TokenItem: React.FC<TokenItemProps> = ({
                 </Text>
             </Box>
 
-            {/* Balance & Price */}
             <VStack align="end" gap={0}>
                 {config.showBalances && token.balance && (
                     <Text fontSize="sm" fontWeight="medium">
@@ -246,6 +247,8 @@ export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
     renderToken,
     renderHeader,
     renderEmptyState,
+
+    triggerProps,
     ...dialogProps
 }) => {
     const config = { ...defaultConfig, ...userConfig };
@@ -350,13 +353,14 @@ export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
             size="md"
             open={open}
             lazyMount
-            onOpenChange={(e) => setOpen(e.open)} {...dialogProps}
+            onOpenChange={(e) => setOpen(e.open)}
+            {...dialogProps}
         >
             <DialogTrigger asChild>
                 {
                     selectedToken ?
-                        <HStack as={Button} p={"1"} h={"fit"} w={"fit"}>
-                            <AvatarRoot size={"xs"}>
+                        <Button p={"1"} h={"fit"} w={"fit"} shadow={"md"} {...triggerProps}>
+                            <AvatarRoot size={"xs"} shadow={"sm"}>
                                 <AvatarImage
                                     src={selectedToken.logoURI}
                                     alt={selectedToken.symbol}
@@ -365,9 +369,9 @@ export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
                             </AvatarRoot>
                             {title}
                             <Icon as={IoChevronDownOutline} />
-                        </HStack>
+                        </Button>
                         :
-                        <Button>
+                        <Button {...triggerProps}>
                             {title}
                             <Icon as={IoChevronDownOutline} />
                         </Button>

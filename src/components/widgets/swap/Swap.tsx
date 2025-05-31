@@ -5,8 +5,7 @@ import { NumericFormat } from 'react-number-format';
 import { SwapState, Token } from "../type";
 import { useSwapQuote, useSwapState, useTokenBalance } from "./hooks";
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { SelectTokenDialog } from "../components/SelectTokenDialog";
+import { SelectTokenDialog, SelectTokenDialogProps } from "../components/SelectTokenDialog";
 
 
 type BackgroundStyle = 'default' | 'vietnamese-flag';
@@ -25,6 +24,7 @@ interface SwapInputProps extends StackProps {
 
     wrapperProps?: StackProps;
     inputProps?: InputProps;
+    selectTokenDialogProps?: Omit<SelectTokenDialogProps, 'onSelectToken' | 'onImportToken' | 'tokenList' | 'selectedToken' | 'children'> & Omit<DialogRootProps, 'children'> & { children?: React.ReactNode };
 }
 export const SwapInput: React.FC<SwapInputProps> = ({ children,
     label,
@@ -151,8 +151,10 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
                 <SelectTokenDialog
                     title={selectedToken?.symbol}
                     selectedToken={selectedToken}
-                    onSelectToken={handleTokenSelect}
                     tokenList={tokenList.length > 0 ? tokenList : sampleTokens}
+                    onSelectToken={handleTokenSelect}
+                    onImportToken={handleImportToken}
+                    {...props.selectTokenDialogProps}
                 />
             </HStack>
         </VStack>
@@ -255,15 +257,20 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                 tokenList={tokenList}
                 onTokenSelect={() => onTokenSelect?.('to')}
                 readOnly
-                disabled={true}
 
                 wrapperProps={{
                     bgImage: "radial-gradient(100% 100% at 50.1% 0%, #FFA103 0%, #BC2D29 41.35%, #450E14 100%)",
                 }}
 
                 inputProps={{
-                    color: "primary",
-                    _placeholder: { color: "primary" },
+                    color: "primary.solid",
+                    _placeholder: { color: "primary.solid" },
+                }}
+
+                selectTokenDialogProps={{
+                    triggerProps: {
+                        colorPalette: "primary"
+                    }
                 }}
             />
         </VStack>
