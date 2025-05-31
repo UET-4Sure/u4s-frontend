@@ -73,6 +73,7 @@ const semanticTokens = defineSemanticTokens({
             inverted: { value: "#FCEDEA" },
         },
         primary: {
+            DEFAULT: { value: "#FFA103" },
             contrast: { value: "#1D1200" },
             fg: { value: "#AA6C10" },
             subtle: { value: "#FFE7C6" },
@@ -81,6 +82,7 @@ const semanticTokens = defineSemanticTokens({
             solid: { value: "#FFA103" },
         },
         secondary: {
+            DEFAULT: { value: "#AB2B26" },
             contrast: { value: "#FAE2DD" },
             fg: { value: "#7B231E" },
             subtle: { value: "#F5CAC1" },
