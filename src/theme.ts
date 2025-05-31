@@ -56,10 +56,11 @@ const semanticTokens = defineSemanticTokens({
         fg: {
             DEFAULT: { value: "#280B05" },
             subtle: { value: "#9D594A" },
-            muted: { value: "#6C291B" },
+            muted: { value: "#AFA19E" },
             inverted: { value: "#FCEDEA" },
         },
         primary: {
+            DEFAULT: { value: "#FFA103" },
             contrast: { value: "#1D1200" },
             fg: { value: "#AA6C10" },
             subtle: { value: "#FFE7C6" },
@@ -68,6 +69,7 @@ const semanticTokens = defineSemanticTokens({
             solid: { value: "#FFA103" },
         },
         secondary: {
+            DEFAULT: { value: "#AB2B26" },
             contrast: { value: "#FAE2DD" },
             fg: { value: "#7B231E" },
             subtle: { value: "#F5CAC1" },
@@ -75,6 +77,13 @@ const semanticTokens = defineSemanticTokens({
             emphasized: { value: "#DD7E6F" },
             solid: { value: "#AB2B26" },
         },
+        border: {
+            DEFAULT: { value: "#DFD5BD" },
+            subtle: { value: "#ECE1C6" },
+            muted: { value: "#EAE0C9" },
+            emphasized: { value: "#D0C4A8" },
+            inverted: { value: "#160704" },
+        }
     },
 });
 
