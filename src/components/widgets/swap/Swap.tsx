@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { SelectTokenDialog } from "../components/SelectTokenDialog";
 
 
+type BackgroundStyle = 'default' | 'vietnamese-flag';
+
 interface SwapInputProps extends StackProps {
     label: string;
     token: Token | null;
@@ -20,6 +22,9 @@ interface SwapInputProps extends StackProps {
     onMaxClick?: () => void;
     disabled?: boolean;
     readOnly?: boolean;
+
+    wrapperProps?: StackProps;
+    inputProps?: InputProps;
 }
 export const SwapInput: React.FC<SwapInputProps> = ({ children,
     label,
@@ -32,6 +37,9 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
     onMaxClick,
     disabled = false,
     readOnly = false,
+
+    wrapperProps,
+    inputProps,
     ...props
 }) => {
     const [selectedToken, setSelectedToken] = useState<Token | null>(token);
@@ -100,7 +108,17 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
     };
 
     return (
-        <VStack>
+        <VStack
+            w={"full"}
+            aspectRatio={"3/1"}
+            maxH={"36"}
+            rounded={"3xl"}
+            bg={"bg.subtle"}
+            p={"4"}
+            shadow={"md"}
+            // bgImage={backgroundStyle === 'vietnamese-flag' ? "radial-gradient(100% 100% at 50.1% 0%, #FFA103 0%, #BC2D29 41.35%, #450E14 100%)" : undefined}
+            {...wrapperProps}
+        >
             <HStack w={"full"}>
                 <Text fontSize={"md"} fontWeight={"medium"} color={"fg.muted"}>
                     {label}
@@ -123,9 +141,10 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
                     customInput={Input}
                     bg={"transparent"}
                     border={"none"}
-                    p={0}
                     focusRing={"none"}
-                    color={"fg"}
+                    p={0}
+                    color={inputProps?.color || "fg"}
+                    _placeholder={{ color: inputProps?._placeholder?.color || "fg.muted" }}
                     fontWeight={"semibold"}
                     fontSize={"2xl"}
                 />
@@ -217,7 +236,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
     return (
         <VStack {...props}>
             <SwapInput
-                label="From"
+                label="Bán"
                 token={swapState.fromToken}
                 amount={swapState.fromAmount}
                 balance={fromBalance}
@@ -226,6 +245,26 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                 onTokenSelect={() => onTokenSelect?.('from')}
                 onMaxClick={handleMaxClick}
                 disabled={swapState.isLoading}
+            />
+            <SwapInput
+                label="Mua"
+                token={swapState.toToken}
+                amount={swapState.toAmount}
+                balance={toBalance}
+                onAmountChange={swapState.setToAmount}
+                tokenList={tokenList}
+                onTokenSelect={() => onTokenSelect?.('to')}
+                readOnly
+                disabled={true}
+
+                wrapperProps={{
+                    bgImage: "radial-gradient(100% 100% at 50.1% 0%, #FFA103 0%, #BC2D29 41.35%, #450E14 100%)",
+                }}
+
+                inputProps={{
+                    color: "primary",
+                    _placeholder: { color: "primary" },
+                }}
             />
         </VStack>
     );
