@@ -4,8 +4,141 @@ import { DialogRootProps, HStack, Input, InputProps, StackProps, Text, VStack } 
 import { NumericFormat } from 'react-number-format';
 import { SwapState, Token } from "../type";
 import { useSwapQuote, useSwapState, useTokenBalance } from "./hooks";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { SelectTokenDialog } from "../components/SelectTokenDialog";
+
+
+interface SwapInputProps extends StackProps {
+    label: string;
+    token: Token | null;
+    amount: string;
+    balance?: string;
+    tokenList?: Token[];
+    onAmountChange: (amount: string) => void;
+    onTokenSelect: (token: Token) => void;
+    onMaxClick?: () => void;
+    disabled?: boolean;
+    readOnly?: boolean;
+}
+export const SwapInput: React.FC<SwapInputProps> = ({ children,
+    label,
+    token,
+    amount,
+    balance,
+    tokenList = [],
+    onAmountChange,
+    onTokenSelect,
+    onMaxClick,
+    disabled = false,
+    readOnly = false,
+    ...props
+}) => {
+    const [selectedToken, setSelectedToken] = useState<Token | null>(token);
+
+    const sampleTokens: Token[] = [
+        {
+            address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+            symbol: 'WETH',
+            name: 'Wrapped Ether',
+            decimals: 18,
+            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
+            balance: '1.2345',
+            price: '2385.56',
+        },
+        {
+            address: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
+            symbol: 'UNI',
+            name: 'Uniswap',
+            decimals: 18,
+            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png',
+            balance: '200',
+            price: '6.82',
+        },
+        {
+            address: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+            symbol: 'LINK',
+            name: 'Chainlink',
+            decimals: 18,
+            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x514910771AF9Ca656af840dff83E8264EcF986CA/logo.png',
+            balance: '100',
+            price: '16.20',
+        },
+        {
+            address: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
+            symbol: 'AAVE',
+            name: 'Aave',
+            decimals: 18,
+            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9/logo.png',
+            balance: '5',
+            price: '199.91',
+        },
+        {
+            address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
+            symbol: 'DAI',
+            name: 'Dai Stablecoin',
+            decimals: 18,
+            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png',
+            balance: '5000',
+            price: '1.00',
+        },
+    ];
+    const handleTokenSelect = useCallback((token: Token) => {
+        onTokenSelect(token);
+        setSelectedToken(token);
+    }, [onTokenSelect]);
+
+    const handleImportToken = async (address: string): Promise<Token> => {
+        // Simulate token import
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return {
+            address,
+            symbol: 'CUSTOM',
+            name: 'Custom Token',
+            decimals: 18,
+        };
+    };
+
+    return (
+        <VStack>
+            <HStack w={"full"}>
+                <Text fontSize={"md"} fontWeight={"medium"} color={"fg.muted"}>
+                    {label}
+                </Text>
+            </HStack>
+            <HStack w={"full"}>
+                <NumericFormat
+                    inputMode="decimal"
+                    value={amount}
+                    onValueChange={(values) => onAmountChange(values.value)}
+                    thousandSeparator
+                    allowNegative={false}
+                    decimalScale={token?.decimals || 18}
+                    allowLeadingZeros={false}
+                    placeholder="0.0"
+                    disabled={disabled}
+                    readOnly={readOnly}
+
+                    // UI
+                    customInput={Input}
+                    bg={"transparent"}
+                    border={"none"}
+                    p={0}
+                    focusRing={"none"}
+                    color={"fg"}
+                    fontWeight={"semibold"}
+                    fontSize={"2xl"}
+                />
+                <SelectTokenDialog
+                    title={selectedToken?.symbol}
+                    selectedToken={selectedToken}
+                    onSelectToken={handleTokenSelect}
+                    tokenList={tokenList.length > 0 ? tokenList : sampleTokens}
+                />
+            </HStack>
+        </VStack>
+    );
+}
 
 interface SwapWidgetProps extends StackProps {
     onSwap?: (swapData: SwapState) => Promise<void>;
@@ -94,67 +227,6 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                 onMaxClick={handleMaxClick}
                 disabled={swapState.isLoading}
             />
-        </VStack>
-    );
-}
-
-interface SwapInputProps extends StackProps {
-    label: string;
-    token: Token | null;
-    amount: string;
-    balance?: string;
-    tokenList?: Token[];
-    onAmountChange: (amount: string) => void;
-    onTokenSelect: () => void;
-    onMaxClick?: () => void;
-    disabled?: boolean;
-    readOnly?: boolean;
-}
-export const SwapInput: React.FC<SwapInputProps> = ({ children,
-    label,
-    token,
-    amount,
-    balance,
-    tokenList = [],
-    onAmountChange,
-    onTokenSelect,
-    onMaxClick,
-    disabled = false,
-    readOnly = false,
-    ...props
-}) => {
-
-    return (
-        <VStack>
-            <HStack w={"full"}>
-                <Text fontSize={"md"} fontWeight={"medium"} color={"fg.muted"}>
-                    {label}
-                </Text>
-            </HStack>
-            <HStack w={"full"}>
-                <NumericFormat
-                    inputMode="decimal"
-                    value={amount}
-                    onValueChange={(values) => onAmountChange(values.value)}
-                    thousandSeparator
-                    allowNegative={false}
-                    decimalScale={token?.decimals || 18}
-                    allowLeadingZeros={false}
-                    placeholder="0.0"
-                    disabled={disabled}
-                    readOnly={readOnly}
-
-                    // UI
-                    customInput={Input}
-                    bg={"transparent"}
-                    border={"none"}
-                    p={0}
-                    focusRing={"none"}
-                    color={"fg"}
-                    fontWeight={"semibold"}
-                    fontSize={"2xl"}
-                />
-            </HStack>
         </VStack>
     );
 }

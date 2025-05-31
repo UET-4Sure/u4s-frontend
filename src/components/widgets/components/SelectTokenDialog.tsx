@@ -1,10 +1,12 @@
-import { Badge, Box, DialogRootProps, Flex, IconButton, VStack, Image, Text, Input, Spinner, HStack } from "@chakra-ui/react";
+import { Badge, Box, DialogRootProps, Flex, IconButton, VStack, Image, Text, Input, Spinner, HStack, DialogTrigger, Icon } from "@chakra-ui/react";
 import { Token } from "../type";
 import { LuSearch, LuStar } from "react-icons/lu";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DialogBackdrop, DialogBody, DialogCloseTrigger, DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
 import { HiMiniClipboardDocumentList } from "react-icons/hi2";
 import { InputGroup } from "@/components/ui/input-group";
+import { Button } from "@/components/ui/button";
+import { IoChevronDownOutline } from "react-icons/io5";
 
 export interface TokenListConfig {
     showBalances?: boolean;
@@ -19,9 +21,10 @@ export interface TokenListConfig {
     groupByChain?: boolean;
 }
 
-interface SelectTokenDialogProps extends DialogRootProps {
+interface SelectTokenDialogProps extends Omit<DialogRootProps, 'children'> {
     // Core props
     tokenList: Token[];
+    selectedToken?: Token | null;
     onSelectToken: (token: Token) => void;
 
     // Customization
@@ -236,6 +239,7 @@ const VirtualList: React.FC<VirtualListProps> = ({
 
 export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
     tokenList,
+    selectedToken,
     onSelectToken,
     title = "Select Token",
     placeholder = "Search by name or address",
@@ -260,6 +264,8 @@ export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
     const config = { ...defaultConfig, ...userConfig };
     const [searchQuery, setSearchQuery] = useState('');
     const [isImporting, setIsImporting] = useState(false);
+    const [open, setOpen] = useState(false)
+
 
     // Filter and sort tokens
     const filteredTokens = useMemo(() => {
@@ -323,6 +329,11 @@ export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
         onSearchChange?.(value);
     }, [onSearchChange]);
 
+    const handleSelectToken = useCallback((token: Token) => {
+        onSelectToken(token);
+        setSearchQuery(''); // Clear search after selection
+        setOpen(false); // Close dialog after selection
+    }, [onSelectToken]);
     // Handle token import
     const handleImportToken = useCallback(async () => {
         if (!onImportToken || !searchQuery) return;
@@ -343,12 +354,31 @@ export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
     const showImportOption = onImportToken && isAddressQuery && filteredTokens.length === 0;
 
     return (
-        <DialogRoot size="md" {...dialogProps}>
+        <DialogRoot size="md" open={open} onOpenChange={(e) => setOpen(e.open)} {...dialogProps}>
+            <DialogTrigger asChild>
+                {
+                    selectedToken ?
+                        <Button>
+                            <Image
+                                src={selectedToken.logoURI || ''}
+                                alt={selectedToken.symbol}
+                                rounded={"full"}
+                            />
+                            {title}
+                            <Icon as={IoChevronDownOutline} />
+                        </Button>
+                        :
+                        <Button>
+                            {title}
+                            <Icon as={IoChevronDownOutline} />
+                        </Button>
+                }
+            </DialogTrigger>
             <DialogBackdrop />
             <DialogContent>
                 {/* Header */}
                 <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
+                    <DialogTitle>Select Token</DialogTitle>
                     <DialogCloseTrigger
                         onClick={onDialogClose}
                         asChild
@@ -440,7 +470,7 @@ export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
                                             token={token}
                                             config={config}
                                             isFavorite={favoriteTokens.includes(token.address)}
-                                            onSelect={onSelectToken}
+                                            onSelect={handleSelectToken}
                                             onToggleFavorite={onToggleFavorite}
                                             renderCustom={renderToken}
                                         />
