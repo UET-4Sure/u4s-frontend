@@ -28,6 +28,7 @@
     "wagmi": "^2.15.4"
   },
   "devDependencies": {
+    "@builder.io/partytown": "^0.10.3",
     "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
