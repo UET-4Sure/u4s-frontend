@@ -75,6 +75,13 @@ const semanticTokens = defineSemanticTokens({
             emphasized: { value: "#DD7E6F" },
             solid: { value: "#AB2B26" },
         },
+        border: {
+            DEFAULT: { value: "#DFD5BD" },
+            subtle: { value: "#ECE1C6" },
+            muted: { value: "#EAE0C9" },
+            emphasized: { value: "#D0C4A8" },
+            inverted: { value: "#160704" },
+        }
     },
 });
 
