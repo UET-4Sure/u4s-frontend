@@ -1,12 +1,20 @@
 "use client";
 
-import { DialogRootProps, HStack, Input, InputProps, StackProps, Text, VStack } from "@chakra-ui/react";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { Center, DialogRootProps, HStack, IconButton, IconButtonProps, Input, InputProps, StackProps, Text, TextProps, VStack } from "@chakra-ui/react";
 import { NumericFormat } from 'react-number-format';
+import { CgArrowsExchangeAltV } from "react-icons/cg";
+import numberal from "numeral";
+
 import { SwapState, Token } from "../type";
 import { useSwapQuote, useSwapState, useTokenBalance } from "./hooks";
-import { useCallback, useEffect, useState } from "react";
 import { SelectTokenDialog, SelectTokenDialogProps } from "../components/SelectTokenDialog";
+import { motion, MotionProps, useCycle } from "framer-motion";
+import { Button, ButtonProps } from "@/components/ui/button";
+import { useAccount } from "wagmi";
+import { ConnectWalletButton } from "@/app/(dashboard)/get-started/_components/AuthenticateButton";
 
+const MotionIconButton = motion.create(IconButton);
 
 type BackgroundStyle = 'default' | 'vietnamese-flag';
 
@@ -24,6 +32,7 @@ interface SwapInputProps extends StackProps {
 
     wrapperProps?: StackProps;
     inputProps?: InputProps;
+    balanceProps?: TextProps;
     selectTokenDialogProps?: Omit<SelectTokenDialogProps, 'onSelectToken' | 'onImportToken' | 'tokenList' | 'selectedToken' | 'children'> & Omit<DialogRootProps, 'children'> & { children?: React.ReactNode };
 }
 export const SwapInput: React.FC<SwapInputProps> = ({ children,
@@ -40,10 +49,9 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
 
     wrapperProps,
     inputProps,
+    balanceProps,
     ...props
 }) => {
-    const [selectedToken, setSelectedToken] = useState<Token | null>(token);
-
     const sampleTokens: Token[] = [
         {
             address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
@@ -91,9 +99,9 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
             price: '1.00',
         },
     ];
+
     const handleTokenSelect = useCallback((token: Token) => {
         onTokenSelect(token);
-        setSelectedToken(token);
     }, [onTokenSelect]);
 
     const handleImportToken = async (address: string): Promise<Token> => {
@@ -149,21 +157,99 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
                     fontSize={"2xl"}
                 />
                 <SelectTokenDialog
-                    title={selectedToken?.symbol}
-                    selectedToken={selectedToken}
+                    title={token?.symbol}
+                    selectedToken={token}
                     tokenList={tokenList.length > 0 ? tokenList : sampleTokens}
                     onSelectToken={handleTokenSelect}
                     onImportToken={handleImportToken}
                     {...props.selectTokenDialogProps}
                 />
             </HStack>
+            <HStack w={"full"} justify={"right"}>
+                <Text fontSize={"sm"} {...balanceProps}>
+                    Balance: {balance ? numberal(balance).format('0,0.0000') : 0} {token?.symbol}
+                </Text>
+            </HStack>
         </VStack>
+    );
+}
+
+interface SwitchButtonProps extends Omit<IconButtonProps, keyof MotionProps> {
+}
+export const SwitchButton: React.FC<SwitchButtonProps & MotionProps> = ({ onClick, ...props }) => {
+    const [rotate, cycleRotate] = useCycle(0, 180);
+
+    const handleClick = (e: any) => {
+        cycleRotate();
+        onClick?.(e);
+    };
+
+    return (
+        <MotionIconButton
+            variant={"solid"}
+            bg={"secondary"}
+            color={"primary"}
+            size={"md"}
+            rounded={"full"}
+            border={"4px solid"}
+            borderColor={"bg"}
+            _icon={{ scale: 1.25 }}
+
+            whileTap={{
+                scale: 0.9,
+                rotate: 180,
+            }}
+            animate={{ rotate }}
+            transition={{ type: "tween", duration: 0.1, ease: "easeInOut" }}
+            onClick={handleClick}
+            {...props}
+        >
+            <CgArrowsExchangeAltV />
+        </MotionIconButton>
+    );
+}
+
+interface SwapButtonProps extends ButtonProps {
+    label?: string;
+}
+export const SwapButton: React.FC<SwapButtonProps> = ({ children, label, ...props }) => {
+    // get balance and price impact from context or props if needed
+    const { isConnected } = useAccount();
+
+    const predefinedLabel = useMemo(() => {
+        if (!isConnected) {
+            return "Kết nối";
+        }
+        return "Trao đổi";
+    }, [isConnected]);
+
+    const buttonStyle = useMemo(() => {
+        return {
+        };
+    }, [isConnected]);
+
+    if (!isConnected) {
+        return (
+            <ConnectWalletButton colorPalette={"primary"} w={"full"} size={"lg"} />
+        )
+    }
+
+    return (
+        <Button
+            variant={"solid"}
+            w={"full"}
+            size={"lg"}
+            {...props}
+            {...buttonStyle}
+        >
+            {predefinedLabel}
+        </Button>
     );
 }
 
 interface SwapWidgetProps extends StackProps {
     onSwap?: (swapData: SwapState) => Promise<void>;
-    onTokenSelect?: (type: 'from' | 'to') => void;
+    onTokenSelect?: (type: 'from' | 'to', token: Token) => void;
     showPriceImpact?: boolean;
     showSlippage?: boolean;
 
@@ -224,6 +310,11 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
         }
     }, [swapState, onSwap]);
 
+    const handleTokenSelect = useCallback((type: 'from' | 'to', token: Token) => {
+        type === 'from' ? swapState.setFromToken(token) : swapState.setToToken(token);
+        onTokenSelect?.(type, token);
+    }, [onTokenSelect]);
+
     const handleMaxClick = useCallback(() => {
         if (fromBalance) {
             swapState.setFromAmount(fromBalance);
@@ -236,43 +327,63 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
 
 
     return (
-        <VStack {...props}>
-            <SwapInput
-                label="Bán"
-                token={swapState.fromToken}
-                amount={swapState.fromAmount}
-                balance={fromBalance}
-                onAmountChange={swapState.setFromAmount}
-                tokenList={tokenList}
-                onTokenSelect={() => onTokenSelect?.('from')}
-                onMaxClick={handleMaxClick}
-                disabled={swapState.isLoading}
-            />
-            <SwapInput
-                label="Mua"
-                token={swapState.toToken}
-                amount={swapState.toAmount}
-                balance={toBalance}
-                onAmountChange={swapState.setToAmount}
-                tokenList={tokenList}
-                onTokenSelect={() => onTokenSelect?.('to')}
-                readOnly
+        <VStack gap={"2"} {...props}>
+            <VStack gap={"2"} pos={"relative"}>
+                <SwapInput
+                    label="Bán"
+                    token={swapState.fromToken}
+                    amount={swapState.fromAmount}
+                    balance={fromBalance}
+                    onAmountChange={swapState.setFromAmount}
+                    tokenList={tokenList}
+                    onTokenSelect={(token) => handleTokenSelect('from', token)}
+                    onMaxClick={handleMaxClick}
+                    disabled={swapState.isLoading}
 
-                wrapperProps={{
-                    bgImage: "radial-gradient(100% 100% at 50.1% 0%, #FFA103 0%, #BC2D29 41.35%, #450E14 100%)",
-                }}
+                    balanceProps={{
+                        color: "fg.muted",
+                    }}
+                />
+                <Center position={"absolute"} top={"50%"} left={"50%"} transform={"translate(-50%, -50%)"} zIndex={1}>
+                    <SwitchButton
+                        onClick={() => {
+                            swapState.swapTokens()
+                            console.log("Swapped tokens:", swapState.fromToken, "and", swapState.toToken);
+                        }}
+                        loading={swapState.isLoading}
+                    />
+                </Center>
+                <SwapInput
+                    label="Mua"
+                    token={swapState.toToken}
+                    amount={swapState.toAmount}
+                    balance={toBalance}
+                    onAmountChange={swapState.setToAmount}
+                    tokenList={tokenList}
+                    onTokenSelect={(token) => handleTokenSelect('to', token)}
+                    readOnly
 
-                inputProps={{
-                    color: "primary.solid",
-                    _placeholder: { color: "primary.solid" },
-                }}
+                    wrapperProps={{
+                        bgImage: "radial-gradient(100% 100% at 50.1% 0%, #FFA103 0%, #BC2D29 41.35%, #450E14 100%)",
+                    }}
 
-                selectTokenDialogProps={{
-                    triggerProps: {
-                        colorPalette: "primary"
-                    }
-                }}
-            />
+                    inputProps={{
+                        color: "primary.solid",
+                        _placeholder: { color: "primary.solid" },
+                    }}
+
+                    balanceProps={{
+                        color: "primary.muted",
+                    }}
+
+                    selectTokenDialogProps={{
+                        triggerProps: {
+                            colorPalette: "primary"
+                        }
+                    }}
+                />
+            </VStack>
+            <SwapButton />
         </VStack>
     );
 }
