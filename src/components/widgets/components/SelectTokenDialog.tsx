@@ -1,14 +1,14 @@
-import { Badge, Box, DialogRootProps, Flex, IconButton, VStack, Text, Input, Spinner, HStack, DialogTrigger, Icon, AvatarRoot, AvatarImage, AvatarFallback } from "@chakra-ui/react";
+import { Badge, Box, DialogRootProps, Flex, IconButton, VStack, Text, Input, Spinner, HStack, DialogTrigger, Icon, AvatarRoot, AvatarImage, AvatarFallback, Center, CenterProps } from "@chakra-ui/react";
 import { LuSearch, LuStar } from "react-icons/lu";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { DialogBackdrop, DialogBody, DialogCloseTrigger, DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
 import { IoChevronDownOutline } from "react-icons/io5";
+import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
 
 import { Button, ButtonProps } from "@/components/ui/button";
 import { InputGroup } from "@/components/ui/input-group";
 
 import { Token } from "../type";
-import { CloseButton } from "@/components/ui/close-button";
 
 export interface TokenListConfig {
     showBalances?: boolean;
@@ -18,7 +18,7 @@ export interface TokenListConfig {
     enableFavorites?: boolean;
     virtualScrolling?: boolean;
     itemHeight?: number;
-    maxHeight?: string;
+    maxHeight?: number;
     popularTokensFirst?: boolean;
     groupByChain?: boolean;
 }
@@ -71,7 +71,7 @@ const defaultConfig: TokenListConfig = {
     enableFavorites: false,
     virtualScrolling: false,
     itemHeight: 72,
-    maxHeight: '400px',
+    maxHeight: 512,
     popularTokensFirst: true,
     groupByChain: false,
 };
@@ -172,59 +172,39 @@ const TokenItem: React.FC<TokenItemProps> = ({
     );
 };
 
-interface VirtualListProps {
+interface VirtualListProps extends CenterProps {
     items: Token[];
     itemHeight: number;
     maxHeight: string;
     renderItem: (token: Token, index: number) => React.ReactNode;
 }
 
-const VirtualList: React.FC<VirtualListProps> = ({
-    items,
-    itemHeight,
-    maxHeight,
-    renderItem
-}) => {
-    const [scrollTop, setScrollTop] = useState(0);
-    const [containerHeight, setContainerHeight] = useState(0);
-    const containerRef = useRef<HTMLDivElement>(null);
+export function VirtualList({ items, itemHeight, maxHeight, renderItem, ...props }: VirtualListProps) {
 
-    useEffect(() => {
-        if (containerRef.current) {
-            setContainerHeight(containerRef.current.clientHeight);
-        }
-    }, []);
-
-    const startIndex = Math.floor(scrollTop / itemHeight);
-    const endIndex = Math.min(
-        startIndex + Math.ceil(containerHeight / itemHeight) + 1,
-        items.length
-    );
-
-    const visibleItems = items.slice(startIndex, endIndex);
-    const totalHeight = items.length * itemHeight;
-    const offsetY = startIndex * itemHeight;
+    // Component render từng dòng
+    const Row = ({ index, style }: ListChildComponentProps) => {
+        const item = items[index];
+        return (
+            <Box style={style} key={item.address} height={itemHeight}>
+                {renderItem(item, index)}
+            </Box>
+        );
+    };
 
     return (
-        <Box
-            ref={containerRef}
-            height={maxHeight}
-            overflow="auto"
-            onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
-        >
-            <Box height={`${totalHeight}px`} position="relative">
-                <Box transform={`translateY(${offsetY}px)`}>
-                    {visibleItems.map((item, index) => (
-                        <Box key={item.address} height={`${itemHeight}px`}>
-                            {renderItem(item, startIndex + index)}
-                        </Box>
-                    ))}
-                </Box>
-            </Box>
-        </Box>
+        <Center height={maxHeight} overflow="auto" w="full" {...props}>
+            <List
+                direction="vertical"
+                height={parseInt(maxHeight, 10)}
+                itemCount={items.length}
+                itemSize={itemHeight}
+                width="100%"
+            >
+                {Row}
+            </List>
+        </Center>
     );
-};
-
+}
 export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
     tokenList,
     selectedToken,
@@ -389,105 +369,88 @@ export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
                 <DialogBody>
                     {/* Custom header */}
                     {renderHeader && renderHeader()}
-
-                    {/* Search input */}
-                    {config.enableSearch && (
-                        <InputGroup w={"full"} startElement={<LuSearch />}>
-                            <Input
-                                variant={"subtle"}
-                                rounded={"full"}
-                                placeholder={placeholder}
-                                value={searchQuery}
-                                onChange={(e) => handleSearchChange(e.target.value)}
-                            />
-                        </InputGroup>
-                    )}
-
-                    {/* Content */}
-                    {isLoading ? (
-                        <Flex justify="center" align="center" py={8}>
-                            <VStack>
-                                <Spinner />
-                                <Text color="gray.500">{loadingText}</Text>
-                            </VStack>
-                        </Flex>
-                    ) : errorText ? (
-                        <Flex justify="center" align="center" py={8}>
-                            <Text color="red.500">{errorText}</Text>
-                        </Flex>
-                    ) : filteredTokens.length === 0 ? (
-                        <>
-                            {showImportOption ? (
-                                <Flex justify="center" align="center" py={8}>
-                                    <VStack>
-                                        <Text color="gray.500">Token not found</Text>
-                                        <Box
-                                            as="button"
-                                            onClick={handleImportToken}
-                                            p={3}
-                                            border="1px dashed"
-                                            borderColor="gray.300"
-                                            borderRadius="md"
-                                            _hover={{ borderColor: 'blue.400' }}
-                                        >
-                                            {isImporting ? (
-                                                <HStack>
-                                                    <Spinner size="sm" />
-                                                    <Text>Importing...</Text>
-                                                </HStack>
-                                            ) : (
-                                                <Text color="blue.500">
-                                                    Import token: {searchQuery}
-                                                </Text>
-                                            )}
-                                        </Box>
-                                    </VStack>
-                                </Flex>
-                            ) : renderEmptyState ? (
-                                renderEmptyState()
-                            ) : (
-                                <Flex justify="center" align="center" py={8}>
-                                    <Text color="gray.500">{emptyText}</Text>
-                                </Flex>
-                            )}
-                        </>
-                    ) : (
-                        /* Token list */
-                        <Box>
-                            {config.virtualScrolling ? (
-                                <VirtualList
-                                    items={filteredTokens}
-                                    itemHeight={config.itemHeight!}
-                                    maxHeight={config.maxHeight!}
-                                    renderItem={(token) => (
-                                        <TokenItem
-                                            key={token.address}
-                                            token={token}
-                                            config={config}
-                                            isFavorite={favoriteTokens.includes(token.address)}
-                                            onSelect={handleSelectToken}
-                                            onToggleFavorite={onToggleFavorite}
-                                            renderCustom={renderToken}
-                                        />
-                                    )}
+                    <VStack w={"full"} h={"full"} gap={"4"}>
+                        {/* Search input */}
+                        {config.enableSearch && (
+                            <InputGroup w={"full"} startElement={<LuSearch />}>
+                                <Input
+                                    variant={"subtle"}
+                                    rounded={"full"}
+                                    placeholder={placeholder}
+                                    value={searchQuery}
+                                    onChange={(e) => handleSearchChange(e.target.value)}
                                 />
-                            ) : (
-                                <Box maxH={config.maxHeight} overflowY="auto">
-                                    {filteredTokens.map((token) => (
-                                        <TokenItem
-                                            key={token.address}
-                                            token={token}
-                                            config={config}
-                                            isFavorite={favoriteTokens.includes(token.address)}
-                                            onSelect={handleSelectToken}
-                                            onToggleFavorite={onToggleFavorite}
-                                            renderCustom={renderToken}
-                                        />
-                                    ))}
-                                </Box>
-                            )}
-                        </Box>
-                    )}
+                            </InputGroup>
+                        )}
+
+                        {/* Content */}
+                        {isLoading ? (
+                            <Flex justify="center" align="center" w={"full"}>
+                                <VStack>
+                                    <Spinner />
+                                    <Text color="gray.500">{loadingText}</Text>
+                                </VStack>
+                            </Flex>
+                        ) : errorText ? (
+                            <Flex justify="center" align="center" w={"full"}>
+                                <Text color="red.500">{errorText}</Text>
+                            </Flex>
+                        ) : filteredTokens.length === 0 ? (
+                            <>
+                                {showImportOption ? (
+                                    <Flex justify="center" align="center" w={"full"}>
+                                        <VStack>
+                                            <Text color="gray.500">Token not found</Text>
+                                            <Box
+                                                as="button"
+                                                onClick={handleImportToken}
+                                                p={3}
+                                                border="1px dashed"
+                                                borderColor="gray.300"
+                                                borderRadius="md"
+                                                _hover={{ borderColor: 'blue.400' }}
+                                            >
+                                                {isImporting ? (
+                                                    <HStack>
+                                                        <Spinner size="sm" />
+                                                        <Text>Importing...</Text>
+                                                    </HStack>
+                                                ) : (
+                                                    <Text color="blue.500">
+                                                        Import token: {searchQuery}
+                                                    </Text>
+                                                )}
+                                            </Box>
+                                        </VStack>
+                                    </Flex>
+                                ) : renderEmptyState ? (
+                                    renderEmptyState()
+                                ) : (
+                                    <Flex justify="center" align="center" w={"full"}>
+                                        <Text color="gray.500">{emptyText}</Text>
+                                    </Flex>
+                                )}
+                            </>
+                        ) :
+                            <VirtualList
+                                w={"full"}
+                                items={filteredTokens}
+                                itemHeight={config.itemHeight!}
+                                maxHeight={config.maxHeight!}
+                                renderItem={(token) => (
+                                    <TokenItem
+                                        key={token.address}
+                                        token={token}
+                                        config={config}
+                                        isFavorite={favoriteTokens.includes(token.address)}
+                                        onSelect={handleSelectToken}
+                                        onToggleFavorite={onToggleFavorite}
+                                        renderCustom={renderToken}
+                                    />
+                                )}
+                            />
+                        }
+                    </VStack>
                 </DialogBody>
             </DialogContent>
         </DialogRoot>
