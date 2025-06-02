@@ -1,6 +1,6 @@
 import { Badge, Box, DialogRootProps, Flex, IconButton, VStack, Text, Input, Spinner, HStack, DialogTrigger, Icon, AvatarRoot, AvatarImage, AvatarFallback, Center, CenterProps } from "@chakra-ui/react";
 import { LuSearch, LuStar } from "react-icons/lu";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { DialogBackdrop, DialogBody, DialogCloseTrigger, DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
 import { IoChevronDownOutline } from "react-icons/io5";
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
@@ -18,7 +18,7 @@ export interface TokenListConfig {
     enableFavorites?: boolean;
     virtualScrolling?: boolean;
     itemHeight?: number;
-    maxHeight?: number;
+    maxHeight: number;
     popularTokensFirst?: boolean;
     groupByChain?: boolean;
 }
@@ -175,7 +175,7 @@ const TokenItem: React.FC<TokenItemProps> = ({
 interface VirtualListProps extends CenterProps {
     items: Token[];
     itemHeight: number;
-    maxHeight: string;
+    maxHeight: number;
     renderItem: (token: Token, index: number) => React.ReactNode;
 }
 
@@ -195,7 +195,7 @@ export function VirtualList({ items, itemHeight, maxHeight, renderItem, ...props
         <Center height={maxHeight} overflow="auto" w="full" {...props}>
             <List
                 direction="vertical"
-                height={parseInt(maxHeight, 10)}
+                height={maxHeight}
                 itemCount={items.length}
                 itemSize={itemHeight}
                 width="100%"
@@ -436,7 +436,7 @@ export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
                                 w={"full"}
                                 items={filteredTokens}
                                 itemHeight={config.itemHeight!}
-                                maxHeight={config.maxHeight!}
+                                maxHeight={config.maxHeight}
                                 renderItem={(token) => (
                                     <TokenItem
                                         key={token.address}
