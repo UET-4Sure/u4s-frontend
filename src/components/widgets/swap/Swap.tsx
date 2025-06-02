@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { Center, DialogRootProps, HStack, IconButton, IconButtonProps, Input, InputProps, StackProps, Text, TextProps, VStack } from "@chakra-ui/react";
 import { NumericFormat } from 'react-number-format';
 import { CgArrowsExchangeAltV } from "react-icons/cg";
@@ -12,7 +12,7 @@ import { SelectTokenDialog, SelectTokenDialogProps } from "../components/SelectT
 import { motion, MotionProps, useCycle } from "framer-motion";
 import { Button, ButtonProps } from "@/components/ui/button";
 import { useAccount } from "wagmi";
-import { ConnectWalletButton } from "@/app/(dashboard)/get-started/_components/AuthenticateButton";
+import { ConnectWalletButton } from "@/components/global/wallet";
 
 const MotionIconButton = motion.create(IconButton);
 
