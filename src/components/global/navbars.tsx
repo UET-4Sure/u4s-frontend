@@ -26,6 +26,16 @@ const VersionTag = () => (
     </Tag>
 );
 
+const BrandAndAppSnippet = () => (
+    <HStack align={"start"} justify={"center"} gap={"1"}>
+        <Brand />
+        <VStack align={"start"} justify={"center"} gap={"1"}>
+            <Text fontSize={"md"} fontWeight={"semibold"}>{siteConfig.name}</Text>
+            <VersionTag />
+        </VStack>
+    </HStack >
+)
+
 interface LandingNavbarProps extends HtmlProps { }
 export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
     const NavLinks = () => (
@@ -38,15 +48,6 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
         </HStack>
     );
 
-    const BrandAndAppSnippet = () => (
-        <HStack align={"start"} justify={"center"} gap={"1"}>
-            <Brand />
-            <VStack align={"start"} justify={"center"} gap={"1"}>
-                <Text fontSize={"md"} fontWeight={"semibold"}>{siteConfig.name}</Text>
-                <VersionTag />
-            </VStack>
-        </HStack >
-    )
     return (
         <ChakraHeader
             position="sticky"
@@ -69,19 +70,16 @@ interface DashboardNavbarProps extends HtmlProps { }
 export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     return (
         <ChakraHeader
-            w={"full"}
             position="sticky"
+            w={"full"}
             top={0}
             left={0}
             right={0}
             {...props}
         >
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
-                <Brand />
-                <HStack align={"center"}>
-                    <ProfileMenu />
-                    <VersionTag />
-                </HStack>
+                <BrandAndAppSnippet />
+                <ConnectWalletButton />
             </HStack>
         </ChakraHeader>
     );

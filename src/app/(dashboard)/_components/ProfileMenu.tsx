@@ -6,6 +6,7 @@ import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import NextImage from "next/image";
 import { useMemo } from "react";
 import { formatAddress } from "@/libs";
+import { ConnectWalletButton } from "@/components/global/wallet";
 
 interface Props extends StackProps { }
 export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
@@ -38,7 +39,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
             </AvatarFallback>
         </AvatarRoot>
     );
-    if (!isConnected && !isConnecting) return null;
+    if (!isConnected && !isConnecting) return <ConnectWalletButton />;
 
     return (
         <HStack
