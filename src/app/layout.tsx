@@ -29,6 +29,7 @@ export default async function RootLayout({
       <body
         className={`${sora.className}`}
         style={{
+          zIndex: -1,
           width: "100vw",
           height: "100vh",
         }}>

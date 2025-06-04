@@ -23,7 +23,7 @@ export const Provider: React.FC<ProviderProps> = ({ children }) => {
 
     if (!isConnected) {
         return <>
-            <Image asChild pos={"absolute"}>
+            <Image asChild pos={"absolute"} pointerEvents={"none"} zIndex={"-1"}>
                 <NextImage
                     src={"/assets/bg-cover-plateau.png"}
                     alt={"Plateau Background"}
