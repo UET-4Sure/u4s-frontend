@@ -7,7 +7,6 @@ import {
     Text,
     VStack,
 } from "@chakra-ui/react"
-import { ConnectWalletButton, SignInButton } from "./_components/AuthenticateButton"
 import NextImage from "next/image"
 import { motion } from "framer-motion"
 
@@ -90,15 +89,7 @@ export default function GetStartedPage() {
                     <Text>Chọn phương thức đăng nhập</Text>
                 </VStack>
                 <HStack gap={"8"}>
-                    {supportAuthenticator.map(({ label, logoSrc, authenticator }) => (
-                        <AuthOptionCard key={authenticator} label={label} logoSrc={logoSrc}>
-                            <SignInButton authenticator={authenticator} label={label} />
-                        </AuthOptionCard>
-                    ))}
 
-                    <AuthOptionCard label={connectWallet.label} logoSrc={connectWallet.logoSrc}>
-                        <ConnectWalletButton />
-                    </AuthOptionCard>
                 </HStack>
             </VStack>
         </Center>

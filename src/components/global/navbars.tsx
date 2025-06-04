@@ -1,11 +1,12 @@
 "use client"
 
 import { siteConfig } from "@/config/site";
-import { chakra, For, HStack, HtmlProps, Image, Link } from "@chakra-ui/react"
+import { chakra, For, HStack, HtmlProps, Image, Link, Text, VStack } from "@chakra-ui/react"
 import NextImage from "next/image";
 import { Tag } from "../ui/tag";
 import { APP_VERSION } from "@/config/constants";
 import { ProfileMenu } from "@/app/(dashboard)/_components/ProfileMenu";
+import { ConnectWalletButton } from "./wallet";
 const ChakraHeader = chakra.header;
 
 const Brand = () => (
@@ -20,7 +21,7 @@ const Brand = () => (
 );
 
 const VersionTag = () => (
-    <Tag size={"lg"} rounded={"full"} colorPalette={"secondary"} variant={"solid"}>
+    <Tag size={"md"} rounded={"full"} colorPalette={"secondary"} variant={"solid"}>
         {APP_VERSION}
     </Tag>
 );
@@ -37,6 +38,15 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
         </HStack>
     );
 
+    const BrandAndAppSnippet = () => (
+        <HStack align={"start"} justify={"center"} gap={"1"}>
+            <Brand />
+            <VStack align={"start"} justify={"center"} gap={"1"}>
+                <Text fontSize={"md"} fontWeight={"semibold"}>{siteConfig.name}</Text>
+                <VersionTag />
+            </VStack>
+        </HStack >
+    )
     return (
         <ChakraHeader
             position="sticky"
@@ -48,9 +58,9 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
             {...props}
         >
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
-                <Brand />
+                <BrandAndAppSnippet />
                 <NavLinks />
-                <VersionTag />
+                <ConnectWalletButton />
             </HStack>
         </ChakraHeader>
     );

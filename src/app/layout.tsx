@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
 import { Sora } from "next/font/google";
 import "./globals.css";
-import { Provider } from "@/components/ui/provider";
 import { Toaster } from "@/components/ui/toaster";
 import { siteConfig } from "@/config/site";
+import { headers } from "next/headers";
+import { Provider } from "./provider";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -16,11 +17,13 @@ export const metadata: Metadata = {
   description: siteConfig.description,
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const cookies = (await headers()).get('cookie')
+
   return (
     <html lang="en">
       <body
@@ -29,7 +32,7 @@ export default function RootLayout({
           width: "100vw",
           height: "100vh",
         }}>
-        <Provider>
+        <Provider cookies={cookies}>
           <Toaster />
           {children}
         </Provider>
