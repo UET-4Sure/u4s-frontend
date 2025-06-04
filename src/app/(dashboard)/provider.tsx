@@ -3,6 +3,7 @@
 import { useAppKit } from "@reown/appkit/react";
 import { useEffect } from "react";
 import { useAccount } from "wagmi";
+import { FallbackView } from "./_components/FallbackView";
 
 interface ProviderProps extends React.PropsWithChildren { }
 export const Provider: React.FC<ProviderProps> = ({ children }) => {
@@ -19,7 +20,10 @@ export const Provider: React.FC<ProviderProps> = ({ children }) => {
     }, [isConnected]);
 
     if (!isConnected) {
-        return null;
+        return <FallbackView
+            label="Bạn chưa kết nối ví"
+            subtitle="Vui lòng kết nối ví để tiếp tục"
+        />;
     };
 
     return (

@@ -9,9 +9,9 @@ export default async function Layout({
 }>) {
 
     return (
-        <VStack>
+        <VStack w={"full"} h={"full"}>
+            <DashboardNavbar />
             <Provider>
-                <DashboardNavbar />
                 {children}
             </Provider>
         </VStack>
