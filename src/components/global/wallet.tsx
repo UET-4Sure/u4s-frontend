@@ -24,7 +24,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = (props) =
             }}
             {...props}
         >
-            Connect Wallet
+            Kết nối
         </Button>
     );
 }

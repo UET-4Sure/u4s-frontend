@@ -29,7 +29,7 @@ const VersionTag = () => (
 interface LandingNavbarProps extends HtmlProps { }
 export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
     const NavLinks = () => (
-        <HStack flex={"1"} as={"nav"} justify={"space-between"}>
+        <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
             <For each={Object.entries(siteConfig.paths)}>
                 {([key, path]) => (
                     <Link key={key} href={path.href}>{path.label}</Link>
@@ -54,7 +54,6 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
             top={0}
             left={0}
             right={0}
-            zIndex={"sticky"}
             {...props}
         >
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
