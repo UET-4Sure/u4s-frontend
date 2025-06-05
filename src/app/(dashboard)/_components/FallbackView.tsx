@@ -39,6 +39,6 @@ export const FallbackView: React.FC<FallbackViewProps> = ({
                 }
                 {icon && icon}
             </VStack>
-        </Center >
+        </Center>
     );
 };
