@@ -1,9 +1,13 @@
+import { HStack } from "@chakra-ui/react";
+import { ProfileArea } from "./components/ProfileArea";
+import { PersonalArea } from "./components/PersonalArea";
+
 export default function Page() {
 
     return (
-        <div>
-            <h1>Profile Page</h1>
-            <p>This is the profile page.</p>
-        </div>
+        <HStack w={"full"} h={"full"}>
+            <ProfileArea flex={1} />
+            <PersonalArea flex={3} />
+        </HStack>
     );
 }
