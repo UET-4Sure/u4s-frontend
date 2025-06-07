@@ -2,7 +2,7 @@
 
 import { useAppKit, useAppKitAccount, useAppKitState } from "@reown/appkit/react";
 import { Button, ButtonProps } from "../ui/button";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { vinaswapApi } from "@/services/axios";
 import { useSignMessage } from "wagmi";
@@ -13,6 +13,7 @@ interface ConnectWalletButtonProps extends ButtonProps {
 export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = (props) => {
     const { open, } = useAppKit();
     const { login, isLoading } = useWalletLogin();
+    const { address } = useAppKitAccount();
 
     return (
         <Button

@@ -4,7 +4,6 @@ import { vinaswapApi } from '@/services/axios';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useAccount, useSignMessage } from 'wagmi';
 import { useUserStore } from './useUserStore';
-import { useEffect } from 'react';
 
 export const useWalletLogin = () => {
     const { address, isConnecting } = useAccount();
@@ -54,13 +53,6 @@ export const useWalletLogin = () => {
     });
 
     const isLoading = isConnecting || isLogining || isNonceLoading || isPending;
-
-    useEffect(() => {
-        if (address) {
-            login();
-        }
-    }, [address]);
-
 
     return {
         login,

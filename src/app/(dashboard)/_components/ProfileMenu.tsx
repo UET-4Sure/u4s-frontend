@@ -12,6 +12,7 @@ import { formatAddress } from "@/libs";
 import { ConnectWalletButton } from "@/components/global/wallet";
 import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "@/components/ui/menu";
 import { motion } from "framer-motion";
+import { useWalletLogin } from "@/hooks/useWalletLogin";
 
 const MotionMenuItem = motion.create(MenuItem);
 
@@ -20,7 +21,8 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
     const { disconnect } = useDisconnect()
     const router = useRouter();
     const { open } = useAppKit();
-    const { address, isConnected, caipAddress, status, embeddedWalletInfo } = useAppKitAccount();
+    const { address, isConnected, status } = useAppKitAccount();
+    const {isLoading} = useWalletLogin();
 
     const isConnecting = useMemo(() => status === "reconnecting" || status === "connecting", [status]);
 
@@ -65,7 +67,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
         }
     ]
 
-    if (!isConnected && !isConnecting) return <ConnectWalletButton />;
+    if (!isConnected && !isConnecting && !isLoading) return <ConnectWalletButton />;
 
     return (
         <MenuRoot>
