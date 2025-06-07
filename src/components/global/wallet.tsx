@@ -12,12 +12,12 @@ interface ConnectWalletButtonProps extends ButtonProps {
 }
 export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = (props) => {
     const { open, } = useAppKit();
-    const { address, status } = useAppKitAccount();
     const { login, isLoading } = useWalletLogin();
 
     return (
         <Button
             disabled={isLoading}
+            loading={isLoading}
             onClick={() => {
                 open({
                     view: "Connect"
