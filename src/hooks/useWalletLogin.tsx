@@ -27,9 +27,9 @@ export const useWalletLogin = () => {
     } = useSignMessage();
 
 
-    const { mutate: login, isPending: isLogining } = useMutation({
-        mutationKey: ["auth:wallet-login", address, nonce],
-        mutationFn: async () => {
+    const { data: login, isPending: isLogining } = useQuery({
+        queryKey: ["auth:wallet-login", address, nonce],
+        queryFn: async () => {
             if (!nonce || !address) throw new Error('Missing nonce or address');
 
             const sig = await signMessageAsync({
@@ -41,14 +41,11 @@ export const useWalletLogin = () => {
                 signature: sig,
             });
 
-            return res.data as AuthLoginResponse;
-        },
-        onSuccess: (data) => {
+            const data = res.data as AuthLoginResponse;
+
             setUser(data.user);
             vinaswapApi.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
-        },
-        onError: (error) => {
-            console.error("Login failed:", error);
+
         },
     });
 
