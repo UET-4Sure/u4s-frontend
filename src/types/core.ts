@@ -6,3 +6,7 @@ interface User {
     bannedUntil: Date | null;
 }
 
+interface AuthLoginResponse {
+    token: string;
+    user: User;
+}
