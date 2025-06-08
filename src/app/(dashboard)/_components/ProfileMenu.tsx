@@ -22,14 +22,14 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
     const router = useRouter();
     const { open } = useAppKit();
     const { address, status } = useAppKitAccount();
-    const { isLoading, isSuccess, isAuthChecked } = useWalletLogin();
+    const { isLoading, isAuthenticated } = useWalletLogin();
 
-    const isConnecting = useMemo(() => status === "reconnecting" || status === "connecting", [status]);
+    const isConnecting = useMemo(() => status === "reconnecting" || status === "connecting" || isLoading, [status]);
 
     const { data: ensName } = useEnsName({
         address: address as `0x${string}`,
         query: {
-            enabled: !!address && isAuthChecked && !isConnecting && !isLoading
+            enabled: !!address && isAuthenticated && !isConnecting
         }
     })
     const { data: ensAvatar } = useEnsAvatar({
@@ -67,7 +67,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
         }
     ]
 
-    if (!isSuccess && !isConnecting && !isLoading) return <ConnectWalletButton />;
+    if (!isAuthenticated && !isConnecting && !isLoading) return <ConnectWalletButton />;
 
     return (
         <MenuRoot>
