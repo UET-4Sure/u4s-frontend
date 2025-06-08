@@ -32,9 +32,9 @@ export const useWalletLogin = () => {
         enabled: isLoginReady,
         queryFn: async () => {
             try {
-                const res = await vinaswapApi.get('/auth/me');
+                const res = await vinaswapApi.get(`/wallet/${address}`);
                 if (res.data.user) {
-                    setUser(res.data.user);
+                    setUser(res.data.user as User);
                     return { isLoggedIn: true, user: res.data.user };
                 }
                 return { isLoggedIn: false, user: null };
