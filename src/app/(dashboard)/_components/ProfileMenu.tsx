@@ -21,15 +21,15 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
     const { disconnect } = useDisconnect()
     const router = useRouter();
     const { open } = useAppKit();
-    const { address, isConnected, status } = useAppKitAccount();
-    const { isLoading, isSuccess } = useWalletLogin();
+    const { address, status } = useAppKitAccount();
+    const { isLoading, isSuccess, isAuthChecked } = useWalletLogin();
 
     const isConnecting = useMemo(() => status === "reconnecting" || status === "connecting", [status]);
 
     const { data: ensName } = useEnsName({
         address: address as `0x${string}`,
         query: {
-            enabled: isConnected && !!address,
+            enabled: !!address && isAuthChecked && !isConnecting && !isLoading
         }
     })
     const { data: ensAvatar } = useEnsAvatar({

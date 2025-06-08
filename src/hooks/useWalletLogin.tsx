@@ -59,7 +59,7 @@ export const useWalletLogin = () => {
                 message: nonceQuery.data
             });
 
-            const res = await vinaswapApi.post('/auth/users/wallet-login', {
+            const res = await vinaswapApi.post('/auth/wallet-login', {
                 address,
                 nonce: nonceQuery.data,
                 signature,
