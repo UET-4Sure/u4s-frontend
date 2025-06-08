@@ -67,6 +67,10 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
         }
     ]
 
+    console.log("isAuthenticated", isAuthenticated);
+    console.log("isConnecting", isConnecting);
+    console.log("isLoading", isLoading);
+    
     if (!isAuthenticated && !isConnecting && !isLoading) return <ConnectWalletButton />;
 
     return (
