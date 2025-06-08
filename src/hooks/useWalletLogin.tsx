@@ -39,6 +39,7 @@ export const useWalletLogin = () => {
 
             const res = await vinaswapApi.post('/auth/wallet-login', {
                 address,
+                nonce,
                 signature: sig,
             });
 
