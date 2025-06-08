@@ -8,7 +8,7 @@ import { useEffect, useMemo } from 'react';
 
 export const useWalletLogin = () => {
     const { address } = useAccount();
-    const { setUser } = useUserStore();
+    const { setUser, user } = useUserStore();
     const queryClient = useQueryClient();
 
 
@@ -119,7 +119,8 @@ export const useWalletLogin = () => {
     );
 
     const error = signError || loginMutation.error;
-    const isAuthenticated = loginMutation.isSuccess || authStatusQuery.data?.isLoggedIn;
+    const isAuthenticated = !!user;
+
 
     return {
         data: loginMutation.data,
