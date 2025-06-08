@@ -7,18 +7,14 @@ import { useUserStore } from './useUserStore';
 import { useEffect, useMemo } from 'react';
 
 export const useWalletLogin = () => {
-    const { address, isConnected } = useAccount();
+    const { address } = useAccount();
     const { setUser } = useUserStore();
     const queryClient = useQueryClient();
 
-    const isLoginReady = useMemo(() =>
-        !!address && isConnected,
-        [address, isConnected]
-    );
 
     const nonceQuery = useQuery({
         queryKey: ["auth:nonce", address],
-        enabled: isLoginReady,
+        enabled: !!address,
         queryFn: async () => {
             const res = await vinaswapApi.get(`/auth/nonce?address=${address}`);
             return res.data.nonce as string;
@@ -29,7 +25,7 @@ export const useWalletLogin = () => {
 
     const authStatusQuery = useQuery({
         queryKey: ["auth:status", address],
-        enabled: isLoginReady,
+        enabled: !!address,
         queryFn: async () => {
             try {
                 const res = await vinaswapApi.get(`/users/wallet/${address}`);
@@ -59,7 +55,7 @@ export const useWalletLogin = () => {
                 message: nonceQuery.data
             });
 
-            const res = await vinaswapApi.post('/auth/users/wallet-login', {
+            const res = await vinaswapApi.post('/auth/wallet-login', {
                 address,
                 nonce: nonceQuery.data,
                 signature,
@@ -84,7 +80,7 @@ export const useWalletLogin = () => {
 
     useEffect(() => {
         const shouldAttemptLogin = (
-            isLoginReady &&
+            address &&
             nonceQuery.isSuccess &&
             nonceQuery.data &&
             authStatusQuery.isSuccess &&
@@ -98,7 +94,7 @@ export const useWalletLogin = () => {
             loginMutation.mutate();
         }
     }, [
-        isLoginReady,
+        address,
         nonceQuery.isSuccess,
         nonceQuery.data,
         authStatusQuery.isSuccess,
@@ -123,18 +119,13 @@ export const useWalletLogin = () => {
     );
 
     const error = signError || loginMutation.error;
-    const isSuccess = loginMutation.isSuccess || authStatusQuery.data?.isLoggedIn;
+    const isAuthenticated = loginMutation.isSuccess || authStatusQuery.data?.isLoggedIn;
 
     return {
         data: loginMutation.data,
         isLoading,
-        isSuccess,
+        isAuthenticated,
         error,
         nonce: nonceQuery.data,
-        // Additional states for debugging
-        isLoginReady,
-        isNonceLoaded: nonceQuery.isSuccess,
-        isAuthChecked: authStatusQuery.isSuccess,
-        isAlreadyLoggedIn: authStatusQuery.data?.isLoggedIn,
     };
 };
