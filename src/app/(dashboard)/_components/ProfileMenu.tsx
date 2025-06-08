@@ -22,7 +22,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
     const router = useRouter();
     const { open } = useAppKit();
     const { address, isConnected, status } = useAppKitAccount();
-    const {isLoading} = useWalletLogin();
+    const { isLoading, isSuccess } = useWalletLogin();
 
     const isConnecting = useMemo(() => status === "reconnecting" || status === "connecting", [status]);
 
@@ -67,7 +67,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
         }
     ]
 
-    if (!isConnected && !isConnecting && !isLoading) return <ConnectWalletButton />;
+    if (!isSuccess && !isConnecting && !isLoading) return <ConnectWalletButton />;
 
     return (
         <MenuRoot>

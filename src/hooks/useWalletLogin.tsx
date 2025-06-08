@@ -1,7 +1,7 @@
 "use client";
 
 import { vinaswapApi } from '@/services/axios';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { useAccount, useSignMessage } from 'wagmi';
 import { useUserStore } from './useUserStore';
 
@@ -29,6 +29,7 @@ export const useWalletLogin = () => {
 
     const { data: login, isPending: isLogining } = useQuery({
         queryKey: ["auth:wallet-login", address, nonce],
+        enabled: !!nonce && !!address && !!signature,
         queryFn: async () => {
             if (!nonce || !address) throw new Error('Missing nonce or address');
 
