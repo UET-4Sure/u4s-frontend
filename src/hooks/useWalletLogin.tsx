@@ -32,7 +32,7 @@ export const useWalletLogin = () => {
         enabled: isLoginReady,
         queryFn: async () => {
             try {
-                const res = await vinaswapApi.get(`/wallet/${address}`);
+                const res = await vinaswapApi.get(`/users/wallet/${address}`);
                 if (res.data.user) {
                     setUser(res.data.user as User);
                     return { isLoggedIn: true, user: res.data.user };
@@ -59,7 +59,7 @@ export const useWalletLogin = () => {
                 message: nonceQuery.data
             });
 
-            const res = await vinaswapApi.post('/auth/wallet-login', {
+            const res = await vinaswapApi.post('/auth/users/wallet-login', {
                 address,
                 nonce: nonceQuery.data,
                 signature,
