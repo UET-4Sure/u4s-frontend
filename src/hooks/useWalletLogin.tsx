@@ -5,10 +5,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAccount, useSignMessage } from 'wagmi';
 import { useUserStore } from './useUserStore';
 import { useEffect, useMemo } from 'react';
+import { useTokenStore } from './useTokenStore';
 
 export const useWalletLogin = () => {
     const { address } = useAccount();
     const { setUser, user } = useUserStore();
+    const { setToken, token } = useTokenStore();
     const queryClient = useQueryClient();
 
 
@@ -19,7 +21,7 @@ export const useWalletLogin = () => {
             const res = await vinaswapApi.get(`/auth/nonce?address=${address}`);
             return res.data.nonce as string;
         },
-        staleTime: 5 * 60 * 1000,
+        staleTime: Infinity,
         gcTime: 10 * 60 * 1000,
     });
 
@@ -27,18 +29,14 @@ export const useWalletLogin = () => {
         queryKey: ["auth:status", address],
         enabled: !!address,
         queryFn: async () => {
-            try {
-                const res = await vinaswapApi.get(`/users/wallet/${address}`);
-                if (res.data.user) {
-                    setUser(res.data.user as User);
-                    return { isLoggedIn: true, user: res.data.user };
-                }
-                return { isLoggedIn: false, user: null };
-            } catch {
-                return { isLoggedIn: false, user: null };
+            const res = await vinaswapApi.get(`/users/wallet/${address}`);
+            if (res.data.user) {
+                setUser(res.data.user as User);
+                return { isLoggedIn: true, user: res.data.user };
             }
         },
-        staleTime: 2 * 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
         retry: false,
     });
 
@@ -62,15 +60,15 @@ export const useWalletLogin = () => {
             });
 
             const data = res.data;
-            setUser(data.user);
-            vinaswapApi.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
 
-            // Invalidate auth status to refresh
-            queryClient.invalidateQueries({ queryKey: ["auth:status"] });
 
             return data;
         },
         onSuccess: (data) => {
+            setUser(data.user);
+            setToken(data.token);
+            vinaswapApi.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+            queryClient.invalidateQueries({ queryKey: ["auth:status"] });
             console.log('Login successful:', data);
         },
         onError: (error) => {
@@ -119,7 +117,7 @@ export const useWalletLogin = () => {
     );
 
     const error = signError || loginMutation.error;
-    const isAuthenticated = !!user;
+    const isAuthenticated = !!user && !!address
 
 
     return {
