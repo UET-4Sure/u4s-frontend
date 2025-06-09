@@ -2,7 +2,7 @@
 
 import { useAppKit, useAppKitAccount, useAppKitState } from "@reown/appkit/react";
 import { Button, ButtonProps } from "../ui/button";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { vinaswapApi } from "@/services/axios";
 import { useSignMessage } from "wagmi";
@@ -25,7 +25,7 @@ export const ConnectWalletButton: React.FC<ConnectWalletButtonProps> = (props) =
             }}
             {...props}
         >
-            Connect Wallet
+            Kết nối
         </Button>
     );
 }

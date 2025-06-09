@@ -1,30 +1,47 @@
-"use client"
+"use client";
 
-import { Config, cookieToInitialState, WagmiProvider } from 'wagmi'
-import reown from '@/utils/reown';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { createAppKit } from '@reown/appkit/react';
+import { useAppKit } from "@reown/appkit/react";
+import { useEffect } from "react";
+import { useAccount } from "wagmi";
+import { FallbackView } from "./_components/FallbackView";
+import NextImage from "next/image";
+import { Image } from "@chakra-ui/react";
+import { useWalletLogin } from "@/hooks/useWalletLogin";
 
-const queryClient = new QueryClient();
+interface ProviderProps extends React.PropsWithChildren { }
+export const Provider: React.FC<ProviderProps> = ({ children }) => {
+    const { isAuthenticated } = useWalletLogin();
 
-const modal = createAppKit(reown.appKit);
+    const { open } = useAppKit();
 
-export function Provider({
-    children,
-    cookies,
-}: Readonly<{
-    children: React.ReactNode;
-    cookies: string | null;
-}>) {
-    const initialState = cookieToInitialState(reown.wagmiAdapter.wagmiConfig as Config, cookies);
+
+    useEffect(() => {
+        if (!isAuthenticated) {
+            open({
+                view: "Connect",
+            });
+        }
+    }, [isAuthenticated]);
+
+    if (!isAuthenticated) {
+        return <>
+            <Image asChild pos={"absolute"} pointerEvents={"none"} zIndex={"-1"}>
+                <NextImage
+                    src={"/assets/bg-cover-plateau.png"}
+                    alt={"Plateau Background"}
+                    fill
+                />
+            </Image>
+            <FallbackView
+                label="Bạn chưa kết nối ví"
+                subtitle="Vui lòng kết nối ví để tiếp tục"
+            />
+        </>;
+    };
 
     return (
         <>
-            <WagmiProvider config={reown.wagmiAdapter.wagmiConfig} initialState={initialState}>
-                <QueryClientProvider client={queryClient}>
-                    {children}
-                </QueryClientProvider>
-            </WagmiProvider>
+            {children}
         </>
     );
-}
+};
