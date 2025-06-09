@@ -1,4 +1,4 @@
-enum KycStatus {
+export enum KycStatus {
     NONE = 'none',
     PENDING = 'pending',
     APPROVED = 'approved',
@@ -13,7 +13,7 @@ interface User {
     bannedUntil: Date | null;
 }
 
-interface AuthLoginResponse {
+export interface AuthLoginResponse {
     token: string;
     user: User;
 }

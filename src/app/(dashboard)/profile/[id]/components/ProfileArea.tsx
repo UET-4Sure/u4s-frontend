@@ -11,6 +11,7 @@ import { FallbackView } from "@/app/(dashboard)/_components/FallbackView";
 import { Button } from "@/components/ui/button";
 import { useUserStore } from "@/hooks/useUserStore";
 import { useMemo } from "react";
+import { KycStatus } from "@/types/core";
 
 interface KycArea extends CenterProps {
 }
@@ -61,7 +62,7 @@ interface Props extends StackProps {
 export const ProfileArea: React.FC<Props> = ({ children, ...props }) => {
     const { address, isConnected } = useAppKitAccount();
     const { user } = useUserStore();
-    const isKyc = useMemo(() => user?.kycStatus === "verified", [user?.kycStatus]);
+    const isKyc = useMemo(() => user?.kycStatus === KycStatus.APPROVED, [user?.kycStatus]);
 
     const { data: ensName } = useEnsName({
         address: address as `0x${string}`,
