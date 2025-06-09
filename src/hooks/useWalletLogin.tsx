@@ -1,123 +1,80 @@
 "use client";
 
-import { vinaswapApi } from '@/services/axios';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useAccount, useSignMessage } from 'wagmi';
-import { useUserStore } from './useUserStore';
-import { useEffect, useMemo, useRef } from 'react';
-import { useTokenStore } from './useTokenStore';
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAccount, useAccountEffect, useSignMessage } from "wagmi";
+import { useUserStore } from "./useUserStore";
+import { useTokenStore } from "./useTokenStore";
+import { useEffect, useRef } from "react";
+import { vinaswapApi } from "@/services/axios";
 
 export const useWalletLogin = () => {
+    const queryClient = useQueryClient();
     const { address } = useAccount();
     const { setUser, user } = useUserStore();
     const { setToken, token } = useTokenStore();
-    const queryClient = useQueryClient();
-    const loginAttempted = useRef(false);
 
-
-    const nonceQuery = useQuery({
+    useQuery({
         queryKey: ["auth:nonce", address],
-        enabled: !!address,
         queryFn: async () => {
             const res = await vinaswapApi.get(`/auth/nonce?address=${address}`);
-            return res.data.nonce as string;
+            const nonce = res.data.nonce;
+
+            await loginMutation.mutateAsync(nonce);
+
+            return nonce;
         },
+        enabled: !!address && !token && !user,
         staleTime: Infinity,
-        gcTime: 10 * 60 * 1000,
     });
 
-    // const authStatusQuery = useQuery({
-    //     queryKey: ["auth:status", address],
-    //     enabled: !!address,
-    //     queryFn: async () => {
-    //         const res = await vinaswapApi.get(`/users/wallet/${address}`);
-    //         setUser(res.data.user as User);
-    //     },
-    //     staleTime: Infinity,
-    //     gcTime: 10 * 60 * 1000,
-    //     retry: false,
-    // });
-
-    const { signMessageAsync, data: signMessageData, isPending: isSignPending, error: signError, variables } = useSignMessage();
+    const { signMessageAsync, isPending: isSignPending, error: signError } = useSignMessage();
 
     const loginMutation = useMutation({
         mutationKey: ["auth:wallet-login", address],
-        mutationFn: async () => {
-            if (!nonceQuery.data || !address) {
-                throw new Error('Missing nonce or address');
-            }
+        mutationFn: async (nonce: string) => {
+            const signature = await signMessageAsync({ message: nonce });
 
-            const signature = await signMessageAsync({
-                message: nonceQuery.data,
-            });
-
-            const res = await vinaswapApi.post('/auth/wallet-login', {
+            const res = await vinaswapApi.post("/auth/wallet-login", {
                 address,
-                nonce: nonceQuery.data,
+                nonce,
                 signature,
             });
 
-            const data = res.data;
-
-            return data;
+            return res.data;
         },
         onSuccess: (data) => {
             setUser(data.user);
             setToken(data.token);
-            vinaswapApi.defaults.headers.common['Authorization'] = `Bearer ${data.token}`;
+            vinaswapApi.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
             queryClient.invalidateQueries({ queryKey: ["auth:status"] });
-            console.log('Login successful:', data);
         },
         onError: (error) => {
-            console.error('Login failed:', error);
+            console.error("Login failed:", error);
         },
     });
 
-    useEffect(() => {
-        const shouldAttemptLogin = (
-            !!address &&
-            nonceQuery.isSuccess &&
-            !!nonceQuery.data &&
-            !token &&
-            !loginMutation.isPending &&
-            !loginMutation.isSuccess &&
-            !loginAttempted.current
-        );
 
-        if (shouldAttemptLogin) {
-            loginAttempted.current = true;
-            loginMutation.mutate();
-        }
-    }, [
-        address,
-        nonceQuery.isSuccess,
-        nonceQuery.data,
-        token,
-        loginMutation.isPending,
-        loginMutation.isSuccess,
-    ]);
+    // Handle disconnect
+    // useAccountEffect({
+    //     onConnect: () => {
+    //     },
+    //     onDisconnect: () => {
+    //         setUser(null);
+    //         //   setToken(null);
+    //         delete vinaswapApi.defaults.headers.common["Authorization"];
+    //         queryClient.removeQueries({ queryKey: ["auth:nonce", address] });
+    //     },
+    // });
 
-    // Cleanup when address changes
-    useEffect(() => {
-        loginAttempted.current = false;
-        loginMutation.reset();
-    }, [loginAttempted])
 
-    const isLoading = (
-        nonceQuery.isLoading ||
-        loginMutation.isPending ||
-        isSignPending
-    );
-
+    const isLoading = loginMutation.isPending || isSignPending;
     const error = signError || loginMutation.error;
-    const isAuthenticated = !!user && !!address
-
+    const isAuthenticated = !!user && !!address;
 
     return {
         data: loginMutation.data,
         isLoading,
         isAuthenticated,
         error,
-        nonce: nonceQuery.data,
     };
 };
