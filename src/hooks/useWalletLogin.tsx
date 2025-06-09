@@ -19,7 +19,7 @@ export const useWalletLogin = () => {
             const res = await vinaswapApi.get(`/auth/nonce?address=${address}`);
             return res.data.nonce as string;
         },
-        staleTime: 5 * 60 * 1000,
+        staleTime: Infinity,
         gcTime: 10 * 60 * 1000,
     });
 
@@ -38,7 +38,8 @@ export const useWalletLogin = () => {
                 return { isLoggedIn: false, user: null };
             }
         },
-        staleTime: 2 * 60 * 1000,
+        staleTime: Infinity,
+        gcTime: 10 * 60 * 1000,
         retry: false,
     });
 
@@ -119,7 +120,7 @@ export const useWalletLogin = () => {
     );
 
     const error = signError || loginMutation.error;
-    const isAuthenticated = !!user;
+    const isAuthenticated = !!user && !!address
 
 
     return {
