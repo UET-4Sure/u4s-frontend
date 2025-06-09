@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAccount, useAccountEffect, useSignMessage } from "wagmi";
 import { useUserStore } from "./useUserStore";
 import { useTokenStore } from "./useTokenStore";
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { vinaswapApi } from "@/services/axios";
 
 export const useWalletLogin = () => {
@@ -13,7 +13,7 @@ export const useWalletLogin = () => {
     const { setUser, user } = useUserStore();
     const { setToken, token } = useTokenStore();
 
-    useQuery({
+    const nonceQuery = useQuery({
         queryKey: ["auth:nonce", address],
         queryFn: async () => {
             const res = await vinaswapApi.get(`/auth/nonce?address=${address}`);
@@ -55,24 +55,25 @@ export const useWalletLogin = () => {
 
 
     // Handle disconnect
-    // useAccountEffect({
-    //     onConnect: () => {
-    //     },
-    //     onDisconnect: () => {
-    //         setUser(null);
-    //         //   setToken(null);
-    //         delete vinaswapApi.defaults.headers.common["Authorization"];
-    //         queryClient.removeQueries({ queryKey: ["auth:nonce", address] });
-    //     },
-    // });
+    useAccountEffect({
+        onDisconnect: () => {
+            setUser(null);
+            setToken(null);
+            delete vinaswapApi.defaults.headers.common["Authorization"];
+            queryClient.removeQueries({ queryKey: ["auth:nonce", address] });
+        },
+    });
 
 
-    const isLoading = loginMutation.isPending || isSignPending;
-    const error = signError || loginMutation.error;
-    const isAuthenticated = !!user && !!address;
+    const isLoading = useMemo(() => {
+        return loginMutation.isPending || nonceQuery .isLoading || isSignPending;
+    }, [loginMutation.isPending, nonceQuery.isLoading, isSignPending]);
+    const error = signError || loginMutation.error || nonceQuery.error;
+    const isAuthenticated = useMemo(() => {
+        return !!user && !!token;
+    }, [user, token]);
 
     return {
-        data: loginMutation.data,
         isLoading,
         isAuthenticated,
         error,

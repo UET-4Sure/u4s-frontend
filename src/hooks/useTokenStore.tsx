@@ -3,7 +3,7 @@ import { persist } from 'zustand/middleware';
 
 interface TokenState {
     token: string | null;
-    setToken: (token: string) => void;
+    setToken: (token: string | null) => void;
     clearToken: () => void;
 }
 
