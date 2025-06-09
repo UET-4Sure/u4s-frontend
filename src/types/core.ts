@@ -5,7 +5,7 @@ export enum KycStatus {
     REJECTED = 'rejected',
 }
 
-interface User {
+export interface User {
     id: string;
     walletAddress: string;
     authMethod: string;
