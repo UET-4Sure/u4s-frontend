@@ -66,8 +66,8 @@ export const useWalletLogin = () => {
 
 
     const isLoading = useMemo(() => {
-        return loginMutation.isPending || nonceQuery .isLoading || isSignPending;
-    }, [loginMutation.isPending, nonceQuery.isLoading, isSignPending]);
+        return (loginMutation.isPending || nonceQuery.isLoading || isSignPending) && !user && !token;
+    }, [loginMutation.isPending, nonceQuery.isLoading, isSignPending, user, token]);
     const error = signError || loginMutation.error || nonceQuery.error;
     const isAuthenticated = useMemo(() => {
         return !!user && !!token;
