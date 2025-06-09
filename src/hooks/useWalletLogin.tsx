@@ -4,7 +4,7 @@ import { vinaswapApi } from '@/services/axios';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAccount, useSignMessage } from 'wagmi';
 import { useUserStore } from './useUserStore';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { useTokenStore } from './useTokenStore';
 
 export const useWalletLogin = () => {
@@ -12,6 +12,7 @@ export const useWalletLogin = () => {
     const { setUser, user } = useUserStore();
     const { setToken, token } = useTokenStore();
     const queryClient = useQueryClient();
+    const loginAttempted = useRef(false);
 
 
     const nonceQuery = useQuery({
@@ -37,7 +38,7 @@ export const useWalletLogin = () => {
     //     retry: false,
     // });
 
-    const { signMessageAsync, isPending: isSignPending, error: signError } = useSignMessage();
+    const { signMessageAsync, data: signMessageData, isPending: isSignPending, error: signError, variables } = useSignMessage();
 
     const loginMutation = useMutation({
         mutationKey: ["auth:wallet-login", address],
@@ -47,7 +48,7 @@ export const useWalletLogin = () => {
             }
 
             const signature = await signMessageAsync({
-                message: nonceQuery.data
+                message: nonceQuery.data,
             });
 
             const res = await vinaswapApi.post('/auth/wallet-login', {
@@ -57,7 +58,6 @@ export const useWalletLogin = () => {
             });
 
             const data = res.data;
-
 
             return data;
         },
@@ -75,32 +75,33 @@ export const useWalletLogin = () => {
 
     useEffect(() => {
         const shouldAttemptLogin = (
-            address &&
+            !!address &&
             nonceQuery.isSuccess &&
-            nonceQuery.data &&
+            !!nonceQuery.data &&
+            !token &&
             !loginMutation.isPending &&
             !loginMutation.isSuccess &&
-            !loginMutation.isError
+            !loginAttempted.current
         );
 
         if (shouldAttemptLogin) {
+            loginAttempted.current = true;
             loginMutation.mutate();
         }
     }, [
         address,
         nonceQuery.isSuccess,
         nonceQuery.data,
+        token,
         loginMutation.isPending,
         loginMutation.isSuccess,
-        loginMutation.isError,
     ]);
 
     // Cleanup when address changes
     useEffect(() => {
-        return () => {
-            loginMutation.reset();
-        };
-    }, [address]);
+        loginAttempted.current = false;
+        loginMutation.reset();
+    }, [loginAttempted])
 
     const isLoading = (
         nonceQuery.isLoading ||
