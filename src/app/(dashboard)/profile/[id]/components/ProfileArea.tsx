@@ -16,7 +16,7 @@ interface KycArea extends CenterProps {
 }
 const KycArea: React.FC<KycArea> = ({ children, ...props }) => {
     const { user } = useUserStore();
-    const isKyc = useMemo(() => user?.kycStatus === "verified", [user?.kycStatus]);
+    const isKyc = useMemo(() => user?.kycStatus === KycStatus.APPROVED, [user?.kycStatus]);
 
     if (!isKyc) {
         return (

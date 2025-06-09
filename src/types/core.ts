@@ -1,8 +1,15 @@
+enum KycStatus {
+    NONE = 'none',
+    PENDING = 'pending',
+    APPROVED = 'approved',
+    REJECTED = 'rejected',
+}
+
 interface User {
     id: string;
     walletAddress: string;
     authMethod: string;
-    kycStatus: string;
+    kycStatus: KycStatus;
     bannedUntil: Date | null;
 }
 
