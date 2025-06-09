@@ -12,6 +12,7 @@ import { formatAddress } from "@/libs";
 import { ConnectWalletButton } from "@/components/global/wallet";
 import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "@/components/ui/menu";
 import { motion } from "framer-motion";
+import { useWalletLogin } from "@/hooks/useWalletLogin";
 
 const MotionMenuItem = motion.create(MenuItem);
 
@@ -20,14 +21,15 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
     const { disconnect } = useDisconnect()
     const router = useRouter();
     const { open } = useAppKit();
-    const { address, isConnected, caipAddress, status, embeddedWalletInfo } = useAppKitAccount();
+    const { address, status } = useAppKitAccount();
+    const { isLoading, isAuthenticated } = useWalletLogin();
 
-    const isConnecting = useMemo(() => status === "reconnecting" || status === "connecting", [status]);
+    const isConnecting = useMemo(() => status === "reconnecting" || status === "connecting" || isLoading, [status]);
 
     const { data: ensName } = useEnsName({
         address: address as `0x${string}`,
         query: {
-            enabled: isConnected && !!address,
+            enabled: !!address && isAuthenticated && !isConnecting
         }
     })
     const { data: ensAvatar } = useEnsAvatar({
@@ -65,7 +67,11 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
         }
     ]
 
-    if (!isConnected && !isConnecting) return <ConnectWalletButton />;
+    console.log("isAuthenticated", isAuthenticated);
+    console.log("isConnecting", isConnecting);
+    console.log("isLoading", isLoading);
+
+    if (!isAuthenticated && !isConnecting && !isLoading) return <ConnectWalletButton />;
 
     return (
         <MenuRoot>
@@ -85,7 +91,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
                             <Spinner color={"fg.muted"} size={"sm"} />
                         </>
                     }
-                    <Text fontSize={"sm"} fontWeight={"medium"}>{formatAddress(address)}</Text>
+                    {isAuthenticated && <Text fontSize={"sm"} fontWeight={"medium"}>{formatAddress(address)}</Text>}
                 </HStack>
             </MenuTrigger>
             <MenuContent>

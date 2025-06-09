@@ -6,22 +6,24 @@ import { useAccount } from "wagmi";
 import { FallbackView } from "./_components/FallbackView";
 import NextImage from "next/image";
 import { Image } from "@chakra-ui/react";
+import { useWalletLogin } from "@/hooks/useWalletLogin";
 
 interface ProviderProps extends React.PropsWithChildren { }
 export const Provider: React.FC<ProviderProps> = ({ children }) => {
-    const { isConnected } = useAccount();
+    const { isAuthenticated } = useWalletLogin();
+
     const { open } = useAppKit();
 
 
     useEffect(() => {
-        if (!isConnected) {
+        if (!isAuthenticated) {
             open({
                 view: "Connect",
             });
         }
-    }, [isConnected]);
+    }, [isAuthenticated]);
 
-    if (!isConnected) {
+    if (!isAuthenticated) {
         return <>
             <Image asChild pos={"absolute"} pointerEvents={"none"} zIndex={"-1"}>
                 <NextImage
