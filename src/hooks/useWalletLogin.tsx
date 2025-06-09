@@ -25,20 +25,17 @@ export const useWalletLogin = () => {
         gcTime: 10 * 60 * 1000,
     });
 
-    const authStatusQuery = useQuery({
-        queryKey: ["auth:status", address],
-        enabled: !!address,
-        queryFn: async () => {
-            const res = await vinaswapApi.get(`/users/wallet/${address}`);
-            if (res.data.user) {
-                setUser(res.data.user as User);
-                return { isLoggedIn: true, user: res.data.user };
-            }
-        },
-        staleTime: Infinity,
-        gcTime: 10 * 60 * 1000,
-        retry: false,
-    });
+    // const authStatusQuery = useQuery({
+    //     queryKey: ["auth:status", address],
+    //     enabled: !!address,
+    //     queryFn: async () => {
+    //         const res = await vinaswapApi.get(`/users/wallet/${address}`);
+    //         setUser(res.data.user as User);
+    //     },
+    //     staleTime: Infinity,
+    //     gcTime: 10 * 60 * 1000,
+    //     retry: false,
+    // });
 
     const { signMessageAsync, isPending: isSignPending, error: signError } = useSignMessage();
 
@@ -81,8 +78,6 @@ export const useWalletLogin = () => {
             address &&
             nonceQuery.isSuccess &&
             nonceQuery.data &&
-            authStatusQuery.isSuccess &&
-            !authStatusQuery.data?.isLoggedIn &&
             !loginMutation.isPending &&
             !loginMutation.isSuccess &&
             !loginMutation.isError
@@ -95,8 +90,6 @@ export const useWalletLogin = () => {
         address,
         nonceQuery.isSuccess,
         nonceQuery.data,
-        authStatusQuery.isSuccess,
-        authStatusQuery.data?.isLoggedIn,
         loginMutation.isPending,
         loginMutation.isSuccess,
         loginMutation.isError,
@@ -111,7 +104,6 @@ export const useWalletLogin = () => {
 
     const isLoading = (
         nonceQuery.isLoading ||
-        authStatusQuery.isLoading ||
         loginMutation.isPending ||
         isSignPending
     );
