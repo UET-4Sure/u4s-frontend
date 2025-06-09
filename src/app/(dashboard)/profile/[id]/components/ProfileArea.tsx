@@ -9,13 +9,14 @@ import { FaCheck } from "react-icons/fa6";
 import { formatAddress } from "@/libs";
 import { FallbackView } from "@/app/(dashboard)/_components/FallbackView";
 import { Button } from "@/components/ui/button";
+import { useUserStore } from "@/hooks/useUserStore";
+import { useMemo } from "react";
 
 interface KycArea extends CenterProps {
-    kycQuery: ReturnType<typeof useQuery>;
 }
 const KycArea: React.FC<KycArea> = ({ children, ...props }) => {
-    const { kycQuery } = props;
-    const { data: isKyc } = kycQuery;
+    const { user } = useUserStore();
+    const isKyc = useMemo(() => user?.kycStatus === "verified", [user?.kycStatus]);
 
     if (!isKyc) {
         return (
@@ -59,6 +60,8 @@ interface Props extends StackProps {
 }
 export const ProfileArea: React.FC<Props> = ({ children, ...props }) => {
     const { address, isConnected } = useAppKitAccount();
+    const { user } = useUserStore();
+    const isKyc = useMemo(() => user?.kycStatus === "verified", [user?.kycStatus]);
 
     const { data: ensName } = useEnsName({
         address: address as `0x${string}`,
@@ -71,15 +74,7 @@ export const ProfileArea: React.FC<Props> = ({ children, ...props }) => {
         query: { enabled: !!ensName }
     });
 
-    const kycQuery = useQuery({
-        queryKey: ["isKyc", address],
-        queryFn: async () => {
-            if (!address) return null;
-            return false;
-        },
-    });
 
-    const { data: isKyc } = kycQuery;
 
     const Avatar = () => {
         return (
@@ -95,6 +90,8 @@ export const ProfileArea: React.FC<Props> = ({ children, ...props }) => {
     }
 
     const InfoSnippet = () => {
+        if (!user) return null;
+
         return (
             <VStack>
                 <Tag
@@ -104,6 +101,9 @@ export const ProfileArea: React.FC<Props> = ({ children, ...props }) => {
                 >
                     {isKyc ? "Đã xác minh" : "Chưa xác minh"}
                 </Tag>
+                <Text fontSize={"lg"} textAlign={"center"} fontWeight={"semibold"}>
+                    {user.id}
+                </Text>
                 <Link
                     href={`https://etherscan.io/address/${address}`}
                     target="_blank"
@@ -120,7 +120,7 @@ export const ProfileArea: React.FC<Props> = ({ children, ...props }) => {
                 <Avatar />
                 <InfoSnippet />
             </VStack>
-            <KycArea kycQuery={kycQuery} />
+            <KycArea />
         </VStack>
     );
 };
