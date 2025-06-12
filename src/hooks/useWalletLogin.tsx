@@ -4,7 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAccount, useAccountEffect, useSignMessage } from "wagmi";
 import { useUserStore } from "./useUserStore";
 import { useTokenStore } from "./useTokenStore";
-import { useEffect, useMemo, useRef } from "react";
+import { useMemo } from "react";
 import { vinaswapApi } from "@/services/axios";
 
 export const useWalletLogin = () => {
@@ -14,7 +14,7 @@ export const useWalletLogin = () => {
     const { setToken, token } = useTokenStore();
 
     const nonceQuery = useQuery({
-        queryKey: ["auth:nonce", address],
+        queryKey: ["auth:nonce", address, token, user],
         queryFn: async () => {
             const res = await vinaswapApi.get(`/auth/nonce?address=${address}`);
             const nonce = res.data.nonce;
@@ -32,6 +32,11 @@ export const useWalletLogin = () => {
     const loginMutation = useMutation({
         mutationKey: ["auth:wallet-login", address],
         mutationFn: async (nonce: string) => {
+            if (user && token) return;
+
+            if (!address) {
+                throw new Error("No wallet address found");
+            }
             const signature = await signMessageAsync({ message: nonce });
 
             const res = await vinaswapApi.post("/auth/wallet-login", {

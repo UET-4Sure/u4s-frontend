@@ -10,13 +10,13 @@ import { useWalletLogin } from "@/hooks/useWalletLogin";
 
 interface ProviderProps extends React.PropsWithChildren { }
 export const Provider: React.FC<ProviderProps> = ({ children }) => {
-    const { isAuthenticated } = useWalletLogin();
+    const { isAuthenticated, isLoading } = useWalletLogin();
 
     const { open } = useAppKit();
 
 
     useEffect(() => {
-        if (!isAuthenticated) {
+        if (!isAuthenticated && !isLoading) {
             open({
                 view: "Connect",
             });
