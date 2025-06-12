@@ -2,8 +2,8 @@
 
 import { toaster } from '@/components/ui/toaster'
 import { vinaswapApi } from '@/services/axios'
-import { CreateKycApplicationBody } from '@/types/core'
-import { EkycSdkConfig } from '@/types/vnpt-sdk'
+import { CreateKycApplicationBody, DocumentTypeMap } from '@/types/core'
+import { EkycResponse, EkycSdkConfig } from '@/types/vnpt-sdk'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, useRef, RefObject } from 'react'
@@ -38,13 +38,7 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
             }
 
             // Replace with your API call to submit KYC data
-            await vinaswapApi.post(`wallet/${address}/kyc/applications`, {
-                documentType: data.documentType,
-                documentNumber: data.documentNumber,
-                documentFrontImageUrl: data.documentFrontImageUrl,
-                documentBackImageUrl: data.documentBackImageUrl,
-                walletAddress: address,
-            } satisfies CreateKycApplicationBody);
+            await vinaswapApi.post(`/users/wallet/${address}/kyc/applications`, data);
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({
@@ -55,17 +49,17 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
             console.error('Error submitting KYC:', error);
         },
     });
-    const callBackEndFlow = async (data: any) => {
+    const callBackEndFlow = async (data: EkycResponse) => {
         if (onResult) {
             onResult(data);
         }
 
+        console.log('KYC Result:', data);
         submitKycApplication({
-            documentType: data.type_document,
-            documentNumber: data.document_number,
-            documentFrontImageUrl: '',
-            documentBackImageUrl: '',
-            walletAddress: ''
+            documentType: DocumentTypeMap[data.type_document],
+            documentNumber: data.ocr.object.id,
+            documentBackImage: data.base64_doc_img.img_back,
+            documentFrontImage: data.base64_doc_img.img_front,
         });
 
         if (onFinalResult) {
