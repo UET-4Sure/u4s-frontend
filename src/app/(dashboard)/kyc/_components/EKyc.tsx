@@ -7,6 +7,8 @@ import { chakra } from '@chakra-ui/react'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, useRef, RefObject } from 'react'
+import { SubmitKycApplicationDialog } from './SubmitKycApplicationDialog'
+import { toaster } from '@/components/ui/toaster'
 
 interface EkycProps {
     keysConfig: {
@@ -30,20 +32,23 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
     const { address } = useAppKitAccount();
     const queryClient = useQueryClient();
 
-    const { mutate: submitKycApplication } = useMutation({
+    const { mutate: submitKycApplication, isPending: isSubmiting } = useMutation({
         mutationKey: ['kyc:submit'],
         mutationFn: async (data: CreateKycApplicationBody) => {
             if (!address) {
                 throw new Error('Not connected to a wallet');
             }
 
-            // Replace with your API call to submit KYC data
             await vinaswapApi.post(`/users/wallet/${address}/kyc/applications`, data);
         },
         onSuccess: (data) => {
             queryClient.invalidateQueries({
                 queryKey: ['kyc:status', address],
             });
+            toaster.success({
+                title: 'Xác minh thành công',
+                description: 'KYC của bạn đã được xác minh thành công. ID NFT sẽ được gửi đến ví của bạn.',
+            })
         },
         onError: (error) => {
             console.error('Error submitting KYC:', error);
@@ -102,6 +107,9 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
     }, []);
 
     return (
-        <chakra.div id="ekyc_sdk_intergrated" w={"full"}/>
+        <>
+            <chakra.div id="ekyc_sdk_intergrated" w={"full"} />
+            <SubmitKycApplicationDialog open={isSubmiting} />
+        </>
     )
 }
