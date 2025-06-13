@@ -1,9 +1,9 @@
 'use client'
 
-import { toaster } from '@/components/ui/toaster'
 import { vinaswapApi } from '@/services/axios'
 import { CreateKycApplicationBody, DocumentTypeMap } from '@/types/core'
 import { EkycResponse, EkycSdkConfig } from '@/types/vnpt-sdk'
+import { chakra } from '@chakra-ui/react'
 import { useAppKitAccount } from '@reown/appkit/react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, useRef, RefObject } from 'react'
@@ -102,6 +102,6 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
     }, []);
 
     return (
-        <div id="ekyc_sdk_intergrated" />
+        <chakra.div id="ekyc_sdk_intergrated" w={"full"}/>
     )
 }
