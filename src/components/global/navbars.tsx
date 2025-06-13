@@ -7,6 +7,7 @@ import { Tag } from "../ui/tag";
 import { APP_VERSION } from "@/config/constants";
 import { ProfileMenu } from "@/app/(dashboard)/_components/ProfileMenu";
 import { ConnectWalletButton } from "./wallet";
+import { HoverCardContent, HoverCardRoot, HoverCardTrigger } from "../ui/hover-card";
 const ChakraHeader = chakra.header;
 
 const Brand = () => (
@@ -68,6 +69,40 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
 
 interface DashboardNavbarProps extends HtmlProps { }
 export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
+    const featLinks = [
+        { label: "Trao đổi", href: "/dashboard/swap" },
+        { label: "Mua", href: "/dashboard/buy" },
+        { label: "Bán", href: "/dashboard/sell" },
+    ]
+    const NavLinks = () => (
+        <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
+            <For each={featLinks}>
+                {(path) => (
+                    <Link key={path.label} href={path.href}>{path.label}</Link>
+                )}
+            </For>
+        </HStack>
+    );
+
+    const TradeMenu = () => (
+        <HoverCardRoot openDelay={100}>
+            <HoverCardTrigger asChild>
+                <Link href={"/dashboard/trade"}>Giao dịch</Link>
+            </HoverCardTrigger>
+            <HoverCardContent>
+                <VStack align={"start"}>
+                    <For each={featLinks}>
+                        {(path) => (
+                            <Link href={path.href} key={path.label}>
+                                {path.label}
+                            </Link>
+                        )}
+                    </For>
+                </VStack>
+            </HoverCardContent>
+        </HoverCardRoot>
+    )
+
     return (
         <ChakraHeader
             position="sticky"
@@ -79,6 +114,9 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         >
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
                 <BrandAndAppSnippet />
+                <HStack>
+                    <TradeMenu />
+                </HStack>
                 <ProfileMenu />
             </HStack>
         </ChakraHeader>
