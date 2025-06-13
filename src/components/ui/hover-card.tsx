@@ -15,7 +15,7 @@ export const HoverCardContent = React.forwardRef<
   return (
     <Portal disabled={!portalled} container={portalRef}>
       <HoverCard.Positioner>
-        <HoverCard.Content ref={ref} {...rest} />
+        <HoverCard.Content rounded={"2xl"} bg={"bg.subtle"} ref={ref} {...rest} />
       </HoverCard.Positioner>
     </Portal>
   )
