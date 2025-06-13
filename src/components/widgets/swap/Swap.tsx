@@ -261,6 +261,11 @@ interface SwapWidgetProps extends StackProps {
     // User context
     userAddress?: string;
     onStateChange?: (state: SwapState) => void;
+
+    // Props
+    swapButtonProps?: SwapButtonProps;
+    swapInputProps?: SwapInputProps;
+    switchButtonProps?: SwitchButtonProps;
 }
 export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
     onSwap,
@@ -271,7 +276,12 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
     defaultFromToken = null,
     defaultToToken = null,
     userAddress,
+
     onStateChange,
+
+    swapButtonProps,
+    swapInputProps,
+    switchButtonProps,
     ...props
 }) => {
     const swapState = useSwapState({
@@ -343,6 +353,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                     balanceProps={{
                         color: "fg.muted",
                     }}
+                    {...swapInputProps}
                 />
                 <Center position={"absolute"} top={"50%"} left={"50%"} transform={"translate(-50%, -50%)"} zIndex={1}>
                     <SwitchButton
@@ -351,6 +362,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                             console.log("Swapped tokens:", swapState.fromToken, "and", swapState.toToken);
                         }}
                         loading={swapState.isLoading}
+                        {...switchButtonProps}
                     />
                 </Center>
                 <SwapInput
@@ -383,7 +395,10 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                     }}
                 />
             </VStack>
-            <SwapButton />
+            <SwapButton
+                onClick={handleSwap}
+                {...swapButtonProps}
+            />
         </VStack>
     );
 }
