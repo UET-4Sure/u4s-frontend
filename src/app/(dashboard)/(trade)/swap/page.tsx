@@ -4,9 +4,6 @@ import { Swap } from "./_components/Swap";
 export default function Page() {
     return (
         <div>
-            <TradeTabs
-                component={<Swap />}
-            />
         </div>
     );
 }

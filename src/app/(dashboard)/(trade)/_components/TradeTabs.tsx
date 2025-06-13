@@ -4,14 +4,13 @@ import { For, Link, TabsContent, TabsList, TabsRoot, TabsRootProps, TabsTrigger 
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { Swap } from "../swap/_components/Swap";
 
 type TradeTabValue = "swap" | "buy";
 
 interface TradeTabsProps extends TabsRootProps {
-    component?: React.ReactElement;
 }
 export function TradeTabs(props: TradeTabsProps) {
-    const { component } = props;
     const pathname = usePathname();
     const initialTab = pathname.match(/\/(swap|buy)/)?.[1] as TradeTabValue || "swap";
     const [activeTab, setActiveTab] = useState<TradeTabValue>(initialTab);
@@ -21,13 +20,13 @@ export function TradeTabs(props: TradeTabsProps) {
             value: "swap" as TradeTabValue,
             label: "Trao đổi",
             href: "/swap",
-            component: component
+            component: <Swap/>
         },
         {
             value: "buy" as TradeTabValue,
             label: "Bán",
             href: "/buy",
-            component: component
+            component: null // Placeholder for future component if needed
         }
     ]
     return (
