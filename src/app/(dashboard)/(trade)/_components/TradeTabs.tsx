@@ -7,8 +7,11 @@ import { useEffect, useState } from "react";
 
 type TradeTabValue = "swap" | "buy";
 
-interface TradeTabsProps extends TabsRootProps { }
+interface TradeTabsProps extends TabsRootProps {
+    component?: React.ReactElement;
+ }
 export function TradeTabs(props: TradeTabsProps) {
+    const { component } = props;
     const pathname = usePathname();
     const initialTab = pathname.match(/\/(swap|buy)/)?.[1] as TradeTabValue || "swap";
     const [activeTab, setActiveTab] = useState<TradeTabValue>(initialTab);
@@ -17,12 +20,14 @@ export function TradeTabs(props: TradeTabsProps) {
         {
             value: "swap" as TradeTabValue,
             label: "Trao đổi",
-            href: "/swap"
+            href: "/swap",
+            component: component
         },
         {
             value: "buy" as TradeTabValue,
             label: "Bán",
-            href: "/buy"
+            href: "/buy",
+            component: component
         }
     ]
     return (
