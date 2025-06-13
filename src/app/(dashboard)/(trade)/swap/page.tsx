@@ -6,8 +6,4 @@ export default function Page() {
             <TradeTabs />
         </div>
     );
-}export default function Page() {
-    return (
-        <></>
-    )
 }
