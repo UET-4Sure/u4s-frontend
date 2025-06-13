@@ -1,6 +1,6 @@
 "use client";
 
-import { Link, TabsList, TabsRoot, TabsRootProps, TabsTrigger } from "@chakra-ui/react";
+import { For, Link, TabsList, TabsRoot, TabsRootProps, TabsTrigger } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -13,24 +13,54 @@ export function TradeTabs(props: TradeTabsProps) {
     const initialTab = pathname.match(/\/(swap|buy)/)?.[1] as TradeTabValue || "swap";
     const [activeTab, setActiveTab] = useState<TradeTabValue>(initialTab);
 
+    const tabs = [
+        {
+            value: "swap" as TradeTabValue,
+            label: "Trao đổi",
+            href: "/swap"
+        },
+        {
+            value: "buy" as TradeTabValue,
+            label: "Bán",
+            href: "/buy"
+        }
+    ]
     return (
-        <TabsRoot defaultValue={activeTab}>
+        <TabsRoot
+            _open={{
+                animationName: "fade-in, scale-in",
+                animationDuration: "300ms",
+            }}
+            _closed={{
+                animationName: "fade-out, scale-out",
+                animationDuration: "120ms",
+            }}
+            variant={"subtle"}
+            defaultValue={activeTab}
+        >
             <TabsList>
-                <TabsTrigger value="swap" asChild>
-                    <Link unstyled asChild>
-                        <NextLink href={"/swap"}>
-                            Trao đổi
-                        </NextLink>
-                    </Link>
-                </TabsTrigger>
-                <TabsTrigger value="buy" asChild>
-                    <Link unstyled asChild>
-                        <NextLink href={"/buy"}>
-                            Bán
-                        </NextLink>
-                    </Link>
-                </TabsTrigger>
-
+                <For each={tabs}>
+                    {(tab) => (
+                        <TabsTrigger
+                            key={tab.value}
+                            value={tab.value}
+                            rounded={"full"}
+                            _selected={{
+                                bg: "bg.subtle",
+                                shadow: "sm",
+                                animationName: "scale-in",
+                                animationDuration: "120ms"
+                            }}
+                            asChild
+                        >
+                            <Link unstyled asChild>
+                                <NextLink href={tab.href}>
+                                    {tab.label}
+                                </NextLink>
+                            </Link>
+                        </TabsTrigger>
+                    )}
+                </For>
             </TabsList>
         </TabsRoot>
     )
