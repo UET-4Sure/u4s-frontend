@@ -1,14 +1,17 @@
 "use client";
 
-import { For, Link, TabsList, TabsRoot, TabsRootProps, TabsTrigger } from "@chakra-ui/react";
+import { For, Link, TabsContent, TabsList, TabsRoot, TabsRootProps, TabsTrigger } from "@chakra-ui/react";
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 
 type TradeTabValue = "swap" | "buy";
 
-interface TradeTabsProps extends TabsRootProps { }
+interface TradeTabsProps extends TabsRootProps {
+    component?: React.ReactElement;
+}
 export function TradeTabs(props: TradeTabsProps) {
+    const { component } = props;
     const pathname = usePathname();
     const initialTab = pathname.match(/\/(swap|buy)/)?.[1] as TradeTabValue || "swap";
     const [activeTab, setActiveTab] = useState<TradeTabValue>(initialTab);
@@ -17,12 +20,14 @@ export function TradeTabs(props: TradeTabsProps) {
         {
             value: "swap" as TradeTabValue,
             label: "Trao đổi",
-            href: "/swap"
+            href: "/swap",
+            component: component
         },
         {
             value: "buy" as TradeTabValue,
             label: "Bán",
-            href: "/buy"
+            href: "/buy",
+            component: component
         }
     ]
     return (
@@ -62,6 +67,13 @@ export function TradeTabs(props: TradeTabsProps) {
                     )}
                 </For>
             </TabsList>
+            <For each={tabs}>
+                {(tab) => (
+                    <TabsContent key={tab.value} value={tab.value}>
+                        {tab.component}
+                    </TabsContent>
+                )}
+            </For>
         </TabsRoot>
     )
 }
