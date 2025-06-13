@@ -114,7 +114,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         >
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
                 <BrandAndAppSnippet />
-                <HStack>
+                <HStack flex={"1"}>
                     <TradeMenu />
                 </HStack>
                 <ProfileMenu />
