@@ -4,57 +4,15 @@ import { SwapWidget } from "@/components/widgets/swap/Swap";
 import { StackProps } from "@chakra-ui/react";
 import { useWriteContract } from "wagmi";
 import {
-  HOOK_CONTRACT,
-  MIN_PRICE_LIMIT,
-  MAX_PRICE_LIMIT,
-  USDC_WETH_POOL_ADDRESS,
-  USDC_ADDRESS,
-  WETH_ADDRESS,
-} from "./Constant";  
+  PRICE_LIMITS,
+  getPoolConfig,
+  getZeroForOne,
+} from "./Config";
 import ERC20_ABI from "@/abis/ERC20.json";
 import POOL_SWAP_TEST_CONTRACT_ABI from "@/abis/PoolSwapTest.json";
 import { ethers } from "ethers";
 
 interface Props extends StackProps {}
-
-// Define pool configuration type
-type PoolConfig = {
-  address: `0x${string}`;
-  fee: number;
-  tickSpacing: number;
-  token0: string; // token0 address in lowercase
-  token1: string; // token1 address in lowercase
-};
-
-// Create a mapping of token pairs to their pool configurations
-const POOL_CONFIGS: Record<string, PoolConfig> = {
-  [`${WETH_ADDRESS.toLowerCase()}-${USDC_ADDRESS.toLowerCase()}`]: {
-    address: USDC_WETH_POOL_ADDRESS as `0x${string}`,
-    fee: 3000,
-    tickSpacing: 60,
-    token0: USDC_ADDRESS.toLowerCase(),
-    token1: WETH_ADDRESS.toLowerCase(),
-  },
-  [`${USDC_ADDRESS.toLowerCase()}-${WETH_ADDRESS.toLowerCase()}`]: {
-    address: USDC_WETH_POOL_ADDRESS as `0x${string}`,
-    fee: 3000,
-    tickSpacing: 60,
-    token0: USDC_ADDRESS.toLowerCase(),
-    token1: WETH_ADDRESS.toLowerCase(),
-  },
-};
-
-// Function to get pool configuration based on token addresses
-const getPoolConfig = (fromTokenAddress: string, toTokenAddress: string): PoolConfig | null => {
-  const key = `${fromTokenAddress.toLowerCase()}-${toTokenAddress.toLowerCase()}`;
-  return POOL_CONFIGS[key] || null;
-};
-
-// Function to determine zeroForOne based on pool and token order
-const getZeroForOne = (fromTokenAddress: string, poolConfig: PoolConfig): boolean => {
-  const fromToken = fromTokenAddress.toLowerCase();
-  return fromToken === poolConfig.token0;
-};
 
 export const Swap: React.FC<Props> = ({ children, ...props }) => {
   const { writeContractAsync } = useWriteContract();
@@ -82,43 +40,44 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
         address: swapData.fromToken.address as `0x${string}`,
         abi: ERC20_ABI.abi,
         functionName: "approve",
-        args: [poolConfig.address, ethers.parseUnits(swapData.fromAmount.toString(), 18)],
+        args: [poolConfig.poolAddress, ethers.parseUnits(swapData.fromAmount.toString(), 18)],
       });
 
-      // PoolKey struct
-      const poolKey = [
-        swapData.fromToken.address, // currency0
-        swapData.toToken.address, // currency1
-        poolConfig.fee, // fee
-        poolConfig.tickSpacing, // tickSpacing
-        HOOK_CONTRACT, // hooks
-      ];
+      const zeroForOne = getZeroForOne(swapData.fromToken.address, poolConfig.poolKey);
+      
+      // CURRENTLY HARDCODED TO SWAP EXACT TOKEN IN FOR NOW
+      const amountSpecified = ethers.parseUnits((-swapData.fromAmount).toString(), 18); 
 
-      const amount = -swapData.fromAmount; // @TODO: HARDCODED SWAP EXACT TOKEN IN FOR NOW 
-      const amountSpecified = ethers.parseUnits(amount.toString(), 18);
-      const zeroForOne = getZeroForOne(swapData.fromToken.address, poolConfig);
+      // Format pool key as array for contract call
+      const poolKeyArray = [
+        poolConfig.poolKey.token0 as `0x${string}`,
+        poolConfig.poolKey.token1 as `0x${string}`,
+        poolConfig.poolKey.fee,
+        poolConfig.poolKey.tickSpacing,
+        poolConfig.poolKey.hooks as `0x${string}`,
+      ] as const;
 
       // SwapParams struct
       const swapParams = [
         zeroForOne,
         amountSpecified,
-        zeroForOne ? MIN_PRICE_LIMIT : MAX_PRICE_LIMIT,
-      ];
+        zeroForOne ? PRICE_LIMITS.MIN : PRICE_LIMITS.MAX,
+      ] as const;
 
       // TestSettings struct
       const testSettings = [
         false, // takeClaims
         false, // settleUsingBurn
-      ];
+      ] as const;
 
       const hookData = "0x";
 
       // Execute the swap
       await writeContractAsync({
-        address: poolConfig.address,
+        address: poolConfig.poolAddress as `0x${string}`,
         abi: POOL_SWAP_TEST_CONTRACT_ABI.abi,
         functionName: "swap",
-        args: [poolKey, swapParams, testSettings, hookData],
+        args: [poolKeyArray, swapParams, testSettings, hookData],
       });
 
     } catch (error) {
