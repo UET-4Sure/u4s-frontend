@@ -11,8 +11,8 @@ import {
   USDC_ADDRESS,
   WETH_ADDRESS,
 } from "./Constant";  
-import ERC20_ABI from "@/app/(dashboard)/(trade)/swap/abi/ERC20.json";
-import POOL_SWAP_TEST_CONTRACT_ABI from "@/app/(dashboard)/(trade)/swap/abi/PoolSwapTest.json";
+import ERC20_ABI from "@/abis/ERC20.json";
+import POOL_SWAP_TEST_CONTRACT_ABI from "@/abis/PoolSwapTest.json";
 import { ethers } from "ethers";
 
 interface Props extends StackProps {}
@@ -60,7 +60,6 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
   const { writeContractAsync } = useWriteContract();
 
   const handleSwap = async (swapData: any) => {
-    console.log("handleSwap called with data:", swapData);
     try {
       if (!swapData.fromToken || !swapData.toToken || !swapData.fromAmount) {
         console.error("Missing required swap data");
@@ -78,7 +77,6 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
         return;
       }
 
-      console.log("Approving token...");
       // First approve the token
       await writeContractAsync({
         address: swapData.fromToken.address as `0x${string}`,
@@ -96,7 +94,7 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
         HOOK_CONTRACT, // hooks
       ];
 
-      const amount = -swapData.fromAmount; // @TODO: check if fromAmount is negative, toAmount is positive
+      const amount = -swapData.fromAmount; // @TODO: HARDCODED SWAP EXACT TOKEN IN FOR NOW 
       const amountSpecified = ethers.parseUnits(amount.toString(), 18);
       const zeroForOne = getZeroForOne(swapData.fromToken.address, poolConfig);
 
@@ -115,7 +113,6 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
 
       const hookData = "0x";
 
-      console.log("Executing swap...");
       // Execute the swap
       await writeContractAsync({
         address: poolConfig.address,
@@ -124,7 +121,6 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
         args: [poolKey, swapParams, testSettings, hookData],
       });
 
-      console.log("Swap executed successfully");
     } catch (error) {
       console.error("Error during swap:", error);
     }
