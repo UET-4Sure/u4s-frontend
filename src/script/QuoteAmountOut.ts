@@ -24,16 +24,17 @@ export async function quoteAmountOut(tokenIn: string, tokenOut: string, amountIn
     const zeroForOne = getZeroForOne(tokenIn, poolConfig.poolKey);
 
     // Use staticCall for read-only operations
-    const quotedAmountOut = await quoterContract.quoteExactInputSingle.staticCall({
-        poolKey: poolConfig.poolKey,
-        zeroForOne: zeroForOne,
-        exactAmount: ethers.parseUnits(amountIn.toString(), 18), 
-        hookData: "0x00",
-    })
-
-    console.log(quotedAmountOut);
-    
-    return ethers.formatUnits(quotedAmountOut.amountOut, 18);
+    try {
+        const quotedAmountOut = await quoterContract.quoteExactInputSingle.staticCall({
+            poolKey: poolConfig.poolKey,
+            zeroForOne: zeroForOne,
+            exactAmount: ethers.parseUnits(amountIn.toString(), 18), 
+            hookData: "0x00",
+        })
+        return ethers.formatUnits(quotedAmountOut.amountOut, 18);
+    } catch (error) {
+        return 0;
+    }
 }
 
 // // Add test function
