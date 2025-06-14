@@ -7,7 +7,7 @@ import { CgArrowsExchangeAltV } from "react-icons/cg";
 import numberal from "numeral";
 
 import { SwapState, Token } from "../type";
-import { useSwapQuote, useSwapState, useTokenBalance } from "./hooks";
+import { useSwapQuote, useSwapState, useTokenBalance, useTokenListBalances } from "./hooks";
 import { SelectTokenDialog, SelectTokenDialogProps } from "../components/SelectTokenDialog";
 import { motion, MotionProps, useCycle } from "framer-motion";
 import { Button, ButtonProps } from "@/components/ui/button";
@@ -29,6 +29,7 @@ interface SwapInputProps extends StackProps {
     onMaxClick?: () => void;
     disabled?: boolean;
     readOnly?: boolean;
+    userAddress?: string;
 
     wrapperProps?: StackProps;
     inputProps?: InputProps;
@@ -46,6 +47,7 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
     onMaxClick,
     disabled = false,
     readOnly = false,
+    userAddress,
 
     wrapperProps,
     inputProps,
@@ -99,6 +101,19 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
             price: '1.15',
         },
     ];
+
+    const { data: tokenBalances } = useTokenListBalances(
+        tokenList.length > 0 ? tokenList : sampleTokens,
+        userAddress
+    );
+
+    const tokensWithBalances = useMemo(() => {
+        const tokens = tokenList.length > 0 ? tokenList : sampleTokens;
+        return tokens.map(token => ({
+            ...token,
+            balance: tokenBalances?.[token.address.toLowerCase()] || '0'
+        }));
+    }, [tokenList, sampleTokens, tokenBalances]);
 
     const handleTokenSelect = useCallback((token: Token) => {
         onTokenSelect(token);
@@ -159,7 +174,7 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
                 <SelectTokenDialog
                     title={token?.symbol}
                     selectedToken={token}
-                    tokenList={tokenList.length > 0 ? tokenList : sampleTokens}
+                    tokenList={tokensWithBalances}
                     onSelectToken={handleTokenSelect}
                     onImportToken={handleImportToken}
                     {...props.selectTokenDialogProps}
@@ -298,7 +313,6 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
         fromAmount: swapState.fromAmount,
         onQuoteUpdate: (quote) => {
             if (quote) {
-                // Ensure toAmount is always displayed with 2 decimal places
                 const formattedAmount = parseFloat(quote.toAmount).toFixed(6);
                 swapState.setToAmount(formattedAmount);
             }
@@ -351,6 +365,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                     onTokenSelect={(token) => handleTokenSelect('from', token)}
                     onMaxClick={handleMaxClick}
                     disabled={swapState.isLoading}
+                    userAddress={userAddress}
 
                     balanceProps={{
                         color: "fg.muted",
@@ -376,6 +391,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                     tokenList={tokenList}
                     onTokenSelect={(token) => handleTokenSelect('to', token)}
                     readOnly
+                    userAddress={userAddress}
 
                     wrapperProps={{
                         bgImage: "radial-gradient(100% 100% at 50.1% 0%, #FFA103 0%, #BC2D29 41.35%, #450E14 100%)",

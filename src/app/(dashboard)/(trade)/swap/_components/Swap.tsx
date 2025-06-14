@@ -2,7 +2,7 @@
 
 import { SwapWidget } from "@/components/widgets/swap/Swap";
 import { StackProps } from "@chakra-ui/react";
-import { useWriteContract } from "wagmi";
+import { useAccount, useWriteContract } from "wagmi";
 import {
   PRICE_LIMITS,
   getPoolConfig,
@@ -16,6 +16,7 @@ interface Props extends StackProps {}
 
 export const Swap: React.FC<Props> = ({ children, ...props }) => {
   const { writeContractAsync } = useWriteContract();
+  const { address: userAddress } = useAccount();
 
   const handleSwap = async (swapData: any) => {
     try {
@@ -88,6 +89,7 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
   return (
     <SwapWidget
       onSwap={handleSwap}
+      userAddress={userAddress}
       {...props}
     />
   );

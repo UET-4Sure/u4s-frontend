@@ -27,17 +27,17 @@ export async function queryBalance(tokenAddress: string, userAddress: string) {
     }
 }
 
-// Example usage
-async function main() {
-    try {
-        const balance = await queryBalance(
-            TOKEN_ADDRESSES.USDC,
-            "0x2Bd7ff87647DFC43CFfE719D589e5eDcFFc751f1" 
-        );
-        console.log("USDC Balance:", balance);
-    } catch (error) {
-        console.error("Error:", error);
-    }
-}
+// // Example usage
+// async function main() {
+//     try {
+//         const balance = await queryBalance(
+//             TOKEN_ADDRESSES.USDC,
+//             "0x2Bd7ff87647DFC43CFfE719D589e5eDcFFc751f1" 
+//         );
+//         console.log("USDC Balance:", balance);
+//     } catch (error) {
+//         console.error("Error:", error);
+//     }
+// }
 
-main();
+// main();
