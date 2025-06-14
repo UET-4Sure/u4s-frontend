@@ -36,14 +36,14 @@ export async function quoteAmountOut(tokenIn: string, tokenOut: string, amountIn
     return ethers.formatUnits(quotedAmountOut.amountOut, 18);
 }
 
-// Add test function
-async function main() {
-    try {
-        const amountOut = await quoteAmountOut(TOKEN_ADDRESSES.USDC, TOKEN_ADDRESSES.WETH, 1);
-        console.log("Amount out:", amountOut);
-    } catch (error) {
-        console.error("Error:", error);
-    }
-}
+// // Add test function
+// async function main() {
+//     try {
+//         const amountOut = await quoteAmountOut(TOKEN_ADDRESSES.USDC, TOKEN_ADDRESSES.WETH, 1);
+//         console.log("Amount out:", amountOut);
+//     } catch (error) {
+//         console.error("Error:", error);
+//     }
+// }
 
-main();
+// main();

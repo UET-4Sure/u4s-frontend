@@ -2,6 +2,7 @@ import { useState, useCallback, useMemo } from 'react';
 import { SwapState, SwapQuote, Token } from '../type';
 import { debounce } from 'lodash';
 import { useQuery } from '@tanstack/react-query';
+import { quoteAmountOut } from '@/script/QuoteAmountOut';
 
 export const useSwapState = (initialState?: Partial<SwapState>) => {
     const [state, setState] = useState<SwapState>({
@@ -92,25 +93,29 @@ export const useSwapQuote = ({
     return useQuery({
         queryKey: ['swap-quote', fromToken?.address, toToken?.address, debouncedAmount],
         queryFn: async (): Promise<SwapQuote> => {
-            const response = await fetch('/api/swap/quote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    fromToken: fromToken!.address,
-                    toToken: toToken!.address,
-                    amount: debouncedAmount,
-                }),
-            });
+            if (!fromToken || !toToken) {
+                throw new Error('Missing tokens');
+            }
+            console.log(fromToken.address, toToken.address, debouncedAmount);
+            const amountOut = await quoteAmountOut(
+                fromToken.address,
+                toToken.address,
+                parseFloat(debouncedAmount)
+            );
 
-            if (!response.ok) throw new Error('Failed to fetch quote');
-
-            const quote: SwapQuote = await response.json();
+            const quote: SwapQuote = {
+                fromAmount: debouncedAmount,
+                toAmount: amountOut,
+                priceImpact: 0, // This would need to be calculated
+                fee: '0', // This would need to be fetched from the pool
+                route: [], // This would need to be determined
+            };
 
             if (onQuoteUpdate) {
                 onQuoteUpdate(quote);
             }
 
-            return await response.json();
+            return quote;
         },
         enabled,
         staleTime: 30_000, // 30 seconds
