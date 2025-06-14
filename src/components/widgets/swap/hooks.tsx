@@ -4,6 +4,7 @@ import { debounce } from 'lodash';
 import { useQuery } from '@tanstack/react-query';
 import { quoteAmountOut } from '@/script/QuoteAmountOut';
 import { queryBalance } from '@/script/QueryBalance';
+import { queryOraclePrice } from '@/script/QueryOraclePrice';
 
 export const useSwapState = (initialState?: Partial<SwapState>) => {
     const [state, setState] = useState<SwapState>({
@@ -180,6 +181,38 @@ export const useTokenListBalances = (tokens: Token[], userAddress?: string) => {
             }
         },
         enabled: !!userAddress && tokens.length > 0,
+        staleTime: 60_000, // 60 seconds
+        refetchOnWindowFocus: false,
+    });
+};
+
+export const useTokenListPrices = (tokens: Token[]) => {
+    return useQuery({
+        queryKey: ['token-list-prices', tokens.map(t => t.address)],
+        queryFn: async (): Promise<{ [address: string]: string }> => {
+            const prices: { [address: string]: string } = {};
+            
+            try {
+                // Query all token prices in parallel
+                const promises = tokens.map(async (token) => {
+                    try {
+                        const price = await queryOraclePrice(token.address);
+                        prices[token.address.toLowerCase()] = price;
+                    } catch (error) {
+                        console.error(`Failed to fetch price for token ${token.symbol}:`, error);
+                        prices[token.address.toLowerCase()] = '0';
+                    }
+                });
+
+                await Promise.all(promises);
+                console.log('Token list prices fetched:', prices);
+                return prices;
+            } catch (error) {
+                console.error('Failed to fetch token list prices:', error);
+                return {};
+            }
+        },
+        enabled: tokens.length > 0,
         staleTime: 60_000, // 60 seconds
         refetchOnWindowFocus: false,
     });

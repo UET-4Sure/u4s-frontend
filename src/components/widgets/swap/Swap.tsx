@@ -7,7 +7,7 @@ import { CgArrowsExchangeAltV } from "react-icons/cg";
 import numberal from "numeral";
 
 import { SwapState, Token } from "../type";
-import { useSwapQuote, useSwapState, useTokenBalance, useTokenListBalances } from "./hooks";
+import { useSwapQuote, useSwapState, useTokenBalance, useTokenListBalances, useTokenListPrices } from "./hooks";
 import { SelectTokenDialog, SelectTokenDialogProps } from "../components/SelectTokenDialog";
 import { motion, MotionProps, useCycle } from "framer-motion";
 import { Button, ButtonProps } from "@/components/ui/button";
@@ -107,13 +107,18 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
         userAddress
     );
 
-    const tokensWithBalances = useMemo(() => {
+    const { data: tokenPrices } = useTokenListPrices(
+        tokenList.length > 0 ? tokenList : sampleTokens
+    );
+
+    const tokensWithBalancesAndPrices = useMemo(() => {
         const tokens = tokenList.length > 0 ? tokenList : sampleTokens;
         return tokens.map(token => ({
             ...token,
-            balance: tokenBalances?.[token.address.toLowerCase()] || '0'
+            balance: tokenBalances?.[token.address.toLowerCase()] || '0',
+            price: tokenPrices?.[token.address.toLowerCase()] || '0'
         }));
-    }, [tokenList, sampleTokens, tokenBalances]);
+    }, [tokenList, sampleTokens, tokenBalances, tokenPrices]);
 
     const handleTokenSelect = useCallback((token: Token) => {
         onTokenSelect(token);
@@ -174,16 +179,21 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
                 <SelectTokenDialog
                     title={token?.symbol}
                     selectedToken={token}
-                    tokenList={tokensWithBalances}
+                    tokenList={tokensWithBalancesAndPrices}
                     onSelectToken={handleTokenSelect}
                     onImportToken={handleImportToken}
                     {...props.selectTokenDialogProps}
                 />
             </HStack>
-            <HStack w={"full"} justify={"right"}>
+            <HStack w={"full"} justify={"space-between"}>
                 <Text fontSize={"sm"} {...balanceProps}>
                     Balance: {balance ? numberal(balance).format('0,0.0000') : 0} {token?.symbol}
                 </Text>
+                {token && tokenPrices?.[token.address.toLowerCase()] && (
+                    <Text fontSize={"sm"} {...balanceProps}>
+                        ${numberal(tokenPrices[token.address.toLowerCase()]).format('0,0.00')}
+                    </Text>
+                )}
             </HStack>
         </VStack>
     );
