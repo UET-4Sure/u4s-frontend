@@ -298,7 +298,9 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
         fromAmount: swapState.fromAmount,
         onQuoteUpdate: (quote) => {
             if (quote) {
-                swapState.setToAmount(quote.toAmount);
+                // Ensure toAmount is always displayed with 2 decimal places
+                const formattedAmount = parseFloat(quote.toAmount).toFixed(6);
+                swapState.setToAmount(formattedAmount);
             }
         },
     });
