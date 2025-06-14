@@ -28,8 +28,8 @@ const PRICE_LIMITS = {
 
 // Pool Key Types
 type PoolKey = {
-  token0: string;
-  token1: string;
+  currency0: string;
+  currency1: string;
   fee: number;
   tickSpacing: number;
   hooks: string;
@@ -44,8 +44,8 @@ type PoolConfig = {
 // USDC-WETH Pool Configuration
 const USDC_WETH_CONFIG: PoolConfig = {
   poolKey: {
-    token0: TOKEN_ADDRESSES.USDC.toLowerCase(),
-    token1: TOKEN_ADDRESSES.WETH.toLowerCase(),
+    currency0: TOKEN_ADDRESSES.USDC.toLowerCase(),
+    currency1: TOKEN_ADDRESSES.WETH.toLowerCase(),
     fee: 3000,
     tickSpacing: 60,
     hooks: HOOK_CONTRACT_ADDRESS.HOOK,
@@ -67,7 +67,7 @@ const getPoolConfig = (fromTokenAddress: string, toTokenAddress: string): PoolCo
 
 const getZeroForOne = (fromTokenAddress: string, poolKey: PoolKey): boolean => {
   const fromToken = fromTokenAddress.toLowerCase();
-  return fromToken === poolKey.token0;
+  return fromToken === poolKey.currency0;
 };
 
 export {

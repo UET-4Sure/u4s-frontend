@@ -50,8 +50,8 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
 
       // Format pool key as array for contract call
       const poolKeyArray = [
-        poolConfig.poolKey.token0 as `0x${string}`,
-        poolConfig.poolKey.token1 as `0x${string}`,
+        poolConfig.poolKey.currency0 as `0x${string}`,
+        poolConfig.poolKey.currency1 as `0x${string}`,
         poolConfig.poolKey.fee,
         poolConfig.poolKey.tickSpacing,
         poolConfig.poolKey.hooks as `0x${string}`,
