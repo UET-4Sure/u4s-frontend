@@ -187,7 +187,7 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
             </HStack>
             <HStack w={"full"} justify={"space-between"}>
                 <Text fontSize={"sm"} {...balanceProps}>
-                    Balance: {Number(balance) ? numberal(balance).format('0,0.0000') : 0} {token?.symbol}
+                    Balance: {balance ? numberal(balance).format('0,0.0000') : 0} {token?.symbol}
                 </Text>
                 {token && tokenPrices?.[token.address.toLowerCase()] && (
                     <Text fontSize={"sm"} {...balanceProps}>
@@ -374,7 +374,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                     tokenList={tokenList}
                     onTokenSelect={(token) => handleTokenSelect('from', token)}
                     onMaxClick={handleMaxClick}
-                    disabled={swapState.isLoading}
+                    disabled={swapState.isLoading || !swapState.fromToken}
                     userAddress={userAddress}
 
                     balanceProps={{
