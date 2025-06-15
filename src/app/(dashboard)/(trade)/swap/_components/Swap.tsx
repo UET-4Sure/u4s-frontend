@@ -23,7 +23,6 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
   const handleSwap = async (swapData: SwapState) => {
     try {
       if (!swapData.fromToken || !swapData.toToken || !swapData.fromAmount) {
-        console.error("Missing required swap data");
         toaster.error({
             title: "Swap Error",
             description: "Please ensure all fields are filled out correctly.",
@@ -38,7 +37,10 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
       );
 
       if (!poolConfig) {
-        console.error("No pool found for the selected token pair");
+        toaster.error({
+            title: "Swap Error",
+            description: "No pool found for the selected token pair.",
+        });
         return;
       }
 
