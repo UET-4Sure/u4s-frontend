@@ -2,6 +2,9 @@ import { useState, useCallback, useMemo } from 'react';
 import { SwapState, SwapQuote, Token } from '../type';
 import { debounce } from 'lodash';
 import { useQuery } from '@tanstack/react-query';
+import { quoteAmountOut } from '@/script/QuoteAmountOut';
+import { queryBalance } from '@/script/QueryBalance';
+import { queryOraclePrice } from '@/script/QueryOraclePrice';
 
 export const useSwapState = (initialState?: Partial<SwapState>) => {
     const [state, setState] = useState<SwapState>({
@@ -92,25 +95,29 @@ export const useSwapQuote = ({
     return useQuery({
         queryKey: ['swap-quote', fromToken?.address, toToken?.address, debouncedAmount],
         queryFn: async (): Promise<SwapQuote> => {
-            const response = await fetch('/api/swap/quote', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    fromToken: fromToken!.address,
-                    toToken: toToken!.address,
-                    amount: debouncedAmount,
-                }),
-            });
+            if (!fromToken || !toToken) {
+                throw new Error('Missing tokens');
+            }
+            console.log(fromToken.address, toToken.address, debouncedAmount);
+            const amountOut = await quoteAmountOut(
+                fromToken.address,
+                toToken.address,
+                parseFloat(debouncedAmount)
+            );
 
-            if (!response.ok) throw new Error('Failed to fetch quote');
-
-            const quote: SwapQuote = await response.json();
+            const quote: SwapQuote = {
+                fromAmount: debouncedAmount,
+                toAmount: amountOut.toString(),
+                priceImpact: 0, // This would need to be calculated
+                fee: '0', // This would need to be fetched from the pool
+                route: [], // This would need to be determined
+            };
 
             if (onQuoteUpdate) {
                 onQuoteUpdate(quote);
             }
 
-            return await response.json();
+            return quote;
         },
         enabled,
         staleTime: 30_000, // 30 seconds
@@ -118,21 +125,95 @@ export const useSwapQuote = ({
     });
 };
 
-
 export const useTokenBalance = (token: Token | null, userAddress?: string) => {
     return useQuery({
         queryKey: ['token-balance', token?.address, userAddress],
         queryFn: async (): Promise<string> => {
-            if (!token || !userAddress) return '0';
+            if (!token || !userAddress) {
+                console.log('Missing token or userAddress:', { token, userAddress });
+                return '0';
+            }
 
-            const response = await fetch(`/api/balance/${token.address}/${userAddress}`);
-            if (!response.ok) throw new Error('Failed to fetch balance');
-
-            const data = await response.json();
-            return data.balance as string;
+            try {
+                const balance = await queryBalance(token.address, userAddress);
+                console.log('Balance fetched:', { token: token.symbol, userAddress, balance });
+                return balance;
+            } catch (error) {
+                console.error('Failed to fetch balance:', error);
+                return '0';
+            }
         },
         enabled: !!token && !!userAddress,
         staleTime: 30_000, // 30 seconds
+        refetchOnWindowFocus: false,
+    });
+};
+
+export const useTokenListBalances = (tokens: Token[], userAddress?: string) => {
+    return useQuery({
+        queryKey: ['token-list-balances', tokens.map(t => t.address), userAddress],
+        queryFn: async (): Promise<{ [address: string]: string }> => {
+            if (!userAddress) {
+                console.log('No user address provided for token list balances');
+                return {};
+            }
+
+            const balances: { [address: string]: string } = {};
+            
+            try {
+                // Query all token balances in parallel
+                const promises = tokens.map(async (token) => {
+                    try {
+                        const balance = await queryBalance(token.address, userAddress);
+                        balances[token.address.toLowerCase()] = balance;
+                    } catch (error) {
+                        console.error(`Failed to fetch balance for token ${token.symbol}:`, error);
+                        balances[token.address.toLowerCase()] = '0';
+                    }
+                });
+
+                await Promise.all(promises);
+                console.log('Token list balances fetched:', balances);
+                return balances;
+            } catch (error) {
+                console.error('Failed to fetch token list balances:', error);
+                return {};
+            }
+        },
+        enabled: !!userAddress && tokens.length > 0,
+        staleTime: 60_000, // 60 seconds
+        refetchOnWindowFocus: false,
+    });
+};
+
+export const useTokenListPrices = (tokens: Token[]) => {
+    return useQuery({
+        queryKey: ['token-list-prices', tokens.map(t => t.address)],
+        queryFn: async (): Promise<{ [address: string]: string }> => {
+            const prices: { [address: string]: string } = {};
+            
+            try {
+                // Query all token prices in parallel
+                const promises = tokens.map(async (token) => {
+                    try {
+                        const price = await queryOraclePrice(token.address);
+                        prices[token.address.toLowerCase()] = price;
+                    } catch (error) {
+                        console.error(`Failed to fetch price for token ${token.symbol}:`, error);
+                        prices[token.address.toLowerCase()] = '0';
+                    }
+                });
+
+                await Promise.all(promises);
+                console.log('Token list prices fetched:', prices);
+                return prices;
+            } catch (error) {
+                console.error('Failed to fetch token list prices:', error);
+                return {};
+            }
+        },
+        enabled: tokens.length > 0,
+        staleTime: 60_000, // 60 seconds
         refetchOnWindowFocus: false,
     });
 };

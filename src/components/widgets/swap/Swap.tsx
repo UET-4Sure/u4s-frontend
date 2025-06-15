@@ -7,7 +7,7 @@ import { CgArrowsExchangeAltV } from "react-icons/cg";
 import numberal from "numeral";
 
 import { SwapState, Token } from "../type";
-import { useSwapQuote, useSwapState, useTokenBalance } from "./hooks";
+import { useSwapQuote, useSwapState, useTokenBalance, useTokenListBalances, useTokenListPrices } from "./hooks";
 import { SelectTokenDialog, SelectTokenDialogProps } from "../components/SelectTokenDialog";
 import { motion, MotionProps, useCycle } from "framer-motion";
 import { Button, ButtonProps } from "@/components/ui/button";
@@ -29,6 +29,7 @@ interface SwapInputProps extends StackProps {
     onMaxClick?: () => void;
     disabled?: boolean;
     readOnly?: boolean;
+    userAddress?: string;
 
     wrapperProps?: StackProps;
     inputProps?: InputProps;
@@ -46,6 +47,7 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
     onMaxClick,
     disabled = false,
     readOnly = false,
+    userAddress,
 
     wrapperProps,
     inputProps,
@@ -54,7 +56,7 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
 }) => {
     const sampleTokens: Token[] = [
         {
-            address: '0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2',
+            address: '0x342d6127609A5Ad63C93E10cb73b7d9dE9bC43Aa',
             symbol: 'WETH',
             name: 'Wrapped Ether',
             decimals: 18,
@@ -63,42 +65,60 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
             price: '2385.56',
         },
         {
-            address: '0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984',
-            symbol: 'UNI',
-            name: 'Uniswap',
+            address: '0x0ff5065E79c051c3D4C790BC9e8ebc9b4E56bbcc',
+            symbol: 'USDC',
+            name: 'USD Coin',
             decimals: 18,
-            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1f9840a85d5aF5bf1D1762F925BDADdC4201F984/logo.png',
+            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
             balance: '200',
-            price: '6.82',
+            price: '1.00',
         },
         {
-            address: '0x514910771AF9Ca656af840dff83E8264EcF986CA',
+            address: '0x12Df3798C30532c068306372d24c9f2f451676e9',
+            symbol: 'WBTC',
+            name: 'Wrapped Bitcoin',
+            decimals: 18,
+            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599/logo.png',
+            balance: '100',
+            price: '108120.01',
+        },
+        {
+            address: '0x88B42E9E9E769F86ab499D8cb111fcb6f691F70E',
             symbol: 'LINK',
             name: 'Chainlink',
             decimals: 18,
             logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x514910771AF9Ca656af840dff83E8264EcF986CA/logo.png',
-            balance: '100',
-            price: '16.20',
-        },
-        {
-            address: '0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9',
-            symbol: 'AAVE',
-            name: 'Aave',
-            decimals: 18,
-            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x7Fc66500c84A76Ad7e9c93437bFc5Ac33E2DDaE9/logo.png',
             balance: '5',
-            price: '199.91',
+            price: '14.12',
         },
         {
-            address: '0x6B175474E89094C44Da98b954EedeAC495271d0F',
-            symbol: 'DAI',
-            name: 'Dai Stablecoin',
+            address: '0x336d87aEdF99d5Fb4F07132C8DbE4bea4c766eAc',
+            symbol: 'EUR',
+            name: 'Euro',
             decimals: 18,
-            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x6B175474E89094C44Da98b954EedeAC495271d0F/logo.png',
+            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c/logo.png',
             balance: '5000',
-            price: '1.00',
+            price: '1.15',
         },
     ];
+
+    const { data: tokenBalances } = useTokenListBalances(
+        tokenList.length > 0 ? tokenList : sampleTokens,
+        userAddress
+    );
+
+    const { data: tokenPrices } = useTokenListPrices(
+        tokenList.length > 0 ? tokenList : sampleTokens
+    );
+
+    const tokensWithBalancesAndPrices = useMemo(() => {
+        const tokens = tokenList.length > 0 ? tokenList : sampleTokens;
+        return tokens.map(token => ({
+            ...token,
+            balance: tokenBalances?.[token.address.toLowerCase()] || '0',
+            price: tokenPrices?.[token.address.toLowerCase()] || '0'
+        }));
+    }, [tokenList, sampleTokens, tokenBalances, tokenPrices]);
 
     const handleTokenSelect = useCallback((token: Token) => {
         onTokenSelect(token);
@@ -159,16 +179,21 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
                 <SelectTokenDialog
                     title={token?.symbol}
                     selectedToken={token}
-                    tokenList={tokenList.length > 0 ? tokenList : sampleTokens}
+                    tokenList={tokensWithBalancesAndPrices}
                     onSelectToken={handleTokenSelect}
                     onImportToken={handleImportToken}
                     {...props.selectTokenDialogProps}
                 />
             </HStack>
-            <HStack w={"full"} justify={"right"}>
+            <HStack w={"full"} justify={"space-between"}>
                 <Text fontSize={"sm"} {...balanceProps}>
-                    Balance: {Number(balance) ? numberal(balance).format('0,0.0000') : 0} {token?.symbol}
+                    Balance: {balance ? numberal(balance).format('0,0.0000') : 0} {token?.symbol}
                 </Text>
+                {token && tokenPrices?.[token.address.toLowerCase()] && (
+                    <Text fontSize={"sm"} {...balanceProps}>
+                        ${numberal(tokenPrices[token.address.toLowerCase()]).format('0,0.00')}
+                    </Text>
+                )}
             </HStack>
         </VStack>
     );
@@ -298,7 +323,8 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
         fromAmount: swapState.fromAmount,
         onQuoteUpdate: (quote) => {
             if (quote) {
-                swapState.setToAmount(quote.toAmount);
+                const formattedAmount = parseFloat(quote.toAmount).toFixed(6);
+                swapState.setToAmount(formattedAmount);
             }
         },
     });
@@ -348,7 +374,8 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                     tokenList={tokenList}
                     onTokenSelect={(token) => handleTokenSelect('from', token)}
                     onMaxClick={handleMaxClick}
-                    disabled={swapState.isLoading}
+                    disabled={swapState.isLoading || !swapState.fromToken}
+                    userAddress={userAddress}
 
                     balanceProps={{
                         color: "fg.muted",
@@ -374,6 +401,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                     tokenList={tokenList}
                     onTokenSelect={(token) => handleTokenSelect('to', token)}
                     readOnly
+                    userAddress={userAddress}
 
                     wrapperProps={{
                         bgImage: "radial-gradient(100% 100% at 50.1% 0%, #FFA103 0%, #BC2D29 41.35%, #450E14 100%)",
