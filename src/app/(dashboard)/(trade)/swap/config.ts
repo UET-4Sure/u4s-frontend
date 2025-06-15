@@ -1,3 +1,5 @@
+import { Token } from "@/components/widgets/type";
+
 // Pool Addresses
 const POOL_ADDRESSES = {
   USDC_WETH: "0x9B6b46e2c869aa39918Db7f52f5557FE577B6eEe",
@@ -25,6 +27,28 @@ const PRICE_LIMITS = {
   MIN: "4295128740", // 2^32
   MAX: "1461446703485210103287273052203988822378723970341", // ~2^96
 } as const;
+
+const TOKEN_LIST: Token[] = [
+  {
+    address: '0x342d6127609A5Ad63C93E10cb73b7d9dE9bC43Aa',
+    symbol: 'WETH',
+    name: 'Wrapped Ether',
+    decimals: 18,
+    logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
+    balance: '1.2345',
+    price: '2385.56',
+  },
+  {
+    address: '0x0ff5065E79c051c3D4C790BC9e8ebc9b4E56bbcc',
+    symbol: 'USDC',
+    name: 'USD Coin',
+    decimals: 18,
+    logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
+    balance: '200',
+    price: '1.00',
+  },
+];
+
 
 // Pool Key Types
 type PoolKey = {
@@ -72,6 +96,7 @@ const getZeroForOne = (fromTokenAddress: string, poolKey: PoolKey): boolean => {
 
 export {
   TOKEN_ADDRESSES,
+  TOKEN_LIST,
   POOL_ADDRESSES,
   PRICE_LIMITS,
   getPoolConfig,

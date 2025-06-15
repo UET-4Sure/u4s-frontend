@@ -5,6 +5,7 @@ import { StackProps } from "@chakra-ui/react";
 import { useAccount, useWriteContract } from "wagmi";
 import {
   PRICE_LIMITS,
+  TOKEN_LIST,
   getPoolConfig,
   getZeroForOne,
 } from "../config";
@@ -98,6 +99,7 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
     <SwapWidget
       onSwap={handleSwap}
       userAddress={userAddress}
+      tokenList={TOKEN_LIST}
       {...props}
     />
   );

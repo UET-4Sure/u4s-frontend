@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo } from "react";
 import { Center, DialogRootProps, HStack, IconButton, IconButtonProps, Input, InputProps, StackProps, Text, TextProps, VStack } from "@chakra-ui/react";
 import { NumericFormat } from 'react-number-format';
 import { CgArrowsExchangeAltV } from "react-icons/cg";
-import numberal from "numeral";
+import numeral from "numeral";
 
 import { SwapState, Token } from "../type";
 import { useSwapQuote, useSwapState, useTokenBalance, useTokenListBalances, useTokenListPrices } from "./hooks";
@@ -54,71 +54,24 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
     balanceProps,
     ...props
 }) => {
-    const sampleTokens: Token[] = [
-        {
-            address: '0x342d6127609A5Ad63C93E10cb73b7d9dE9bC43Aa',
-            symbol: 'WETH',
-            name: 'Wrapped Ether',
-            decimals: 18,
-            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
-            balance: '1.2345',
-            price: '2385.56',
-        },
-        {
-            address: '0x0ff5065E79c051c3D4C790BC9e8ebc9b4E56bbcc',
-            symbol: 'USDC',
-            name: 'USD Coin',
-            decimals: 18,
-            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
-            balance: '200',
-            price: '1.00',
-        },
-        {
-            address: '0x12Df3798C30532c068306372d24c9f2f451676e9',
-            symbol: 'WBTC',
-            name: 'Wrapped Bitcoin',
-            decimals: 18,
-            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599/logo.png',
-            balance: '100',
-            price: '108120.01',
-        },
-        {
-            address: '0x88B42E9E9E769F86ab499D8cb111fcb6f691F70E',
-            symbol: 'LINK',
-            name: 'Chainlink',
-            decimals: 18,
-            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x514910771AF9Ca656af840dff83E8264EcF986CA/logo.png',
-            balance: '5',
-            price: '14.12',
-        },
-        {
-            address: '0x336d87aEdF99d5Fb4F07132C8DbE4bea4c766eAc',
-            symbol: 'EUR',
-            name: 'Euro',
-            decimals: 18,
-            logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c/logo.png',
-            balance: '5000',
-            price: '1.15',
-        },
-    ];
 
     const { data: tokenBalances } = useTokenListBalances(
-        tokenList.length > 0 ? tokenList : sampleTokens,
+        tokenList.length > 0 ? tokenList : [],
         userAddress
     );
 
     const { data: tokenPrices } = useTokenListPrices(
-        tokenList.length > 0 ? tokenList : sampleTokens
+        tokenList.length > 0 ? tokenList : []
     );
 
     const tokensWithBalancesAndPrices = useMemo(() => {
-        const tokens = tokenList.length > 0 ? tokenList : sampleTokens;
+        const tokens = tokenList.length > 0 ? tokenList : [];
         return tokens.map(token => ({
             ...token,
             balance: tokenBalances?.[token.address.toLowerCase()] || '0',
             price: tokenPrices?.[token.address.toLowerCase()] || '0'
         }));
-    }, [tokenList, sampleTokens, tokenBalances, tokenPrices]);
+    }, [tokenList, tokenBalances, tokenPrices]);
 
     const handleTokenSelect = useCallback((token: Token) => {
         onTokenSelect(token);
@@ -187,11 +140,11 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
             </HStack>
             <HStack w={"full"} justify={"space-between"}>
                 <Text fontSize={"sm"} {...balanceProps}>
-                    Balance: {numeral(balance) ? numberal(balance).format('0,0.0000') : 0} {token?.symbol}
+                    Balance: {numeral(balance).value() ? numeral(balance).format('0,0.0000') : 0} {token?.symbol}
                 </Text>
                 {token && tokenPrices?.[token.address.toLowerCase()] && (
                     <Text fontSize={"sm"} {...balanceProps}>
-                        ${numberal(tokenPrices[token.address.toLowerCase()]).format('0,0.00')}
+                        ${numeral(tokenPrices[token.address.toLowerCase()]).format('0,0.00')}
                     </Text>
                 )}
             </HStack>
