@@ -108,7 +108,7 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
             <HStack w={"full"}>
                 <NumericFormat
                     inputMode="decimal"
-                    value={amount}
+                    value={numeral(amount).format('0,0.[00000]')}
                     onValueChange={(values) => onAmountChange(values.value)}
                     thousandSeparator
                     allowNegative={false}
@@ -140,7 +140,7 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
             </HStack>
             <HStack w={"full"} justify={"space-between"}>
                 <Text fontSize={"sm"} {...balanceProps}>
-                    Balance: {numeral(balance).value() ? numeral(balance).format('0,0.0000') : 0} {token?.symbol}
+                    Balance: {numeral(balance).format('0,0.[0000')} {token?.symbol}
                 </Text>
                 {token && tokenPrices?.[token.address.toLowerCase()] && (
                     <Text fontSize={"sm"} {...balanceProps}>

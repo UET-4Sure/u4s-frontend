@@ -121,7 +121,6 @@ export const useSwapQuote = ({
         },
         enabled,
         staleTime: 30_000, // 30 seconds
-        retry: false,
     });
 };
 

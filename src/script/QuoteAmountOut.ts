@@ -8,7 +8,7 @@ import QUOTER_ABI from '@/abis/V4Quoter.json'
 
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "";
 
-const QUOTER_CONTRACT_ADDRESS = '0x61b3f2011a92d183c7dbadbda940a7555ccf9227';
+const QUOTER_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_QUOTER_CONTRACT_ADDRESS as `0x${string}`;
 
 export async function quoteAmountOut(tokenIn: string, tokenOut: string, amountIn: number) {
     const quoterContract = new ethers.Contract(
@@ -28,11 +28,12 @@ export async function quoteAmountOut(tokenIn: string, tokenOut: string, amountIn
         const quotedAmountOut = await quoterContract.quoteExactInputSingle.staticCall({
             poolKey: poolConfig.poolKey,
             zeroForOne: zeroForOne,
-            exactAmount: ethers.parseUnits(amountIn.toString(), 18), 
+            exactAmount: ethers.parseUnits(amountIn.toString(), 18),
             hookData: "0x00",
         })
         return ethers.formatUnits(quotedAmountOut.amountOut, 18);
     } catch (error) {
+        console.error("Error quoting amount out:", error);
         return 0;
     }
 }
