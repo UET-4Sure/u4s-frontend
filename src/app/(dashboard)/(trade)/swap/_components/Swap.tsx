@@ -7,10 +7,12 @@ import {
   PRICE_LIMITS,
   getPoolConfig,
   getZeroForOne,
-} from "./Config";
+} from "../config";
 import ERC20_ABI from "@/abis/ERC20.json";
 import POOL_SWAP_TEST_CONTRACT_ABI from "@/abis/PoolSwapTest.json";
 import { ethers } from "ethers";
+import { SwapState } from "@/components/widgets/type";
+import { toaster } from "@/components/ui/toaster";
 
 interface Props extends StackProps {}
 
@@ -18,10 +20,14 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
   const { writeContractAsync } = useWriteContract();
   const { address: userAddress } = useAccount();
 
-  const handleSwap = async (swapData: any) => {
+  const handleSwap = async (swapData: SwapState) => {
     try {
       if (!swapData.fromToken || !swapData.toToken || !swapData.fromAmount) {
         console.error("Missing required swap data");
+        toaster.error({
+            title: "Swap Error",
+            description: "Please ensure all fields are filled out correctly.",
+        })
         return;
       }
 

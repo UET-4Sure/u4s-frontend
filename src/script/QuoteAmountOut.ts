@@ -2,7 +2,7 @@ import { config } from 'dotenv'
 config();
 
 import { SwapExactInSingle } from '@uniswap/v4-sdk'
-import { getPoolConfig, getZeroForOne, TOKEN_ADDRESSES } from '@/app/(dashboard)/(trade)/swap/_components/Config'
+import { getPoolConfig, getZeroForOne, TOKEN_ADDRESSES } from '@/app/(dashboard)/(trade)/swap/config'
 import { ethers } from 'ethers'
 import QUOTER_ABI from '@/abis/V4Quoter.json'
 
