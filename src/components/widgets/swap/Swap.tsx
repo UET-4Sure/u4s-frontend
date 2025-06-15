@@ -353,7 +353,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                 <Center position={"absolute"} top={"50%"} left={"50%"} transform={"translate(-50%, -50%)"} zIndex={1}>
                     <SwitchButton
                         onClick={() => {
-                            swapState.swapTokens()
+                            swapState.switchTokens()
                             console.log("Swapped tokens:", swapState.fromToken, "and", swapState.toToken);
                         }}
                         loading={swapState.isLoading}
