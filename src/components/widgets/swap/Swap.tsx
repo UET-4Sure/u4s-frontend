@@ -310,6 +310,21 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
         }
     }, [fromBalance, swapState]);
 
+    const labelLoading = useMemo(() => {
+        if (isQuoteLoading) {
+            return "Đang ước lượng giá...";
+        }
+
+        if (swapState.isLoading) {
+            return "Đang trao đổi...";
+        }
+        return "Trao đổi";
+    }, [isQuoteLoading, swapState.isLoading]);
+
+    const isDisabled = useMemo(() => {
+        return swapState.isLoading || !swapState.fromToken || !swapState.toToken || !swapState.fromAmount;
+    }, [swapState]);
+
     useEffect(() => {
         onStateChange?.(swapState);
     }, [swapState, onStateChange]);
@@ -348,7 +363,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                 <SwapInput
                     label="Mua"
                     token={swapState.toToken}
-                    amount={swapState.toAmount}
+                    amount={quote?.toAmount || swapState.toAmount}
                     balance={toBalance}
                     onAmountChange={swapState.setToAmount}
                     tokenList={tokenList}
@@ -377,6 +392,9 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                 />
             </VStack>
             <SwapButton
+                loadingText={labelLoading}
+                loading={swapState.isLoading || isQuoteLoading}
+                disabled={isDisabled}
                 onClick={handleSwap}
                 {...swapButtonProps}
             />
