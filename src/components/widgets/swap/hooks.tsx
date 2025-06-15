@@ -38,7 +38,7 @@ export const useSwapState = (initialState?: Partial<SwapState>) => {
         setState(prev => ({ ...prev, toAmount: amount }));
     }, []);
 
-    const swapTokens = useCallback(() => {
+    const switchTokens = useCallback(() => {
         setState(prev => ({
             ...prev,
             fromToken: prev.toToken,
@@ -64,7 +64,7 @@ export const useSwapState = (initialState?: Partial<SwapState>) => {
         setToToken,
         setFromAmount,
         setToAmount,
-        swapTokens,
+        switchTokens,
         reset,
     };
 };
@@ -159,7 +159,7 @@ export const useTokenListBalances = (tokens: Token[], userAddress?: string) => {
             }
 
             const balances: { [address: string]: string } = {};
-            
+
             try {
                 // Query all token balances in parallel
                 const promises = tokens.map(async (token) => {
@@ -191,7 +191,7 @@ export const useTokenListPrices = (tokens: Token[]) => {
         queryKey: ['token-list-prices', tokens.map(t => t.address)],
         queryFn: async (): Promise<{ [address: string]: string }> => {
             const prices: { [address: string]: string } = {};
-            
+
             try {
                 // Query all token prices in parallel
                 const promises = tokens.map(async (token) => {
