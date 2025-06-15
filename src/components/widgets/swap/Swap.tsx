@@ -167,7 +167,7 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
             </HStack>
             <HStack w={"full"} justify={"right"}>
                 <Text fontSize={"sm"} {...balanceProps}>
-                    Balance: {balance ? numberal(balance).format('0,0.0000') : 0} {token?.symbol}
+                    Balance: {Number(balance) ? numberal(balance).format('0,0.0000') : 0} {token?.symbol}
                 </Text>
             </HStack>
         </VStack>
