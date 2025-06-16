@@ -354,9 +354,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                     <SwitchButton
                         onClick={() => {
                             swapState.switchTokens()
-                            console.log("Swapped tokens:", swapState.fromToken, "and", swapState.toToken);
                         }}
-                        loading={swapState.isLoading}
                         {...switchButtonProps}
                     />
                 </Center>
