@@ -1,8 +1,15 @@
+import { DocumentType } from './vnpt-sdk';
+
 export enum KycStatus {
     NONE = 'none',
     PENDING = 'pending',
     APPROVED = 'approved',
     REJECTED = 'rejected',
+}
+
+export const DocumentTypeMap: Record<number, DocumentType> = {
+    ["-1"]: DocumentType.ID_CARD,
+
 }
 
 export interface User {
@@ -16,4 +23,11 @@ export interface User {
 export interface AuthLoginResponse {
     token: string;
     user: User;
+}
+
+export interface CreateKycApplicationBody {
+    documentType: DocumentType;
+    documentNumber: string;
+    documentFrontImage: string;
+    documentBackImage: string;
 }
