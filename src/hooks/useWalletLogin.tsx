@@ -37,7 +37,8 @@ export const useWalletLogin = () => {
             if (!address) {
                 throw new Error("No wallet address found");
             }
-            const signature = await signMessageAsync({ message: nonce });
+
+            const signature = await signMessageAsync({ message: nonce, account: address });
 
             const res = await vinaswapApi.post("/auth/wallet-login", {
                 address,
