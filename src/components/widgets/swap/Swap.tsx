@@ -139,14 +139,14 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
                 />
             </HStack>
             <HStack w={"full"} justify={"space-between"}>
+                {token && tokenPrices?.[token.address.toLowerCase()] && (
+                    <Text fontSize={"sm"} {...balanceProps}>
+                        ${numeral(Number(tokenPrices[token.address.toLowerCase()]) * Number(amount)).format('0,0.00')}
+                    </Text>
+                )}
                 <Text fontSize={"sm"} {...balanceProps}>
                     Balance: {numeral(balance).format('0,0.[0000')} {token?.symbol}
                 </Text>
-                {token && tokenPrices?.[token.address.toLowerCase()] && (
-                    <Text fontSize={"sm"} {...balanceProps}>
-                        ${numeral(tokenPrices[token.address.toLowerCase()]).format('0,0.00')}
-                    </Text>
-                )}
             </HStack>
         </VStack>
     );
@@ -354,9 +354,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                     <SwitchButton
                         onClick={() => {
                             swapState.switchTokens()
-                            console.log("Swapped tokens:", swapState.fromToken, "and", swapState.toToken);
                         }}
-                        loading={swapState.isLoading}
                         {...switchButtonProps}
                     />
                 </Center>
