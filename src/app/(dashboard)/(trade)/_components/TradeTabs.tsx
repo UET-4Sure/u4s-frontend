@@ -4,6 +4,10 @@ import { For, Link, TabsContent, TabsList, TabsRoot, TabsRootProps, TabsTrigger 
 import NextLink from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+<<<<<<< HEAD
+=======
+import { Swap } from "../swap/_components/Swap";
+>>>>>>> f57c588 (fix(trade): merge swap)
 
 type TradeTabValue = "swap" | "buy";
 
@@ -19,7 +23,11 @@ export function TradeTabs(props: TradeTabsProps) {
             value: "swap" as TradeTabValue,
             label: "Trao đổi",
             href: "/swap",
+<<<<<<< HEAD
             component: null // Placeholder for future component if needed
+=======
+            component: <Swap/>
+>>>>>>> f57c588 (fix(trade): merge swap)
         },
         {
             value: "buy" as TradeTabValue,
