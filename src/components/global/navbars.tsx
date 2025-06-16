@@ -70,9 +70,9 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
 interface DashboardNavbarProps extends HtmlProps { }
 export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     const featLinks = [
-        { label: "Trao đổi", href: "/dashboard/swap" },
-        { label: "Mua", href: "/dashboard/buy" },
-        { label: "Bán", href: "/dashboard/sell" },
+        { label: "Trao đổi", href: "/swap" },
+        { label: "Mua", href: "/buy" },
+        { label: "Bán", href: "/sell" },
     ]
     const NavLinks = () => (
         <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
@@ -87,7 +87,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     const TradeMenu = () => (
         <HoverCardRoot openDelay={100}>
             <HoverCardTrigger asChild>
-                <Link href={"/dashboard/trade"}>Giao dịch</Link>
+                <Link href={featLinks[0].href}>Giao dịch</Link>
             </HoverCardTrigger>
             <HoverCardContent>
                 <VStack align={"start"}>
