@@ -193,7 +193,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         }
     ]
 
-    const isStep1Completed = useMemo(() => !watch("fromToken") || !watch("toToken"), [watch]);
+    const isStep1Completed = !!(watch("fromToken") && watch("toToken"));
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} style={{ width: '100%' }}>
@@ -201,7 +201,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 colorPalette={"bg"}
                 orientation={"vertical"}
                 defaultStep={0}
-                linear={!isStep1Completed}
+                linear={isStep1Completed}
             >
                 <StepsList>
                     {stepRenders.map((step, index) => (
