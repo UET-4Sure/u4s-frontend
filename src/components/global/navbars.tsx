@@ -73,6 +73,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         { label: "Trao đổi", href: "/swap" },
         { label: "Mua", href: "/buy" },
         { label: "Bán", href: "/sell" },
+        { label: "Faucet", href: "/faucet" },
     ]
     const NavLinks = () => (
         <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
