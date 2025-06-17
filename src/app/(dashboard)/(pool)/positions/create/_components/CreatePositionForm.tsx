@@ -6,12 +6,13 @@ import { Token } from '@/components/widgets/type';
 import { HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useTokenList } from '@/hooks/data/useTokenList';
 import { StepsCompletedContent, StepsContent, StepsIndicator, StepsItem, StepsList, StepsNextTrigger, StepsRoot } from '@/components/ui/steps';
 import { SwapWidget } from '@/components/widgets/swap/Swap';
 
 const MotionVStack = motion.create(VStack);
+const MotionStepContent = motion.create(StepsContent);
 
 interface CreatePositionFormValues {
     fromToken: Token;
@@ -24,8 +25,9 @@ interface CreatePositionFormProps extends StackProps {
 export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children, ...props }) => {
     const [showAdvanced, setShowAdvanced] = useState(false);
     const steps = useSteps({
-        defaultStep: 1,
+        defaultStep: 0,
         count: 2,
+        linear: true,
     })
     const { data: tokenList } = useTokenList();
 
@@ -106,7 +108,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </Button>
             </StepsNextTrigger>
         </MotionVStack >
-    ), [tokenList]);
+    ), [tokenList, watch]);
 
     const Step2 = useMemo(() => () => (
         <MotionVStack
@@ -176,7 +178,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </Button>
             </StepsNextTrigger>
         </MotionVStack>
-    ), []);
+    ), [watch, errors]);
 
     const stepRenders = [
         {
@@ -191,13 +193,15 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         }
     ]
 
+    const isStep1Completed = useMemo(() => !watch("fromToken") || !watch("toToken"), [watch]);
+
     return (
         <form onSubmit={handleSubmit(onSubmit)} style={{ width: '100%' }}>
             <StepsRoot
                 colorPalette={"bg"}
                 orientation={"vertical"}
                 defaultStep={0}
-                count={stepRenders.length}
+                linear={!isStep1Completed}
             >
                 <StepsList>
                     {stepRenders.map((step, index) => (
@@ -213,14 +217,16 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                         </StepsItem>
                     ))}
                 </StepsList>
-                {stepRenders.map((step, index) => (
-                    <StepsContent
-                        key={index}
-                        index={index}
-                    >
-                        {step.content}
-                    </StepsContent>
-                ))}
+                <AnimatePresence mode="wait">
+                    {stepRenders.map((step, index) => (
+                        <StepsContent
+                            key={index}
+                            index={index}
+                        >
+                            {step.content}
+                        </StepsContent>
+                    ))}
+                </AnimatePresence>
             </StepsRoot>
         </form >
     );
