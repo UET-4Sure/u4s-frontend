@@ -7,6 +7,9 @@ import { HStack, StackProps, Text, VStack } from '@chakra-ui/react';
 import { useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { TOKEN_LIST } from '../config';
+import { motion } from 'framer-motion';
+
+const MotionVStack = motion.create(VStack);
 
 interface CreatePositionFormValues {
     fromToken: Token;
@@ -18,6 +21,7 @@ interface CreatePositionFormProps extends StackProps {
 }
 export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children, ...props }) => {
     const [showAdvanced, setShowAdvanced] = useState(false);
+    const [currentStep, setCurrentStep] = useState(1);
 
     const { register, handleSubmit, control, watch, setValue, formState: { errors } } = useForm<CreatePositionFormValues>({
     });
@@ -29,63 +33,76 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
     return (
         <form onSubmit={handleSubmit(onSubmit)} style={{ width: '100%' }}>
-            <VStack {...props}>
-                <FormFieldTitle
-                    title="Tạo vị thế"
-                    description="Chọn token và nhập thông tin để tạo vị thế mới"
-                />
-                <HStack align={"start"} w={"full"}>
-                    <Controller
-                        name="fromToken"
-                        control={control}
-                        render={({ field }) => (
-                            <SelectTokenDialog
-                                title={field.value?.symbol}
-                                triggerProps={{
-                                    bg: field.value ? "bg.subtle" : "",
-                                    color: field.value ? "bg.inverted" : "",
-                                }}
-                                tokenList={TOKEN_LIST}
-                                placeholder="Chọn token cung cấp"
-                                selectedToken={field.value}
-                                onSelectToken={(token) => {
-                                    field.onChange(token);
-                                }}
+            {
+                currentStep === 1 && (
+                    <MotionVStack
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        align={"start"}
+                        w={"full"}
+                    >
+                        <FormFieldTitle
+                            title="Tạo vị thế"
+                            description="Chọn token và nhập thông tin để tạo vị thế mới"
+                        />
+                        <HStack align={"start"} w={"full"}>
+                            <Controller
+                                name="fromToken"
+                                control={control}
+                                render={({ field }) => (
+                                    <SelectTokenDialog
+                                        title={field.value?.symbol}
+                                        triggerProps={{
+                                            bg: field.value ? "bg.subtle" : "",
+                                            color: field.value ? "bg.inverted" : "",
+                                        }}
+                                        tokenList={TOKEN_LIST}
+                                        placeholder="Chọn token cung cấp"
+                                        selectedToken={field.value}
+                                        onSelectToken={(token) => {
+                                            field.onChange(token);
+                                        }}
+                                    />
+                                )}
                             />
-                        )}
-                    />
-                    <Controller
-                        name="toToken"
-                        control={control}
-                        render={({ field }) => (
-                            <SelectTokenDialog
-                                title={field.value?.symbol}
-                                tokenList={TOKEN_LIST}
-                                placeholder="Chọn token nhận"
-                                selectedToken={field.value}
-                                onSelectToken={(token) => {
-                                    field.onChange(token);
-                                }}
-                                triggerProps={{
-                                    bg: field.value ? "bg.subtle" : "",
-                                    color: field.value ? "bg.inverted" : "",
-                                }}
+                            <Controller
+                                name="toToken"
+                                control={control}
+                                render={({ field }) => (
+                                    <SelectTokenDialog
+                                        title={field.value?.symbol}
+                                        tokenList={TOKEN_LIST}
+                                        placeholder="Chọn token nhận"
+                                        selectedToken={field.value}
+                                        onSelectToken={(token) => {
+                                            field.onChange(token);
+                                        }}
+                                        triggerProps={{
+                                            bg: field.value ? "bg.subtle" : "",
+                                            color: field.value ? "bg.inverted" : "",
+                                        }}
+                                    />
+                                )}
                             />
-                        )}
-                    />
-                </HStack>
-                <VStack w={"full"} align={"start"}>
-                    <FormFieldTitle
-                        title="Bậc phí"
-                        description="Chọn bậc phí cho vị thế của bạn. Bậc phí ảnh hưởng đến chi phí giao dịch và hiệu suất của vị thế."
-                    />
-                </VStack>
-                <Button
-                    type='submit'>
-                    Tạo vị thế
-                </Button>
-            </VStack>
-        </form>
+                        </HStack>
+                        <VStack w={"full"} align={"start"}>
+                            <FormFieldTitle
+                                title="Bậc phí"
+                                description="Chọn bậc phí cho vị thế của bạn. Bậc phí ảnh hưởng đến chi phí giao dịch và hiệu suất của vị thế."
+                            />
+                        </VStack>
+                        <Button
+                            w={"full"}
+                            onClick={() => setCurrentStep(2)}
+                        >
+                            Tiếp tục
+                        </Button>
+                    </MotionVStack>
+                )
+            }
+
+        </form >
     );
 };
 
