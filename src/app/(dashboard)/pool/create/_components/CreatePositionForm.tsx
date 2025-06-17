@@ -26,13 +26,14 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         console.log("Form submitted with data:", data);
         // Handle form submission logic here
     }
+
     return (
         <form onSubmit={handleSubmit(onSubmit)} style={{ width: '100%' }}>
             <VStack {...props}>
-                <VStack align={"start"} w={"full"}>
-                    <Text fontSize="2xl" fontWeight="bold">Tạo vị thế</Text>
-                    <Text fontSize="sm" color="fg.muted">Chọn token bạn muốn cung cấp thanh khoản</Text>
-                </VStack>
+                <FormFieldTitle
+                    title="Tạo vị thế"
+                    description="Chọn token và nhập thông tin để tạo vị thế mới"
+                />
                 <HStack align={"start"} w={"full"}>
                     <Controller
                         name="fromToken"
@@ -40,6 +41,10 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                         render={({ field }) => (
                             <SelectTokenDialog
                                 title={field.value?.symbol}
+                                triggerProps={{
+                                    bg: field.value ? "bg.subtle" : "",
+                                    color: field.value ? "bg.inverted" : "",
+                                }}
                                 tokenList={TOKEN_LIST}
                                 placeholder="Chọn token cung cấp"
                                 selectedToken={field.value}
@@ -61,10 +66,20 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 onSelectToken={(token) => {
                                     field.onChange(token);
                                 }}
+                                triggerProps={{
+                                    bg: field.value ? "bg.subtle" : "",
+                                    color: field.value ? "bg.inverted" : "",
+                                }}
                             />
                         )}
                     />
                 </HStack>
+                <VStack w={"full"} align={"start"}>
+                    <FormFieldTitle
+                        title="Bậc phí"
+                        description="Chọn bậc phí cho vị thế của bạn. Bậc phí ảnh hưởng đến chi phí giao dịch và hiệu suất của vị thế."
+                    />
+                </VStack>
                 <Button
                     type='submit'>
                     Tạo vị thế
@@ -73,3 +88,10 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         </form>
     );
 };
+
+const FormFieldTitle: React.FC<{ title: string, description?: string }> = ({ title, description }) => (
+    <VStack align={"start"} w={"full"}>
+        <Text fontSize="lg" fontWeight="semibold">{title}</Text>
+        {description && <Text fontSize="sm" color="fg.subtle">{description}</Text>}
+    </VStack>
+);
