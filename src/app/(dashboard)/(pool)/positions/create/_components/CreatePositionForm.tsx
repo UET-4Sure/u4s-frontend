@@ -369,7 +369,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     userAddress={userAddress}
                     onCreatePosition={handleCreatePosition}
                 />
-                <StepsNextTrigger asChild>
+                {/* <StepsNextTrigger asChild>
                     <Button
                         w={"full"}
                         colorPalette={"primary"}
@@ -377,7 +377,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     >
                         Tạo vị thế
                     </Button>
-                </StepsNextTrigger>
+                </StepsNextTrigger> */}
             </MotionVStack>
         );
     }, [watch, errors]);
