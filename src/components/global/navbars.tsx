@@ -3,11 +3,14 @@
 import { siteConfig } from "@/config/site";
 import { chakra, For, HStack, HtmlProps, Image, Link, Text, VStack } from "@chakra-ui/react"
 import NextImage from "next/image";
+import NextLink from "next/link";
+
 import { Tag } from "../ui/tag";
 import { APP_VERSION } from "@/config/constants";
 import { ProfileMenu } from "@/app/(dashboard)/_components/ProfileMenu";
 import { ConnectWalletButton } from "./wallet";
 import { HoverCardContent, HoverCardRoot, HoverCardTrigger } from "../ui/hover-card";
+
 const ChakraHeader = chakra.header;
 
 const Brand = () => (
@@ -103,6 +106,16 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         </HoverCardRoot>
     )
 
+    const FaucetMenu = () => (
+        <Link asChild>
+            <NextLink
+                href={"/faucet"}
+            >
+                Faucet
+            </NextLink>
+        </Link>
+    )
+
     return (
         <ChakraHeader
             position="sticky"
@@ -116,6 +129,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
                 <BrandAndAppSnippet />
                 <HStack flex={"1"}>
                     <TradeMenu />
+                    <FaucetMenu />
                 </HStack>
                 <ProfileMenu />
             </HStack>
