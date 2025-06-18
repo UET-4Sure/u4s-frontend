@@ -5,13 +5,13 @@ import { SelectTokenDialog } from '@/components/widgets/components/SelectTokenDi
 import { HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import { useTokenList } from '@/hooks/data/useTokenList';
 import { StepsCompletedContent, StepsContent, StepsIndicator, StepsItem, StepsList, StepsNextTrigger, StepsRoot } from '@/components/ui/steps';
 import { SwapWidget } from '@/components/widgets/swap/Swap';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
 import { getPoolConfig, POOL_ADDRESSES, TOKEN_ADDRESSES, HOOK_CONTRACT_ADDRESS } from '@/app/(dashboard)/(trade)/swap/config';
-import { ethers } from 'ethers';
+import { errors, ethers } from 'ethers';
 import { parseUnits } from 'ethers/lib/utils';
 import { toaster } from '@/components/ui/toaster';
 import POSITION_MANAGER_ABI from '@/abis/PositionManager.json';
@@ -37,6 +37,7 @@ const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
 const POOL_MANAGER_ADDRESS = "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543";
 
 const MotionVStack = motion.create(VStack);
+const MotionStepContent = motion.create(StepsContent);
 
 interface CreatePositionFormValues {
     fromToken: LocalToken;
@@ -53,8 +54,9 @@ interface CreatePositionFormProps extends StackProps {
 export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children, ...props }) => {
     const [showAdvanced, setShowAdvanced] = useState(false);
     const steps = useSteps({
-        defaultStep: 1,
+        defaultStep: 0,
         count: 2,
+        linear: true,
     })
     const { data: tokenList } = useTokenList();
     const { writeContractAsync } = useWriteContract();
@@ -354,6 +356,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 exit={{ opacity: 0, y: -20 }}
                 align={"start"}
                 w={"full"}
+                gap={4}
             >
                 <FormFieldTitle
                     title="Chọn số lượng token"
@@ -366,9 +369,18 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     userAddress={userAddress}
                     onCreatePosition={handleCreatePosition}
                 />
+                <StepsNextTrigger asChild>
+                    <Button
+                        w={"full"}
+                        colorPalette={"primary"}
+                        type="submit"
+                    >
+                        Tạo vị thế
+                    </Button>
+                </StepsNextTrigger>
             </MotionVStack>
         );
-    }, [watch, steps]);
+    }, [watch, errors]);
 
     const stepRenders = [
         {
@@ -383,13 +395,15 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         }
     ]
 
+    const isStep1Completed = !!(watch("fromToken") && watch("toToken"));
+
     return (
         <form style={{ width: '100%' }}>
             <StepsRoot
                 colorPalette={"bg"}
                 orientation={"vertical"}
                 defaultStep={0}
-                count={stepRenders.length}
+                linear={isStep1Completed}
             >
                 <StepsList>
                     {stepRenders.map((step, index) => (
@@ -405,14 +419,16 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                         </StepsItem>
                     ))}
                 </StepsList>
-                {stepRenders.map((step, index) => (
-                    <StepsContent
-                        key={index}
-                        index={index}
-                    >
-                        {step.content}
-                    </StepsContent>
-                ))}
+                <AnimatePresence mode="wait">
+                    {stepRenders.map((step, index) => (
+                        <StepsContent
+                            key={index}
+                            index={index}
+                        >
+                            {step.content}
+                        </StepsContent>
+                    ))}
+                </AnimatePresence>
             </StepsRoot>
         </form>
     );
