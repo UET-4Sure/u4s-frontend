@@ -8,7 +8,7 @@ export default function Layout({
     children: React.ReactNode;
 }>) {
     return (
-        <VStack>
+        <VStack overflow={"auto"} minH={"100vh"} w={"full"}>
             <LandingNavbar />
             {children}
         </VStack>
