@@ -1,24 +1,26 @@
 "use client";
 
 import { ConnectWalletButton } from "@/components/global/wallet";
-import { ButtonProps } from "@/components/ui/button";
+import { ButtonProps, Button } from "@/components/ui/button";
 import { siteConfig } from "@/config/site";
 import { useWalletLogin } from "@/hooks/useWalletLogin";
-import { Button, Link, LinkProps } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
 
 interface StartButtonProps extends ButtonProps { }
 export const StartButton: React.FC<StartButtonProps> = (props) => {
     const { isAuthenticated } = useWalletLogin();
-
+    const router = useRouter();
     if (!isAuthenticated) {
         return <ConnectWalletButton />
     }
 
     return (
-        <Link href={"/dashboard"} target="_blank" rel="noopener noreferrer" colorPalette="primary" color={"primary.solid"} asChild>
-            <Button>
-                Bắt đầu ngay
-            </Button>
-        </Link>
+        <Button
+            onClick={() => { router.push("/dashboard") }}
+            colorPalette={isAuthenticated ? "primary" : "gray"}
+            {...props}
+        >
+            Bắt đầu ngay
+        </Button>
     )
 }
