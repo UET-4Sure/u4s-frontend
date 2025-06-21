@@ -141,11 +141,6 @@ const TokenItem: React.FC<TokenItemProps> = ({
             </Box>
 
             <VStack align="end" gap={0}>
-                {config.showBalances && token.balance && (
-                    <Text fontSize="sm" fontWeight="medium">
-                        {parseFloat(token.balance).toFixed(4)}
-                    </Text>
-                )}
                 {config.showPrices && token.price && (
                     <Text fontSize="xs" color="gray.500">
                         ${parseFloat(token.price).toFixed(2)}
