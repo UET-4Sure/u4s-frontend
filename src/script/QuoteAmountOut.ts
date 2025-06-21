@@ -14,7 +14,7 @@ export async function quoteAmountOut(tokenIn: string, tokenOut: string, amountIn
     const quoterContract = new ethers.Contract(
         QUOTER_CONTRACT_ADDRESS,
         QUOTER_ABI.abi,
-        new ethers.JsonRpcProvider(RPC_URL)
+        new ethers.providers.JsonRpcProvider(RPC_URL)
     )
 
     const poolConfig = getPoolConfig(tokenIn, tokenOut);
@@ -28,10 +28,10 @@ export async function quoteAmountOut(tokenIn: string, tokenOut: string, amountIn
         const quotedAmountOut = await quoterContract.quoteExactInputSingle.staticCall({
             poolKey: poolConfig.poolKey,
             zeroForOne: zeroForOne,
-            exactAmount: ethers.parseUnits(amountIn.toString(), 18),
+            exactAmount: ethers.utils.parseUnits(amountIn.toString(), 18),
             hookData: "0x00",
         })
-        return ethers.formatUnits(quotedAmountOut.amountOut, 18);
+        return ethers.utils.formatUnits(quotedAmountOut.amountOut, 18);
     } catch (error) {
         console.error("Error quoting amount out:", error);
         return 0;

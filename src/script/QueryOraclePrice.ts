@@ -26,7 +26,7 @@ export async function queryOraclePrice(tokenAddress: string): Promise<string> {
             return "0";
         }
 
-        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
         const priceFeed = new ethers.Contract(
             priceFeedAddress,
             CHAINLINK_PRICE_FEED_ABI,
@@ -40,7 +40,7 @@ export async function queryOraclePrice(tokenAddress: string): Promise<string> {
         const roundData = await priceFeed.latestRoundData();
         
         // Format the price with the correct number of decimals
-        const price = ethers.formatUnits(roundData.answer, decimals);
+        const price = ethers.utils.formatUnits(roundData.answer, decimals);
         
         console.log('Oracle price fetched:', {
             token: tokenAddress,
