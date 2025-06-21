@@ -170,7 +170,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </Button>
             </StepsNextTrigger>
         </MotionVStack >
-    ), [tokenList, handleSubmit, watch, register, errors]);
+    ), [tokenList, watch, errors]);
 
     const Step2 = useMemo(() => () => {
         const fromToken = watch("fromToken");
@@ -274,7 +274,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     amount1: parseUnits(toAmount, toToken.decimals).toString(),
                     useFullPrecision: true,
                 });
-                
+
 
                 // slippage limits - add 1 wei to each amount
                 const amount0Max = parseUnits(fromAmount, fromToken.decimals).add(1);
@@ -380,7 +380,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </StepsNextTrigger> */}
             </MotionVStack>
         );
-    }, [watch, errors]);
+    }, [tokenList, watch, errors, userAddress]);
 
     const stepRenders = [
         {
