@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { siteConfig } from "@/config/site";
 import { headers } from "next/headers";
 import { Provider } from "./provider";
+import { Footer } from "@/components/global/footer";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -36,6 +37,7 @@ export default async function RootLayout({
         <Provider cookies={cookies}>
           <Toaster />
           {children}
+          <Footer />
         </Provider>
       </body>
     </html>
