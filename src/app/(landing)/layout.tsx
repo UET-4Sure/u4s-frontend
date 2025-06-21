@@ -1,4 +1,6 @@
 import { VStack } from "@chakra-ui/react";
+import NextJsTopLoader from "nextjs-toploader";
+
 import { LandingNavbar } from "@/components/global/navbars";
 
 
@@ -8,9 +10,9 @@ export default function Layout({
     children: React.ReactNode;
 }>) {
     return (
-        <VStack overflow={"auto"} minH={"100vh"} w={"full"}>
+        <VStack overflow={"auto"} minH={"100vh"} w={"full"} >
             <LandingNavbar />
             {children}
-        </VStack>
+        </VStack >
     );
 }

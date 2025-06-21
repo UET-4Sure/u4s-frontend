@@ -7,18 +7,9 @@ import { Tag } from "../ui/tag";
 import { APP_VERSION } from "@/config/constants";
 import { ProfileMenu } from "@/app/(dashboard)/_components/ProfileMenu";
 import { ConnectWalletButton } from "./wallet";
+import { BrandLogo } from "./brand";
 const ChakraHeader = chakra.header;
 
-const Brand = () => (
-    <Image asChild>
-        <NextImage
-            src="/RootFaviconLight.png"
-            alt="Brand Logo"
-            width={48}
-            height={48}
-        />
-    </Image>
-);
 
 const VersionTag = () => (
     <Tag size={"md"} rounded={"full"} colorPalette={"secondary"} variant={"solid"}>
@@ -28,7 +19,7 @@ const VersionTag = () => (
 
 const BrandAndAppSnippet = () => (
     <HStack align={"start"} justify={"center"} gap={"1"}>
-        <Brand />
+        <BrandLogo />
         <VStack align={"start"} justify={"center"} gap={"1"}>
             <Text fontSize={"md"} fontWeight={"semibold"}>{siteConfig.name}</Text>
             <VersionTag />

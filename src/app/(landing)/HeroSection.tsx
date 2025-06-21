@@ -3,6 +3,8 @@
 import { Box, Flex, HStack, Heading, HtmlProps, Image, Span, Text, chakra } from "@chakra-ui/react";
 import { motion } from "framer-motion";
 import NextImage from "next/image";
+import { ExploreButton } from "./_components/ExploreButton";
+import { ConnectWalletButton } from "@/components/global/wallet";
 
 const MotionBox = motion.create(Box);
 const MotionHeading = motion.create(Heading);
@@ -30,7 +32,7 @@ export const HeroSection: React.FC<HeroSectionProps> = (props) => {
                         initial={{ opacity: 0, y: 30 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.3 }}
-                        as={"h1"} size={["lg", "2xl", "3xl", "4xl"]}
+                        as={"h1"} size={["lg", "2xl", "3xl", "4xl"]} mt={"1"}
                         color={"fg"}
                     >
                         Tinh thần
@@ -41,9 +43,14 @@ export const HeroSection: React.FC<HeroSectionProps> = (props) => {
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.6 }}
+                        mt={"1"}
                     >
                         Xây dựng trên Uniswap V4, VinaSwap cung cấp nền tảng DeFi hiện đại, minh bạch, an toàn, phục vụ cộng đồng Việt và thúc đẩy hệ sinh thái DeFi phát triển bền vững
                     </MotionText>
+                    <HStack gap={"4"} my={"6"}>
+                        <ConnectWalletButton />
+                        <ExploreButton />
+                    </HStack>
                 </Box>
                 <Image
                     w={["100%", "100%", "320px", "480", "640px"]}
