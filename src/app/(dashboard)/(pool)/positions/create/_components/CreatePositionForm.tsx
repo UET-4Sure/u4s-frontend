@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { SelectTokenDialog } from '@/components/widgets/components/SelectTokenDialog';
-import { HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
+import { Center, chakra, HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
 import { useMemo, useState } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -298,8 +298,10 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                         <SelectTokenDialog
                             title={field.value?.symbol}
                             triggerProps={{
+                                size: "lg",
                                 bg: field.value ? "bg.subtle" : "",
                                 color: field.value ? "bg.inverted" : "",
+                                flex: 1,
                             }}
                             tokenList={tokenList || []}
                             placeholder="Chọn token cung cấp"
@@ -319,12 +321,14 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                             tokenList={tokenList || []}
                             placeholder="Chọn token nhận"
                             selectedToken={field.value}
-                            onSelectToken={(token) => {
-                                field.onChange(token);
-                            }}
                             triggerProps={{
+                                size: "lg",
                                 bg: field.value ? "bg.subtle" : "",
                                 color: field.value ? "bg.inverted" : "",
+                                flex: 1,
+                            }}
+                            onSelectToken={(token) => {
+                                field.onChange(token);
                             }}
                         />
                     )}
@@ -335,6 +339,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 <Button
                     disabled={!watch("token0") || !watch("token1")}
                     w={"full"}
+                    size={"lg"}
                     onClick={() => {
                         if (!watch("token0") || !watch("token1")) {
                             toaster.error({
@@ -386,6 +391,10 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 balanceProps={{
                                     color: "fg.muted",
                                 }}
+                                wrapperProps={{
+                                    maxW: "full",
+                                    maxH: "full",
+                                }}
                                 selectTokenDialogProps={{
                                     triggerProps: {
                                         disabled: !!field.value,
@@ -412,6 +421,10 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 balanceProps={{
                                     color: "fg.muted",
                                 }}
+                                wrapperProps={{
+                                    maxW: "full",
+                                    maxH: "full",
+                                }}
                                 selectTokenDialogProps={{
                                     triggerProps: {
                                         disabled: !!field.value,
@@ -427,7 +440,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </VStack>
                 <Button
                     w={"full"}
-                    colorPalette={"primary"}
+                    size={"lg"}
                     type="submit"
                 >
                     Tạo vị thế
@@ -454,7 +467,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     return (
         <StepsRoot
             colorPalette={"bg"}
-            orientation={"vertical"}
+            orientation={["horizontal", "horizontal", "vertical"]}
             defaultStep={0}
             count={stepRenders.length}
             linear={!isStep1Completed}
@@ -470,16 +483,19 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 ))}
             </StepsList>
             <AnimatePresence mode="wait">
-                <form onSubmit={handleSubmit(onSubmit)}>
-                    {stepRenders.map((step, index) => (
-                        <StepsContent
-                            key={index}
-                            index={index}
-                        >
-                            {step.content}
-                        </StepsContent>
-                    ))}
-                </form>
+                <Center flex={1} w={"full"} maxW={"lg"}>
+                    <chakra.form w={"full"} h={"full"} onSubmit={handleSubmit(onSubmit)}>
+                        {stepRenders.map((step, index) => (
+                            <StepsContent
+                                w={"full"}
+                                key={index}
+                                index={index}
+                            >
+                                {step.content}
+                            </StepsContent>
+                        ))}
+                    </chakra.form>
+                </Center>
             </AnimatePresence>
         </StepsRoot>
     );
