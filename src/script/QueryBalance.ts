@@ -9,7 +9,7 @@ const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "";
 
 export async function queryBalance(tokenAddress: string, userAddress: string) {
     try {
-        const provider = new ethers.JsonRpcProvider(RPC_URL);
+        const provider = new ethers.providers.JsonRpcProvider(RPC_URL);
         const tokenContract = new ethers.Contract(
             tokenAddress,
             ERC20_ABI.abi,
@@ -20,7 +20,7 @@ export async function queryBalance(tokenAddress: string, userAddress: string) {
         const balance = await tokenContract.balanceOf(userAddress);
         
         // Format with correct decimals
-        return ethers.formatUnits(balance, 18);
+        return ethers.utils.formatUnits(balance, 18);
     } catch (error) {
         console.error('Error querying balance:', error);
         return "0";
