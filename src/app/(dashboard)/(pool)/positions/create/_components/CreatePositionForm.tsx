@@ -8,7 +8,7 @@ import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTokenList } from '@/hooks/data/useTokenList';
 import { StepsContent, StepsItem, StepsList, StepsNextTrigger, StepsRoot } from '@/components/ui/steps';
-import { SwapWidget } from '@/components/widgets/swap/Swap';
+import { SwapInput, SwapWidget } from '@/components/widgets/swap/Swap';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
 import { getPoolConfig, POOL_ADDRESSES, TOKEN_ADDRESSES, HOOK_CONTRACT_ADDRESS } from '@/app/(dashboard)/(trade)/swap/config';
 import { errors, ethers } from 'ethers';
@@ -40,10 +40,10 @@ const MotionVStack = motion.create(VStack);
 const MotionStepContent = motion.create(StepsContent);
 
 interface CreatePositionFormValues {
-    fromToken: LocalToken;
-    toToken: LocalToken;
-    fromAmount: string;
-    toAmount: string;
+    token0: LocalToken;
+    token1: LocalToken;
+    token0Amount: string;
+    token1Amount: string;
     slippage: string;
 }
 
@@ -80,7 +80,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
     const onSubmit = async (data: CreatePositionFormValues) => {
         try {
-            if (!data.fromToken || !data.toToken) {
+            if (!data.token0 || !data.token1) {
                 toaster.error({
                     title: "Lỗi tạo vị thế",
                     description: "Vui lòng chọn cả hai token.",
@@ -88,7 +88,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 return;
             }
 
-            const poolConfig = await getPoolConfig(data.fromToken.address, data.toToken.address);
+            const poolConfig = await getPoolConfig(data.token0.address, data.token1.address);
             if (!poolConfig) {
                 toaster.error({
                     title: "Lỗi tạo vị thế",
@@ -100,14 +100,14 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
             // First approve tokens to Permit2
             await writeContractAsync({
-                address: data.fromToken.address as `0x${string}`,
+                address: data.token0.address as `0x${string}`,
                 abi: ERC20_ABI.abi,
                 functionName: "approve",
                 args: [PERMIT2_ADDRESS as `0x${string}`, ethers.constants.MaxUint256],
             });
 
             await writeContractAsync({
-                address: data.toToken.address as `0x${string}`,
+                address: data.token1.address as `0x${string}`,
                 abi: ERC20_ABI.abi,
                 functionName: "approve",
                 args: [PERMIT2_ADDRESS as `0x${string}`, ethers.constants.MaxUint256],
@@ -122,7 +122,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 abi: PERMIT2_ABI,
                 functionName: "approve",
                 args: [
-                    data.fromToken.address,
+                    data.token0.address,
                     POSITION_MANAGER_ADDRESS,
                     MAX_UINT160,
                     MAX_UINT48
@@ -134,7 +134,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 abi: PERMIT2_ABI,
                 functionName: "approve",
                 args: [
-                    data.toToken.address,
+                    data.token1.address,
                     POSITION_MANAGER_ADDRESS,
                     MAX_UINT160,
                     MAX_UINT48
@@ -146,10 +146,10 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             }
 
             const provider = new ethers.providers.Web3Provider(publicClient.transport);
-            const { sqrtPriceX96, tick, liquidity } = await queryPoolInfo(data.fromToken.address, data.toToken.address);
+            const { sqrtPriceX96, tick, liquidity } = await queryPoolInfo(data.token0.address, data.token1.address);
 
-            const token0 = new UniswapToken(publicClient.chain.id, data.fromToken.address, data.fromToken.decimals, data.fromToken.symbol, data.fromToken.name);
-            const token1 = new UniswapToken(publicClient.chain.id, data.toToken.address, data.toToken.decimals, data.toToken.symbol, data.toToken.name);
+            const token0 = new UniswapToken(publicClient.chain.id, data.token0.address, data.token0.decimals, data.token0.symbol, data.token0.name);
+            const token1 = new UniswapToken(publicClient.chain.id, data.token1.address, data.token1.decimals, data.token1.symbol, data.token1.name);
 
             const pool = new Pool(
                 token0,
@@ -175,15 +175,15 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 pool: pool,
                 tickLower: tickLower,
                 tickUpper: tickUpper,
-                amount0: parseUnits(data.fromAmount, data.fromToken.decimals).toString(),
-                amount1: parseUnits(data.toAmount, data.toToken.decimals).toString(),
+                amount0: parseUnits(data.token0Amount, data.token0.decimals).toString(),
+                amount1: parseUnits(data.token1Amount, data.token1.decimals).toString(),
                 useFullPrecision: true,
             });
 
 
             // slippage limits - add 1 wei to each amount
-            const amount0Max = parseUnits(data.fromAmount, data.fromToken.decimals).add(1);
-            const amount1Max = parseUnits(data.toAmount, data.toToken.decimals).add(1);
+            const amount0Max = parseUnits(data.token0Amount, data.token0.decimals).add(1);
+            const amount1Max = parseUnits(data.token1Amount, data.token1.decimals).add(1);
 
             // Set deadline to 20 minutes from now
             const deadline = Math.floor(Date.now() / 1000) + 20 * 60;
@@ -254,6 +254,29 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         }
     }
 
+    const registers = {
+        token0: register("token0", {
+            required: "Vui lòng chọn token cung cấp",
+        }),
+        token1: register("token1", {
+            required: "Vui lòng chọn token nhận",
+        }),
+        token0Amount: register("token0Amount", {
+            required: "Vui lòng nhập số lượng token cung cấp",
+            pattern: {
+                value: /^\d+(\.\d+)?$/,
+                message: "Số lượng không hợp lệ",
+            },
+        }),
+        token1Amount: register("token1Amount", {
+            required: "Vui lòng nhập số lượng token nhận",
+            pattern: {
+                value: /^\d+(\.\d+)?$/,
+                message: "Số lượng không hợp lệ",
+            },
+        }),
+    };
+
     const Step1 = useMemo(() => () => (
         <MotionVStack
             initial={{ opacity: 0, y: 20 }}
@@ -269,7 +292,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             />
             <HStack align={"start"} w={"full"}>
                 <Controller
-                    name="fromToken"
+                    name="token0"
                     control={control}
                     render={({ field }) => (
                         <SelectTokenDialog
@@ -288,7 +311,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     )}
                 />
                 <Controller
-                    name="toToken"
+                    name="token1"
                     control={control}
                     render={({ field }) => (
                         <SelectTokenDialog
@@ -310,10 +333,10 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
             <StepsNextTrigger asChild>
                 <Button
-                    disabled={!watch("fromToken") || !watch("toToken")}
+                    disabled={!watch("token0") || !watch("token1")}
                     w={"full"}
                     onClick={() => {
-                        if (!watch("fromToken") || !watch("toToken")) {
+                        if (!watch("token0") || !watch("token1")) {
                             toaster.error({
                                 title: "Lỗi tạo vị thế",
                                 description: "Vui lòng chọn cả hai token.",
@@ -330,181 +353,9 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     ), [tokenList, watch, errors]);
 
     const Step2 = useMemo(() => () => {
-        const fromToken = watch("fromToken");
-        const toToken = watch("toToken");
-        const { writeContractAsync } = useWriteContract();
-        const publicClient = usePublicClient();
+        const token0 = watch("token0");
+        const token1 = watch("token1");
         const { address: userAddress } = useAccount();
-
-        // Create a token list with only the selected tokens
-        const selectedTokens = [fromToken, toToken].filter(Boolean) as LocalToken[];
-
-        const handleCreatePosition = async (fromToken: LocalToken, toToken: LocalToken, fromAmount: string, toAmount: string) => {
-            try {
-                const poolConfig = await getPoolConfig(fromToken.address, toToken.address);
-                if (!poolConfig) {
-                    toaster.error({
-                        title: "Lỗi tạo vị thế",
-                        description: "Không tìm thấy pool cho token của bạn.",
-                    });
-                    return;
-                }
-
-                // First approve tokens to Permit2
-                await writeContractAsync({
-                    address: fromToken.address as `0x${string}`,
-                    abi: ERC20_ABI.abi,
-                    functionName: "approve",
-                    args: [PERMIT2_ADDRESS as `0x${string}`, ethers.constants.MaxUint256],
-                });
-
-                await writeContractAsync({
-                    address: toToken.address as `0x${string}`,
-                    abi: ERC20_ABI.abi,
-                    functionName: "approve",
-                    args: [PERMIT2_ADDRESS as `0x${string}`, ethers.constants.MaxUint256],
-                });
-
-                // Then approve Permit2 to spend tokens
-                const MAX_UINT48 = "281474976710655"; // 2^48 - 1
-                const MAX_UINT160 = "1461501637330902918203684832716283019655932542975"; // 2^160 - 1
-
-                await writeContractAsync({
-                    address: PERMIT2_ADDRESS as `0x${string}`,
-                    abi: PERMIT2_ABI,
-                    functionName: "approve",
-                    args: [
-                        fromToken.address,
-                        POSITION_MANAGER_ADDRESS,
-                        MAX_UINT160,
-                        MAX_UINT48
-                    ],
-                });
-
-                await writeContractAsync({
-                    address: PERMIT2_ADDRESS as `0x${string}`,
-                    abi: PERMIT2_ABI,
-                    functionName: "approve",
-                    args: [
-                        toToken.address,
-                        POSITION_MANAGER_ADDRESS,
-                        MAX_UINT160,
-                        MAX_UINT48
-                    ],
-                });
-
-                if (!publicClient) {
-                    throw new Error("Public client not available");
-                }
-
-                const provider = new ethers.providers.Web3Provider(publicClient.transport);
-                const { sqrtPriceX96, tick, liquidity } = await queryPoolInfo(fromToken.address, toToken.address);
-
-                const token0 = new UniswapToken(publicClient.chain.id, fromToken.address, fromToken.decimals, fromToken.symbol, fromToken.name);
-                const token1 = new UniswapToken(publicClient.chain.id, toToken.address, toToken.decimals, toToken.symbol, toToken.name);
-
-                const pool = new Pool(
-                    token0,
-                    token1,
-                    DEFAULT_FEE,
-                    DEFAULT_TICK_SPACING,
-                    HOOK_CONTRACT_ADDRESS.HOOK,
-                    sqrtPriceX96.toString(),
-                    liquidity.toString(),
-                    tick,
-                );
-
-                // Calculate the widest possible range that aligns with tick spacing
-                // const tickLower = Math.ceil(TickMath.MIN_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
-                // const tickUpper = Math.floor(TickMath.MAX_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
-
-                const tickLower = -600;
-                const tickUpper = 600;
-
-                console.log(tickLower, tickUpper);
-
-                const position = Position.fromAmounts({
-                    pool: pool,
-                    tickLower: tickLower,
-                    tickUpper: tickUpper,
-                    amount0: parseUnits(fromAmount, fromToken.decimals).toString(),
-                    amount1: parseUnits(toAmount, toToken.decimals).toString(),
-                    useFullPrecision: true,
-                });
-
-
-                // slippage limits - add 1 wei to each amount
-                const amount0Max = parseUnits(fromAmount, fromToken.decimals).add(1);
-                const amount1Max = parseUnits(toAmount, toToken.decimals).add(1);
-
-                // Set deadline to 20 minutes from now
-                const deadline = Math.floor(Date.now() / 1000) + 20 * 60;
-
-                // Empty hook data
-                const hookData = "0x";
-
-                // Prepare mint parameters
-                const mintParams = ethers.utils.defaultAbiCoder.encode(
-                    ["tuple(address,address,uint24,int24,address)", "int24", "int24", "uint256", "uint256", "uint256", "address", "bytes"],
-                    [
-                        [
-                            poolConfig.poolKey.currency0,
-                            poolConfig.poolKey.currency1,
-                            poolConfig.poolKey.fee,
-                            poolConfig.poolKey.tickSpacing,
-                            poolConfig.poolKey.hooks
-                        ],
-                        position.tickLower,
-                        position.tickUpper,
-                        position.liquidity.toString(),
-                        amount0Max,
-                        amount1Max,
-                        userAddress,
-                        hookData
-                    ]
-                );
-
-                const settleParams = ethers.utils.defaultAbiCoder.encode(
-                    ["address", "address"],
-                    [poolConfig.poolKey.currency0, poolConfig.poolKey.currency1]
-                );
-
-                // Encode the actions and parameters together
-                const encodedData = ethers.utils.defaultAbiCoder.encode(
-                    ["bytes", "bytes[]"],
-                    [
-                        ethers.utils.solidityPack(
-                            ["uint8", "uint8"],
-                            [2, 13] // SETTLE_PAIR = 2, MINT_POSITION = 13
-                        ),
-                        [mintParams, settleParams]
-                    ]
-                );
-
-                await writeContractAsync({
-                    address: POSITION_MANAGER_ADDRESS as `0x${string}`,
-                    abi: POSITION_MANAGER_ABI.abi,
-                    functionName: "modifyLiquidities",
-                    args: [
-                        encodedData,
-                        deadline
-                    ]
-                });
-
-                toaster.success({
-                    title: "Vị thế đã được tạo",
-                    description: "Vị thế của bạn đã được tạo thành công.",
-                });
-
-                steps.goToNextStep();
-            } catch (error) {
-                console.error("Error creating position:", error);
-                toaster.error({
-                    title: "Lỗi tạo vị thế",
-                    description: "Có lỗi xảy ra khi tạo vị thế. Vui lòng thử lại.",
-                });
-            }
-        };
 
         return (
             <MotionVStack
@@ -517,24 +368,70 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             >
                 <FormFieldTitle
                     title="Chọn số lượng token"
-                    description={`Nhập số lượng ${fromToken?.symbol} và ${toToken?.symbol} bạn muốn cung cấp`}
+                    description={`Nhập số lượng ${token0?.symbol} và ${token1?.symbol} bạn muốn cung cấp`}
                 />
-                <PositionWidget
-                    defaultFromToken={fromToken}
-                    defaultToToken={toToken}
-                    tokenList={selectedTokens}
-                    userAddress={userAddress}
-                    onCreatePosition={handleCreatePosition}
-                />
-                {/* <StepsNextTrigger asChild>
-                    <Button
-                        w={"full"}
-                        colorPalette={"primary"}
-                        type="submit"
-                    >
-                        Tạo vị thế
-                    </Button>
-                </StepsNextTrigger> */}
+
+                <VStack gap={"2"} pos={"relative"}>
+                    <Controller
+                        control={control}
+                        render={({ field }) => (
+                            <SwapInput
+                                label="Token 0"
+                                token={field.value}
+                                amount={watch("token0Amount")}
+                                onAmountChange={(value) => setValue("token0Amount", value)}
+                                tokenList={tokenList}
+                                onTokenSelect={(token) => field.onChange(token)}
+                                userAddress={userAddress}
+                                balanceProps={{
+                                    color: "fg.muted",
+                                }}
+                                selectTokenDialogProps={{
+                                    triggerProps: {
+                                        disabled: !!field.value,
+                                        _disabled: {
+                                            opacity: 1
+                                        }
+                                    }
+                                }}
+                            />
+                        )}
+                        {...registers.token0}
+                    />
+                    <Controller
+                        control={control}
+                        render={({ field }) => (
+                            <SwapInput
+                                label="Token 1"
+                                token={field.value}
+                                amount={watch("token1Amount")}
+                                onAmountChange={(value) => setValue("token1Amount", value)}
+                                tokenList={tokenList}
+                                onTokenSelect={(token) => field.onChange(token)}
+                                userAddress={userAddress}
+                                balanceProps={{
+                                    color: "fg.muted",
+                                }}
+                                selectTokenDialogProps={{
+                                    triggerProps: {
+                                        disabled: !!field.value,
+                                        _disabled: {
+                                            opacity: 1
+                                        }
+                                    }
+                                }}
+                            />
+                        )}
+                        {...registers.token1}
+                    />
+                </VStack>
+                <Button
+                    w={"full"}
+                    colorPalette={"primary"}
+                    type="submit"
+                >
+                    Tạo vị thế
+                </Button>
             </MotionVStack>
         );
     }, [tokenList, watch, errors, userAddress]);
@@ -552,13 +449,13 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         }
     ]
 
-    const isStep1Completed = !!(watch("fromToken") && watch("toToken"));
+    const isStep1Completed = !!(watch("token0") && watch("token1"));
 
     return (
         <StepsRoot
             colorPalette={"bg"}
             orientation={"vertical"}
-            defaultStep={1}
+            defaultStep={0}
             count={stepRenders.length}
             linear={!isStep1Completed}
         >
