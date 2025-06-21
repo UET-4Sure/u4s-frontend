@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import NextImage from "next/image";
 import { ExploreButton } from "./_components/ExploreButton";
 import { ConnectWalletButton } from "@/components/global/wallet";
+import { StartButton } from "./_components/StartButton";
 
 const MotionBox = motion.create(Box);
 const MotionHeading = motion.create(Heading);
@@ -48,7 +49,7 @@ export const HeroSection: React.FC<HeroSectionProps> = (props) => {
                         Xây dựng trên Uniswap V4, VinaSwap cung cấp nền tảng DeFi hiện đại, minh bạch, an toàn, phục vụ cộng đồng Việt và thúc đẩy hệ sinh thái DeFi phát triển bền vững
                     </MotionText>
                     <HStack gap={"4"} my={"6"}>
-                        <ConnectWalletButton />
+                        <StartButton />
                         <ExploreButton />
                     </HStack>
                 </Box>

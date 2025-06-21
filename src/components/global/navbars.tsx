@@ -8,6 +8,7 @@ import { APP_VERSION } from "@/config/constants";
 import { ProfileMenu } from "@/app/(dashboard)/_components/ProfileMenu";
 import { ConnectWalletButton } from "./wallet";
 import { BrandLogo } from "./brand";
+import { useWalletLogin } from "@/hooks/useWalletLogin";
 const ChakraHeader = chakra.header;
 
 
@@ -29,6 +30,8 @@ const BrandAndAppSnippet = () => (
 
 interface LandingNavbarProps extends HtmlProps { }
 export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
+    const { isAuthenticated } = useWalletLogin();
+
     const NavLinks = () => (
         <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
             <For each={Object.entries(siteConfig.paths)}>
@@ -51,7 +54,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
                 <BrandAndAppSnippet />
                 <NavLinks />
-                <ConnectWalletButton />
+                {!isAuthenticated && <ConnectWalletButton />}
             </HStack>
         </ChakraHeader>
     );
