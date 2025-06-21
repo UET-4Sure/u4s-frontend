@@ -1,5 +1,4 @@
-import { Center } from "@chakra-ui/react";
-import { Provider } from "./provider";
+import { TradeTabs } from "./_components/TradeTabs";
 
 export default function Layout({
     children,
@@ -7,8 +6,9 @@ export default function Layout({
     children: React.ReactNode;
 }>) {
     return (
-        <Provider>
+        <>
+            <TradeTabs />
             {children}
-        </Provider>
+        </>
     );
 }
