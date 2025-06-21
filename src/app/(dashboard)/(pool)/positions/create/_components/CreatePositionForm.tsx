@@ -71,7 +71,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         control,
         watch,
         setValue,
-        formState: { errors }
+        formState: { isLoading, errors }
     } = useForm<CreatePositionFormValues>({
         defaultValues: {
             slippage: "0.5"
@@ -440,6 +440,8 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     />
                 </VStack>
                 <Button
+                    loading={isLoading}
+                    loadingText={"Đang tạo vị thế..."}
                     w={"full"}
                     size={"lg"}
                     type="submit"
