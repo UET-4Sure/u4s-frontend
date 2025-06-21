@@ -91,8 +91,7 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
     return (
         <VStack
             w={"full"}
-            aspectRatio={"3/1"}
-            maxH={"36"}
+            h={"36"}
             rounded={"3xl"}
             bg={"bg.subtle"}
             p={"4"}
