@@ -302,6 +302,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 bg: field.value ? "bg.subtle" : "",
                                 color: field.value ? "bg.inverted" : "",
                                 flex: 1,
+                                justifyContent: "space-between",
                             }}
                             tokenList={tokenList || []}
                             placeholder="Chọn token cung cấp"
@@ -326,6 +327,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 bg: field.value ? "bg.subtle" : "",
                                 color: field.value ? "bg.inverted" : "",
                                 flex: 1,
+                                justifyContent: "space-between",
                             }}
                             onSelectToken={(token) => {
                                 field.onChange(token);
@@ -376,7 +378,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     description={`Nhập số lượng ${token0?.symbol} và ${token1?.symbol} bạn muốn cung cấp`}
                 />
 
-                <VStack gap={"2"} pos={"relative"}>
+                <VStack w={"full"} gap={"2"} pos={"relative"}>
                     <Controller
                         control={control}
                         render={({ field }) => (
@@ -391,9 +393,9 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 balanceProps={{
                                     color: "fg.muted",
                                 }}
+                                w={"full"}
                                 wrapperProps={{
                                     maxW: "full",
-                                    maxH: "full",
                                 }}
                                 selectTokenDialogProps={{
                                     triggerProps: {
@@ -423,7 +425,6 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 }}
                                 wrapperProps={{
                                     maxW: "full",
-                                    maxH: "full",
                                 }}
                                 selectTokenDialogProps={{
                                     triggerProps: {
