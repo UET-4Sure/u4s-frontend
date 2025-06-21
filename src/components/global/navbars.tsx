@@ -10,6 +10,7 @@ import { APP_VERSION } from "@/config/constants";
 import { ProfileMenu } from "@/app/(dashboard)/_components/ProfileMenu";
 import { ConnectWalletButton } from "./wallet";
 import { HoverCardContent, HoverCardRoot, HoverCardTrigger } from "../ui/hover-card";
+import { Button } from "../ui/button";
 
 const ChakraHeader = chakra.header;
 
@@ -92,19 +93,48 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
             <HoverCardTrigger asChild>
                 <Link href={featLinks[0].href}>Giao dịch</Link>
             </HoverCardTrigger>
-            <HoverCardContent>
+            <HoverCardContent p={"2"}>
                 <VStack align={"start"}>
                     <For each={featLinks}>
                         {(path) => (
-                            <Link href={path.href} key={path.label}>
-                                {path.label}
-                            </Link>
+                            <Button w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"} asChild>
+                                <Link href={path.href} key={path.label}>
+                                    {path.label}
+                                </Link>
+                            </Button>
                         )}
                     </For>
                 </VStack>
             </HoverCardContent>
         </HoverCardRoot>
     )
+
+    const PoolMenu = () => {
+        const featLinks = [
+            { label: "Tạo vị thế", href: "/positions/create" },
+        ]
+
+        return (
+            <HoverCardRoot openDelay={100}>
+                <HoverCardTrigger asChild>
+                    <Link href={featLinks[0].href}>Pool</Link>
+                </HoverCardTrigger>
+                <HoverCardContent p={"2"}>
+                    <VStack align={"start"}>
+                        <For each={featLinks}>
+                            {(path) => (
+                                <Button w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"} asChild>
+                                    <Link href={path.href} key={path.label}>
+                                        {path.label}
+                                    </Link>
+                                </Button>
+                            )}
+                        </For>
+                    </VStack>
+                </HoverCardContent>
+            </HoverCardRoot>
+        )
+    }
 
     const FaucetMenu = () => (
         <Link asChild>
@@ -130,6 +160,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
                 <HStack flex={"1"}>
                     <TradeMenu />
                     <FaucetMenu />
+                    <PoolMenu />
                 </HStack>
                 <ProfileMenu />
             </HStack>
