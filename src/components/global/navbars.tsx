@@ -14,6 +14,8 @@ import { Button } from "../ui/button";
 
 import { BrandLogo } from "./brand";
 import { useWalletLogin } from "@/hooks/useWalletLogin";
+import { useMotionValueEvent, useScroll } from "framer-motion";
+import { useEffect, useState } from "react";
 const ChakraHeader = chakra.header;
 
 const Brand = () => (
@@ -77,6 +79,9 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
 
 interface DashboardNavbarProps extends HtmlProps { }
 export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
+    const { scrollY } = useScroll();
+    const [scrollYValue, setScrollYValue] = useState(0);
+
     const featLinks = [
         { label: "Trao đổi", href: "/swap" },
         { label: "Mua", href: "/buy" },
@@ -150,9 +155,18 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         </Link>
     )
 
+    useMotionValueEvent(scrollY, "change", (latest) => {
+        setScrollYValue(latest);
+        console.log("bg/" + ((Math.floor(latest * 2) % 101) > 100 ? "100" : Math.floor(latest * 2) % 101))
+    });
+
     return (
         <ChakraHeader
             position="sticky"
+            bg={"bg/" + (scrollYValue * 2 > 100 ? "100" : scrollYValue * 2)}
+            shadow={scrollYValue > 0 ? "md" : "none"}
+            transition={"box-shadow 0.5s ease-in-out"}
+            zIndex={"sticky"}
             w={"full"}
             top={0}
             left={0}
