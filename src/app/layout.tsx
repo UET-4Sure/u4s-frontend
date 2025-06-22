@@ -18,6 +18,28 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: siteConfig.name,
   description: siteConfig.description,
+  openGraph: {
+    title: siteConfig.name,
+    description: siteConfig.description,
+    url: siteConfig.url,
+    countryName: "Vietnam",
+    type: "website",
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: `${siteConfig.url}/brand/logo-presentation.svg`,
+        width: 973,
+        height: 512,
+        alt: "VinaSwap Presentation Image",
+      }
+    ],
+  },
+  twitter: {
+    title: siteConfig.name,
+    description: siteConfig.description,
+    card: "summary_large_image",
+    images: [`${siteConfig.url}/brand/logo-presentation.svg`],
+  },
 };
 
 export default async function RootLayout({
