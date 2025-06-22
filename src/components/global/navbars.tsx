@@ -16,6 +16,16 @@ import { BrandLogo } from "./brand";
 import { useWalletLogin } from "@/hooks/useWalletLogin";
 const ChakraHeader = chakra.header;
 
+const Brand = () => (
+    <Image asChild>
+        <NextImage
+            src="/brand/logo-favicon.svg"
+            alt="Brand Logo"
+            width={48}
+            height={48}
+        />
+    </Image>
+);
 
 const VersionTag = () => (
     <Tag size={"md"} rounded={"full"} colorPalette={"secondary"} variant={"solid"}>
