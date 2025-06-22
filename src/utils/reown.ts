@@ -33,7 +33,7 @@ const appKit: CreateAppKit = {
         name: siteConfig.name,
         description: siteConfig.description,
         url: siteConfig.url,
-        icons: ["https:localhost:3000/brand/logo-favicon.svg"],
+        icons: [`${siteConfig.url}/brand/logo-favicon.svg`],
     },
     enableAuthLogger: true,
     enableNetworkSwitch: true,
