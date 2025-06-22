@@ -12,6 +12,8 @@ import { ConnectWalletButton } from "./wallet";
 import { HoverCardContent, HoverCardRoot, HoverCardTrigger } from "../ui/hover-card";
 import { Button } from "../ui/button";
 
+import { BrandLogo } from "./brand";
+import { useWalletLogin } from "@/hooks/useWalletLogin";
 const ChakraHeader = chakra.header;
 
 const Brand = () => (
@@ -33,7 +35,7 @@ const VersionTag = () => (
 
 const BrandAndAppSnippet = () => (
     <HStack align={"start"} justify={"center"} gap={"1"}>
-        <Brand />
+        <BrandLogo />
         <VStack align={"start"} justify={"center"} gap={"1"}>
             <Text fontSize={"md"} fontWeight={"semibold"}>{siteConfig.name}</Text>
             <VersionTag />
@@ -43,6 +45,8 @@ const BrandAndAppSnippet = () => (
 
 interface LandingNavbarProps extends HtmlProps { }
 export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
+    const { isAuthenticated } = useWalletLogin();
+
     const NavLinks = () => (
         <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
             <For each={Object.entries(siteConfig.paths)}>
@@ -65,7 +69,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
                 <BrandAndAppSnippet />
                 <NavLinks />
-                <ConnectWalletButton />
+                {!isAuthenticated && <ConnectWalletButton />}
             </HStack>
         </ChakraHeader>
     );
