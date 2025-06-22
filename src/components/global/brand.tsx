@@ -6,7 +6,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = (props) => {
     return (
         <Image asChild {...props}>
             <NextImage
-                src="/RootFaviconLight.png"
+                src="/brand/logo-favicon.svg"
                 alt="Brand Logo"
                 width={48}
                 height={48}
