@@ -17,7 +17,7 @@ const ChakraHeader = chakra.header;
 const Brand = () => (
     <Image asChild>
         <NextImage
-            src="/RootFaviconLight.png"
+            src="/brand/logo-favicon.svg"
             alt="Brand Logo"
             width={48}
             height={48}
