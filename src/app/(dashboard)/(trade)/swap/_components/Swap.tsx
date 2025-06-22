@@ -50,13 +50,13 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
         address: swapData.fromToken.address as `0x${string}`,
         abi: ERC20_ABI.abi,
         functionName: "approve",
-        args: [poolConfig.poolAddress, ethers.parseUnits(swapData.fromAmount.toString(), 18)],
+        args: [poolConfig.poolAddress, ethers.utils.parseUnits(swapData.fromAmount.toString(), 18)],
       });
 
       const zeroForOne = getZeroForOne(swapData.fromToken.address, poolConfig.poolKey);
       
       // CURRENTLY HARDCODED TO SWAP EXACT TOKEN IN FOR NOW
-      const amountSpecified = ethers.parseUnits((-swapData.fromAmount).toString(), 18); 
+      const amountSpecified = ethers.utils.parseUnits((-swapData.fromAmount).toString(), 18); 
 
       // Format pool key as array for contract call
       const poolKeyArray = [
