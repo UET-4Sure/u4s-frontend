@@ -105,8 +105,8 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
             <HoverCardContent p={"2"}>
                 <VStack align={"start"}>
                     <For each={featLinks}>
-                        {(path) => (
-                            <Button w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"} asChild>
+                        {(path, index) => (
+                            <Button key={index} w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"} asChild>
                                 <Link href={path.href} key={path.label}>
                                     {path.label}
                                 </Link>
