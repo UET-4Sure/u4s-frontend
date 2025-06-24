@@ -497,6 +497,13 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 w={"full"}
                                 key={index}
                                 index={index}
+                                data-state="open"
+                                _open={{
+                                    animation: "fade-in-up 300ms ease-out",
+                                }}
+                                _closed={{
+                                    animation: "fade-in-out 300ms ease-in",
+                                }}
                             >
                                 {step.content}
                             </StepsContent>
