@@ -357,7 +357,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </Button>
             </StepsNextTrigger>
         </MotionVStack >
-    ), [tokenList, watch, errors]);
+    ), [tokenList, watch, steps]);
 
     const Step2 = useMemo(() => () => {
         const token0 = watch("token0");
@@ -450,7 +450,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </Button>
             </MotionVStack>
         );
-    }, [tokenList, watch, errors, userAddress]);
+    }, [tokenList, watch, errors, userAddress, steps]);
 
     const stepRenders = [
         {
