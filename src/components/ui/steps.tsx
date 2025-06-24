@@ -9,7 +9,7 @@ interface StepInfoProps {
 
 export interface StepsItemProps
   extends Omit<ChakraSteps.ItemProps, "title">,
-    StepInfoProps {
+  StepInfoProps {
   completedIcon?: React.ReactNode
   icon?: React.ReactNode
 }
@@ -28,7 +28,9 @@ export const StepsItem = React.forwardRef<HTMLDivElement, StepsItemProps>(
           </ChakraSteps.Indicator>
           <StepInfo title={title} description={description} />
         </ChakraSteps.Trigger>
-        <ChakraSteps.Separator />
+        <ChakraSteps.Separator
+          transition={"all 0.2s ease-in-out"}
+        />
       </ChakraSteps.Item>
     )
   },
