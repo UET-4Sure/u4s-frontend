@@ -7,9 +7,9 @@ import { ExploreButton } from "./_components/ExploreButton";
 import { ConnectWalletButton } from "@/components/global/wallet";
 import { StartButton } from "./_components/StartButton";
 
-const MotionBox = motion.create(Box);
 const MotionHeading = motion.create(Heading);
 const MotionText = motion.create(Text);
+const MotionHStack = motion.create(HStack);
 
 interface HeroSectionProps extends HtmlProps { }
 export const HeroSection: React.FC<HeroSectionProps> = (props) => {
@@ -48,10 +48,16 @@ export const HeroSection: React.FC<HeroSectionProps> = (props) => {
                     >
                         Xây dựng trên Uniswap V4, VinaSwap cung cấp nền tảng DeFi hiện đại, minh bạch, an toàn, phục vụ cộng đồng Việt và thúc đẩy hệ sinh thái DeFi phát triển bền vững
                     </MotionText>
-                    <HStack gap={"4"} my={"6"}>
+                    <MotionHStack
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ duration: 0.6, delay: 0.9 }}
+                        gap={"4"}
+                        my={"6"}
+                    >
                         <StartButton />
                         <ExploreButton />
-                    </HStack>
+                    </MotionHStack>
                 </Box>
                 <Image
                     w={["100%", "100%", "320px", "480", "640px"]}
