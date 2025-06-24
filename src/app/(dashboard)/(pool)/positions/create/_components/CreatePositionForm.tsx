@@ -60,6 +60,8 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         count: 2,
         linear: true,
     })
+    const [step, setStep] = useState(1)
+
     const { data: tokenList } = useTokenList();
     const { writeContractAsync } = useWriteContract();
     const { address: userAddress } = useAccount();
@@ -279,9 +281,10 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
     const Step1 = useMemo(() => () => (
         <MotionVStack
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             align={"start"}
             w={"full"}
             gap={4}
@@ -357,7 +360,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </Button>
             </StepsNextTrigger>
         </MotionVStack >
-    ), [tokenList, watch, errors]);
+    ), [tokenList]);
 
     const Step2 = useMemo(() => () => {
         const token0 = watch("token0");
@@ -450,7 +453,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </Button>
             </MotionVStack>
         );
-    }, [tokenList, watch, errors, userAddress]);
+    }, [tokenList]);
 
     const stepRenders = [
         {
@@ -474,6 +477,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             defaultStep={0}
             count={stepRenders.length}
             linear={!isStep1Completed}
+            onStepChange={(e) => setStep(e.step)}
         >
             <StepsList>
                 {stepRenders.map((step, index) => (
@@ -493,6 +497,13 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 w={"full"}
                                 key={index}
                                 index={index}
+                                data-state="open"
+                                _open={{
+                                    animation: "fade-in-up 300ms ease-out",
+                                }}
+                                _closed={{
+                                    animation: "fade-in-out 300ms ease-in",
+                                }}
                             >
                                 {step.content}
                             </StepsContent>
