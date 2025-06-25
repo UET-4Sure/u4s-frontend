@@ -101,6 +101,7 @@ export {
   PRICE_LIMITS,
   getPoolConfig,
   getZeroForOne,
+  HOOK_CONTRACT_ADDRESS,
 };
 
 

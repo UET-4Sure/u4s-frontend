@@ -39,7 +39,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
             <AvatarImage alt="ENS Avatar" src={ensAvatar!} />
             <AvatarFallback asChild>
                 <NextImage
-                    src="/BgLogoDark.png"
+                    src="/brand/logo-social-gradient.svg"
                     alt="Brand Logo"
                     fill
                 />
