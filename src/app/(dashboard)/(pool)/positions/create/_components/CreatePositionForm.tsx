@@ -30,6 +30,7 @@ import {
     encodeSqrtRatioX96,
 } from '@uniswap/v3-sdk';
 import { queryPoolInfo } from '@/script/QuerySqrtPrice';
+import { useTokenBalance } from '@/components/widgets/swap/hooks';
 
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
@@ -367,6 +368,9 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         const token1 = watch("token1");
         const { address: userAddress } = useAccount();
 
+        const { data: token0Balance } = useTokenBalance(token0, userAddress);
+        const { data: token1Balance } = useTokenBalance(token1, userAddress);
+
         return (
             <MotionVStack
                 initial={{ opacity: 0, y: 20 }}
@@ -389,6 +393,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 label="Token 0"
                                 token={field.value}
                                 amount={watch("token0Amount")}
+                                balance={token0Balance}
                                 onAmountChange={(value) => setValue("token0Amount", value)}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
@@ -419,6 +424,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 label="Token 1"
                                 token={field.value}
                                 amount={watch("token1Amount")}
+                                balance={token1Balance}
                                 onAmountChange={(value) => setValue("token1Amount", value)}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
