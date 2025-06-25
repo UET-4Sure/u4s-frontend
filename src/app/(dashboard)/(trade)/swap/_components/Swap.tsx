@@ -14,15 +14,42 @@ import POOL_SWAP_TEST_CONTRACT_ABI from "@/abis/PoolSwapTest.json";
 import { ethers } from "ethers";
 import { SwapState } from "@/components/widgets/type";
 import { toaster } from "@/components/ui/toaster";
+import { checkHasSBT } from "@/script/CheckHasSBT";
+import { queryOraclePrice } from "@/script/QueryOraclePrice";
 
 interface Props extends StackProps {}
 
-export const Swap: React.FC<Props> = ({ children, ...props }) => {
+export function Swap({ ...props }: Props) {
+  const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
-  const { address: userAddress } = useAccount();
 
   const handleSwap = async (swapData: SwapState) => {
     try {
+      // Get token price and calculate volume
+      const oraclePrice = await queryOraclePrice(swapData.fromToken?.address || "");
+      const volume = Number(swapData.fromAmount) * Number(oraclePrice);
+
+      // Check volume limits
+      if (volume > 10000) {
+        toaster.error({
+          title: "Khối lượng giao dịch quá lớn",
+          description: "Bạn không được phép thực hiện giao dịch lớn hơn 10.000 USD"
+        });
+        return;
+      }
+
+      // Check SBT requirement for high volume trades
+      if (volume >= 500) {
+        const hasSBT = await checkHasSBT(address || "");
+        if (!hasSBT) {
+          toaster.error({
+            title: "Xác thực KYC",
+            description: "Bạn cần xác thực KYC để thực hiện giao dịch lớn hơn 500 USD"
+          });
+          return;
+        }
+      }
+
       if (!swapData.fromToken || !swapData.toToken || !swapData.fromAmount) {
         toaster.error({
             title: "Swap Error",
@@ -90,17 +117,25 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
         args: [poolKeyArray, swapParams, testSettings, hookData],
       });
 
+      toaster.success({
+        title: "Swap successful",
+        description: "Your swap has been executed successfully",
+      });
     } catch (error) {
-      console.error("Error during swap:", error);
+      console.error("Swap error:", error);
+      toaster.error({
+        title: "Swap Error",
+        description: error instanceof Error ? error.message : "An error occurred during swap",
+      });
     }
   };
 
   return (
     <SwapWidget
       onSwap={handleSwap}
-      userAddress={userAddress}
+      userAddress={address}
       tokenList={TOKEN_LIST}
       {...props}
     />
   );
-};
+}
