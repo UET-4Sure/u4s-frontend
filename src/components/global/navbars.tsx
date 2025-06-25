@@ -16,6 +16,8 @@ import { BrandLogo } from "./brand";
 import { useWalletLogin } from "@/hooks/useWalletLogin";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
+import { memo } from "react";
+
 const ChakraHeader = chakra.header;
 
 const Brand = () => (
@@ -36,19 +38,25 @@ const VersionTag = () => (
 );
 
 const BrandAndAppSnippet = () => (
-    <HStack align={"start"} justify={"center"} gap={"1"}>
-        <BrandLogo />
-        <VStack align={"start"} justify={"center"} gap={"1"}>
-            <Text fontSize={"md"} fontWeight={"semibold"}>{siteConfig.name}</Text>
-            <VersionTag />
-        </VStack>
-    </HStack >
+    <NextLink href={"/"}>
+        <HStack align={"start"} justify={"center"} gap={"1"}>
+            <BrandLogo />
+            <VStack align={"start"} justify={"center"} gap={"1"}>
+                <Text fontSize={"md"} fontWeight={"semibold"}>{siteConfig.name}</Text>
+                <VersionTag />
+            </VStack>
+        </HStack>
+    </NextLink>
 )
 
-interface LandingNavbarProps extends HtmlProps { }
-export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
+const ConnectWalletButtonWrapper = () => {
     const { isAuthenticated } = useWalletLogin();
+    if (isAuthenticated) return null;
+    return <ConnectWalletButton />;
+};
 
+interface LandingNavbarProps extends HtmlProps { }
+export const LandingNavbar: React.FC<LandingNavbarProps> = memo((props) => {
     const NavLinks = () => (
         <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
             <For each={Object.entries(siteConfig.paths)}>
@@ -71,11 +79,11 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
                 <BrandAndAppSnippet />
                 <NavLinks />
-                {!isAuthenticated && <ConnectWalletButton />}
+                <ConnectWalletButtonWrapper />
             </HStack>
         </ChakraHeader>
     );
-}
+});
 
 interface DashboardNavbarProps extends HtmlProps { }
 export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
