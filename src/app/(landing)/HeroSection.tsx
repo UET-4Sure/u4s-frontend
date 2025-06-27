@@ -38,14 +38,14 @@ export const HeroSection: React.FC<HeroSectionProps> = (props) => {
                         color={"fg"}
                     >
                         Tinh thần
-                        <Span>&nbsp;Việt Nam</Span>&nbsp;
+                        <Span fontWeight={"semibold"} color={"primary"}> Việt Nam </Span>
                         tương lai phi tập trung – kỷ nguyên mới bắt nguồn từ văn hoá.
                     </MotionHeading>
                     <MotionText
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.6 }}
-                        mt={"1"}
+                        mt={"6"}
                     >
                         Xây dựng trên Uniswap V4, VinaSwap cung cấp nền tảng DeFi hiện đại, minh bạch, an toàn, phục vụ cộng đồng Việt và thúc đẩy hệ sinh thái DeFi phát triển bền vững
                     </MotionText>
