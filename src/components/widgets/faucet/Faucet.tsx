@@ -38,7 +38,7 @@ export const FaucetWidget = () => {
             setLoading(prev => ({ ...prev, [tokenAddress]: true }));
 
             // Get token decimals first
-            const provider = new ethers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
+            const provider = new ethers.providers.JsonRpcProvider(process.env.NEXT_PUBLIC_RPC_URL);
             const tokenContract = new ethers.Contract(tokenAddress, ERC20_MINTABLE_ABI.abi, provider);
             const decimals = await tokenContract.decimals();
             
@@ -47,7 +47,7 @@ export const FaucetWidget = () => {
                 address: tokenAddress as `0x${string}`,
                 abi: ERC20_MINTABLE_ABI.abi,
                 functionName: "mint",
-                args: [address, ethers.parseUnits(MINT_AMOUNT, decimals)],
+                args: [address, ethers.utils.parseUnits(MINT_AMOUNT, decimals)],
             });
 
             toaster.success({
