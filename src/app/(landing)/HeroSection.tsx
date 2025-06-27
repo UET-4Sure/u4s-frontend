@@ -10,6 +10,7 @@ import { StartButton } from "./_components/StartButton";
 const MotionHeading = motion.create(Heading);
 const MotionText = motion.create(Text);
 const MotionHStack = motion.create(HStack);
+const MotionImage = motion.create(Image);
 
 interface HeroSectionProps extends HtmlProps { }
 export const HeroSection: React.FC<HeroSectionProps> = (props) => {
@@ -37,14 +38,14 @@ export const HeroSection: React.FC<HeroSectionProps> = (props) => {
                         color={"fg"}
                     >
                         Tinh thần
-                        <Span>&nbsp;Việt Nam</Span>&nbsp;
+                        <Span fontWeight={"semibold"} color={"primary"}> Việt Nam </Span>
                         tương lai phi tập trung – kỷ nguyên mới bắt nguồn từ văn hoá.
                     </MotionHeading>
                     <MotionText
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.6, delay: 0.6 }}
-                        mt={"1"}
+                        mt={"6"}
                     >
                         Xây dựng trên Uniswap V4, VinaSwap cung cấp nền tảng DeFi hiện đại, minh bạch, an toàn, phục vụ cộng đồng Việt và thúc đẩy hệ sinh thái DeFi phát triển bền vững
                     </MotionText>
@@ -59,10 +60,13 @@ export const HeroSection: React.FC<HeroSectionProps> = (props) => {
                         <ExploreButton />
                     </MotionHStack>
                 </Box>
-                <Image
+                <MotionImage
                     w={["100%", "100%", "320px", "480", "640px"]}
                     aspectRatio={640 / 512}
                     asChild
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 128, damping: 20 }}
                 >
                     <NextImage
                         src="/assets/poster-hero.png"
@@ -71,8 +75,8 @@ export const HeroSection: React.FC<HeroSectionProps> = (props) => {
                         width={640}
                         height={512}
                     />
-                </Image>
+                </MotionImage>
             </Flex>
-        </chakra.section>
+        </chakra.section >
     );
 };

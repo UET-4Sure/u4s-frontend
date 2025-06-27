@@ -17,6 +17,7 @@ import { useWalletLogin } from "@/hooks/useWalletLogin";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { useEffect, useState } from "react";
 import { memo } from "react";
+import { usePathname } from "next/navigation";
 
 const ChakraHeader = chakra.header;
 
@@ -57,11 +58,23 @@ const ConnectWalletButtonWrapper = () => {
 
 interface LandingNavbarProps extends HtmlProps { }
 export const LandingNavbar: React.FC<LandingNavbarProps> = memo((props) => {
+    const pathname = usePathname();
+    const isActive = (path: string) => pathname === path || pathname.startsWith(path);
+
     const NavLinks = () => (
-        <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
+        <HStack flex={"1"} as={"nav"} align={"center"} justify={"start"} gap={"4"}>
             <For each={Object.entries(siteConfig.paths)}>
                 {([key, path]) => (
-                    <Link key={key} href={path.href}>{path.label}</Link>
+                    <Link key={key} href={path.href}
+                        target="_blank"
+                        unstyled
+                        color={isActive(path.href) ? "fg" : "fg.muted"}
+                        transition="all 0.3s ease-in-out"
+                        _hover={{
+                            color: "fg",
+                        }}>
+                        {path.label}
+                    </Link>
                 )}
             </For>
         </HStack>
@@ -94,6 +107,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         { label: "Trao đổi", href: "/swap" },
         { label: "Mua", href: "/buy" },
         { label: "Bán", href: "/sell" },
+        { label: "Faucet", href: "/faucet" },
     ]
     const NavLinks = () => (
         <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
@@ -108,7 +122,11 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     const TradeMenu = () => (
         <HoverCardRoot openDelay={100}>
             <HoverCardTrigger asChild>
-                <Link href={featLinks[0].href}>Giao dịch</Link>
+                <Link asChild>
+                    <NextLink href={featLinks[0].href}>
+                        Giao dịch
+                    </NextLink>
+                </Link>
             </HoverCardTrigger>
             <HoverCardContent p={"2"}>
                 <VStack align={"start"}>
@@ -134,7 +152,11 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         return (
             <HoverCardRoot openDelay={100}>
                 <HoverCardTrigger asChild>
-                    <Link href={featLinks[0].href}>Pool</Link>
+                    <Link asChild>
+                        <NextLink href={featLinks[0].href}>
+                            Pool
+                        </NextLink>
+                    </Link>
                 </HoverCardTrigger>
                 <HoverCardContent p={"2"}>
                     <VStack align={"start"}>
@@ -183,7 +205,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         >
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
                 <BrandAndAppSnippet />
-                <HStack flex={"1"}>
+                <HStack flex={"1"} gap={"4"}>
                     <TradeMenu />
                     <FaucetMenu />
                     <PoolMenu />
