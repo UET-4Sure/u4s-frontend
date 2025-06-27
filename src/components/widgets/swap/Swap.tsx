@@ -319,10 +319,35 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
         }
     });
 
-    const handleTokenSelect = useCallback((type: 'from' | 'to', token: Token) => {
-        type === 'from' ? swapState.setFromToken(token) : swapState.setToToken(token);
-        onTokenSelect?.(type, token);
-    }, [onTokenSelect]);
+    const handleTokenSelect = useCallback((type: 'from' | 'to', selectedToken: Token) => {
+        const { fromToken, toToken } = swapState;
+
+        const isSameAsOther =
+            (type === 'from' && selectedToken.address === toToken?.address) ||
+            (type === 'to' && selectedToken.address === fromToken?.address);
+
+        if (isSameAsOther) {
+            swapState.switchTokens();
+            onTokenSelect?.(type, selectedToken);
+            return;
+        }
+
+        const isNoChange =
+            (type === 'from' && selectedToken.address === fromToken?.address) ||
+            (type === 'to' && selectedToken.address === toToken?.address);
+
+        if (isNoChange) {
+            return;
+        }
+
+        if (type === 'from') {
+            swapState.setFromToken(selectedToken);
+        } else {
+            swapState.setToToken(selectedToken);
+        }
+
+        onTokenSelect?.(type, selectedToken);
+    }, [swapState, onTokenSelect]);
 
     const handleMaxClick = useCallback(() => {
         if (fromBalance) {
