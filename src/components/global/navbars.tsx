@@ -12,6 +12,7 @@ import { ConnectWalletButton } from "./wallet";
 import { BrandLogo } from "./brand";
 import { useWalletLogin } from "@/hooks/useWalletLogin";
 import { memo } from "react";
+import { usePathname } from "next/navigation";
 
 const ChakraHeader = chakra.header;
 
@@ -42,11 +43,23 @@ const ConnectWalletButtonWrapper = () => {
 
 interface LandingNavbarProps extends HtmlProps { }
 export const LandingNavbar: React.FC<LandingNavbarProps> = memo((props) => {
+    const pathname = usePathname();
+    const isActive = (path: string) => pathname === path || pathname.startsWith(path);
+
     const NavLinks = () => (
-        <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
+        <HStack flex={"1"} as={"nav"} align={"center"} justify={"start"} gap={"4"}>
             <For each={Object.entries(siteConfig.paths)}>
                 {([key, path]) => (
-                    <Link key={key} href={path.href}>{path.label}</Link>
+                    <Link key={key} href={path.href}
+                        target="_blank"
+                        unstyled
+                        color={isActive(path.href) ? "fg" : "fg.muted"}
+                        transition="all 0.3s ease-in-out"
+                        _hover={{
+                            color: "fg",
+                        }}>
+                        {path.label}
+                    </Link>
                 )}
             </For>
         </HStack>
