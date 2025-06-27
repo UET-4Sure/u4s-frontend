@@ -1,63 +1,86 @@
 "use client";
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useAccount, useAccountEffect, useSignMessage } from "wagmi";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useAccount, useAccountEffect, useSignMessage, useSignTypedData } from "wagmi";
 import { useUserStore } from "./useUserStore";
 import { useTokenStore } from "./useTokenStore";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { vinaswapApi } from "@/services/axios";
+import { siteConfig } from "@/config/site";
+import { toaster } from "@/components/ui/toaster";
+import { useDisconnect } from "@reown/appkit/react";
 
 export const useWalletLogin = () => {
     const queryClient = useQueryClient();
     const { address } = useAccount();
+    const { disconnect } = useDisconnect();
     const { setUser, user } = useUserStore();
     const { setToken, token } = useTokenStore();
 
-    const nonceQuery = useQuery({
-        queryKey: ["auth:nonce", address, token, user],
+    const authQuery = useQuery({
+        queryKey: ["auth", address, token, user],
         queryFn: async () => {
-            const res = await vinaswapApi.get(`/auth/nonce?address=${address}`);
-            const nonce = res.data.nonce;
-
-            await loginMutation.mutateAsync(nonce);
-
-            return nonce;
-        },
-        enabled: !!address && !token && !user,
-        staleTime: Infinity,
-    });
-
-    const { signMessageAsync, isPending: isSignPending, error: signError } = useSignMessage();
-
-    const loginMutation = useMutation({
-        mutationKey: ["auth:wallet-login", address],
-        mutationFn: async (nonce: string) => {
             if (user && token) return;
+            if (!address) {
+                throw new Error("No wallet address found");
+            }
 
             if (!address) {
                 throw new Error("No wallet address found");
             }
 
-            const signature = await signMessageAsync({ message: nonce, account: address });
-
-            const res = await vinaswapApi.post("/auth/wallet-login", {
+            const domain = {
+                name: siteConfig.name,
+            };
+            const message = {
                 address,
-                nonce,
-                signature,
+                purpose: "Xác thực đăng nhập ví VinaSwap",
+            };
+            const primaryType = "Login";
+            const types = {
+                Login: [
+                    { name: "address", type: "address" },
+                    { name: "purpose", type: "string" },
+                ],
+            };
+
+            const signature = await signTypedDataAsync({
+                domain,
+                message,
+                primaryType,
+                account: address,
+                types,
             });
 
-            return res.data;
-        },
-        onSuccess: (data) => {
-            setUser(data.user);
-            setToken(data.token);
-            vinaswapApi.defaults.headers.common["Authorization"] = `Bearer ${data.token}`;
+            const res = await vinaswapApi.post("/auth/wallet-login", {
+                domain,
+                message,
+                signature,
+                address,
+                types,
+            });
+
+            if (res.data) {
+                setUser(res.data.user);
+                setToken(res.data.token);
+                vinaswapApi.defaults.headers.common["Authorization"] = `Bearer ${res.data.token}`;
+            }
+
             queryClient.invalidateQueries({ queryKey: ["auth:status"] });
+            toaster.success({
+                title: "Đăng nhập thành công",
+                description: "Bạn đã đăng nhập thành công vào VinaSwap.",
+            })
         },
-        onError: (error) => {
-            console.error("Login failed:", error);
-        },
+        enabled: !!address && !token && !user,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        refetchOnMount: false,
+        retry: false,
+        staleTime: Infinity,
     });
+
+    const { signTypedDataAsync, isPending: isSignPending, error: signError } = useSignTypedData();
 
 
     // Handle disconnect
@@ -66,18 +89,25 @@ export const useWalletLogin = () => {
             setUser(null);
             setToken(null);
             delete vinaswapApi.defaults.headers.common["Authorization"];
-            queryClient.removeQueries({ queryKey: ["auth:nonce", address] });
+            queryClient.invalidateQueries({ queryKey: ["auth", "status"] });
         },
     });
 
 
     const isLoading = useMemo(() => {
-        return (loginMutation.isPending || nonceQuery.isLoading || isSignPending) && !user && !token;
-    }, [loginMutation.isPending, nonceQuery.isLoading, isSignPending, user, token]);
-    const error = signError || loginMutation.error || nonceQuery.error;
+        return (authQuery.isLoading || isSignPending) && !user && !token;
+    }, [authQuery.isLoading, isSignPending, user, token]);
+    const error = signError || authQuery.error;
     const isAuthenticated = useMemo(() => {
         return !!user && !!token;
     }, [user, token]);
+
+    useEffect(() => {
+        if (error) {
+            console.error("Authentication error:", error);
+            disconnect();
+        }
+    }, [error]);
 
     return {
         isLoading,
