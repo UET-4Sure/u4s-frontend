@@ -101,7 +101,11 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     const TradeMenu = () => (
         <HoverCardRoot openDelay={100}>
             <HoverCardTrigger asChild>
-                <Link href={featLinks[0].href}>Giao dịch</Link>
+                <Link asChild>
+                    <NextLink href={featLinks[0].href}>
+                        Giao dịch
+                    </NextLink>
+                </Link>
             </HoverCardTrigger>
             <HoverCardContent p={"2"}>
                 <VStack align={"start"}>
@@ -127,7 +131,11 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         return (
             <HoverCardRoot openDelay={100}>
                 <HoverCardTrigger asChild>
-                    <Link href={featLinks[0].href}>Pool</Link>
+                    <Link asChild>
+                        <NextLink href={featLinks[0].href}>
+                            Pool
+                        </NextLink>
+                    </Link>
                 </HoverCardTrigger>
                 <HoverCardContent p={"2"}>
                     <VStack align={"start"}>
@@ -176,7 +184,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         >
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
                 <BrandAndAppSnippet />
-                <HStack flex={"1"}>
+                <HStack flex={"1"} gap={"4"}>
                     <TradeMenu />
                     <FaucetMenu />
                     <PoolMenu />
