@@ -10,6 +10,7 @@ import { StartButton } from "./_components/StartButton";
 const MotionHeading = motion.create(Heading);
 const MotionText = motion.create(Text);
 const MotionHStack = motion.create(HStack);
+const MotionImage = motion.create(Image);
 
 interface HeroSectionProps extends HtmlProps { }
 export const HeroSection: React.FC<HeroSectionProps> = (props) => {
@@ -59,10 +60,13 @@ export const HeroSection: React.FC<HeroSectionProps> = (props) => {
                         <ExploreButton />
                     </MotionHStack>
                 </Box>
-                <Image
+                <MotionImage
                     w={["100%", "100%", "320px", "480", "640px"]}
                     aspectRatio={640 / 512}
                     asChild
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", stiffness: 128, damping: 20 }}
                 >
                     <NextImage
                         src="/assets/poster-hero.png"
@@ -71,8 +75,8 @@ export const HeroSection: React.FC<HeroSectionProps> = (props) => {
                         width={640}
                         height={512}
                     />
-                </Image>
+                </MotionImage>
             </Flex>
-        </chakra.section>
+        </chakra.section >
     );
 };
