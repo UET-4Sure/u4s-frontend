@@ -13,6 +13,7 @@ import { motion, MotionProps, useCycle } from "framer-motion";
 import { Button, ButtonProps } from "@/components/ui/button";
 import { useAccount } from "wagmi";
 import { ConnectWalletButton } from "@/components/global/wallet";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 const MotionIconButton = motion.create(IconButton);
 
@@ -265,7 +266,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
         fromToken: defaultFromToken || null,
         toToken: defaultToToken || null,
     });
-
+    const queryClient = useQueryClient();
     const { data: fromBalance } = useTokenBalance(swapState.fromToken, userAddress);
     const { data: toBalance } = useTokenBalance(swapState.toToken, userAddress);
 
@@ -281,27 +282,72 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
         },
     });
 
-    const handleSwap = useCallback(async () => {
-        if (!swapState.fromToken || !swapState.toToken || !swapState.fromAmount) {
+    const { mutate: handleSwap } = useMutation({
+        mutationKey: ['swap', swapState.fromToken?.address, swapState.toToken?.address],
+        mutationFn: async () => {
+            if (!swapState.fromToken || !swapState.toToken || !swapState.fromAmount) {
+                throw new Error("Missing swap data");
+            }
+
+            // Optional: optimistic update
+            swapState.updateState({ isLoading: true, error: null });
+
+            await onSwap?.(swapState); // thực hiện swap
+
+            return {
+                fromToken: swapState.fromToken.address,
+                toToken: swapState.toToken.address,
+            };
+        },
+        onSuccess: ({ fromToken, toToken }) => {
+            // Reset amount sau swap
+            swapState.updateState({ fromAmount: '', toAmount: '' });
+
+            // Invalidate balance
+            queryClient.invalidateQueries({ queryKey: ['token-balance', fromToken, userAddress] });
+            queryClient.invalidateQueries({ queryKey: ['token-balance', toToken, userAddress] });
+
+            // Optionally invalidate price
+            queryClient.invalidateQueries({ queryKey: ['token-price', fromToken, toToken] });
+        },
+        onError: (error) => {
+            const errorMsg = error instanceof Error ? error.message : 'Swap failed';
+            swapState.updateState({ error: errorMsg });
+        },
+        onSettled: () => {
+            swapState.updateState({ isLoading: false });
+        }
+    });
+
+    const handleTokenSelect = useCallback((type: 'from' | 'to', selectedToken: Token) => {
+        const { fromToken, toToken } = swapState;
+
+        const isSameAsOther =
+            (type === 'from' && selectedToken.address === toToken?.address) ||
+            (type === 'to' && selectedToken.address === fromToken?.address);
+
+        if (isSameAsOther) {
+            swapState.switchTokens();
+            onTokenSelect?.(type, selectedToken);
             return;
         }
 
-        try {
-            swapState.updateState({ isLoading: true, error: null });
-            await onSwap?.(swapState);
-        } catch (error) {
-            const errorMsg = error instanceof Error ? error.message : 'Swap failed';
-            swapState.updateState({ error: errorMsg });
+        const isNoChange =
+            (type === 'from' && selectedToken.address === fromToken?.address) ||
+            (type === 'to' && selectedToken.address === toToken?.address);
 
-        } finally {
-            swapState.updateState({ isLoading: false });
+        if (isNoChange) {
+            return;
         }
-    }, [swapState, onSwap]);
 
-    const handleTokenSelect = useCallback((type: 'from' | 'to', token: Token) => {
-        type === 'from' ? swapState.setFromToken(token) : swapState.setToToken(token);
-        onTokenSelect?.(type, token);
-    }, [onTokenSelect]);
+        if (type === 'from') {
+            swapState.setFromToken(selectedToken);
+        } else {
+            swapState.setToToken(selectedToken);
+        }
+
+        onTokenSelect?.(type, selectedToken);
+    }, [swapState, onTokenSelect]);
 
     const handleMaxClick = useCallback(() => {
         if (fromBalance) {
@@ -317,6 +363,7 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
         if (swapState.isLoading) {
             return "Đang trao đổi...";
         }
+
         return "Trao đổi";
     }, [isQuoteLoading, swapState.isLoading]);
 
@@ -392,7 +439,9 @@ export const SwapWidget: React.FC<SwapWidgetProps> = ({ children,
                 loadingText={labelLoading}
                 loading={swapState.isLoading || isQuoteLoading}
                 disabled={isDisabled}
-                onClick={handleSwap}
+                onClick={() => {
+                    handleSwap();
+                }}
                 {...swapButtonProps}
             />
         </VStack>

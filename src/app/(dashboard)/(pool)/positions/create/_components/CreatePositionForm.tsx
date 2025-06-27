@@ -30,6 +30,7 @@ import {
     encodeSqrtRatioX96,
 } from '@uniswap/v3-sdk';
 import { queryPoolInfo } from '@/script/QuerySqrtPrice';
+import { useTokenBalance } from '@/components/widgets/swap/hooks';
 
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
@@ -60,6 +61,8 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         count: 2,
         linear: true,
     })
+    const [step, setStep] = useState(1)
+
     const { data: tokenList } = useTokenList();
     const { writeContractAsync } = useWriteContract();
     const { address: userAddress } = useAccount();
@@ -279,9 +282,10 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
     const Step1 = useMemo(() => () => (
         <MotionVStack
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
+            initial="hidden"
+            animate="visible"
+            exit="hidden"
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             align={"start"}
             w={"full"}
             gap={4}
@@ -357,12 +361,15 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </Button>
             </StepsNextTrigger>
         </MotionVStack >
-    ), [tokenList, watch, errors]);
+    ), [tokenList]);
 
     const Step2 = useMemo(() => () => {
         const token0 = watch("token0");
         const token1 = watch("token1");
         const { address: userAddress } = useAccount();
+
+        const { data: token0Balance } = useTokenBalance(token0, userAddress);
+        const { data: token1Balance } = useTokenBalance(token1, userAddress);
 
         return (
             <MotionVStack
@@ -386,6 +393,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 label="Token 0"
                                 token={field.value}
                                 amount={watch("token0Amount")}
+                                balance={token0Balance}
                                 onAmountChange={(value) => setValue("token0Amount", value)}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
@@ -416,6 +424,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 label="Token 1"
                                 token={field.value}
                                 amount={watch("token1Amount")}
+                                balance={token1Balance}
                                 onAmountChange={(value) => setValue("token1Amount", value)}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
@@ -450,7 +459,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </Button>
             </MotionVStack>
         );
-    }, [tokenList, watch, errors, userAddress]);
+    }, [tokenList]);
 
     const stepRenders = [
         {
@@ -474,6 +483,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             defaultStep={0}
             count={stepRenders.length}
             linear={!isStep1Completed}
+            onStepChange={(e) => setStep(e.step)}
         >
             <StepsList>
                 {stepRenders.map((step, index) => (
@@ -493,6 +503,13 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 w={"full"}
                                 key={index}
                                 index={index}
+                                data-state="open"
+                                _open={{
+                                    animation: "fade-in-up 300ms ease-out",
+                                }}
+                                _closed={{
+                                    animation: "fade-in-out 300ms ease-in",
+                                }}
                             >
                                 {step.content}
                             </StepsContent>

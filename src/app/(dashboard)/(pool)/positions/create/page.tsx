@@ -1,5 +1,6 @@
 import { Center, Heading, VStack } from "@chakra-ui/react";
 import { CreatePositionForm } from "./_components/CreatePositionForm";
+import "./styles.css";
 
 export default function Page() {
     return (
