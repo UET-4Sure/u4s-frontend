@@ -5,7 +5,6 @@ import { useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import NextImage from "next/image";
 import { useRouter } from "next/navigation";
-import { useMemo } from "react";
 import { FaUser } from "react-icons/fa";
 
 import { formatAddress } from "@/libs";
@@ -24,12 +23,10 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
     const { address, status } = useAppKitAccount();
     const { isLoading, isAuthenticated } = useWalletLogin();
 
-    const isConnecting = useMemo(() => status === "reconnecting" || status === "connecting" || isLoading, [status]);
-
     const { data: ensName } = useEnsName({
         address: address as `0x${string}`,
         query: {
-            enabled: !!address && isAuthenticated && !isConnecting
+            enabled: !!address && isAuthenticated && !isLoading
         }
     })
     const { data: ensAvatar } = useEnsAvatar({
@@ -67,7 +64,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
         }
     ]
 
-    if (!isAuthenticated && !isConnecting && !isLoading) return <ConnectWalletButton />;
+    if (!isAuthenticated && !isLoading) return <ConnectWalletButton />;
 
     return (
         <MenuRoot>
@@ -81,7 +78,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
                     {...props}
                 >
                     <ProfileAvatar />
-                    {isConnecting &&
+                    {isLoading &&
                         <>
                             <Text fontSize={"sm"} fontWeight={"semibold"} color={"fg.muted"}>Connecting</Text>
                             <Spinner color={"fg.muted"} size={"sm"} />

@@ -82,7 +82,7 @@ export const ProfileArea: React.FC<Props> = ({ children, ...props }) => {
             <Center>
                 <Image
                     alt="ENS Avatar"
-                    src={ensAvatar || "/RootFaviconLight.png"}
+                    src={ensAvatar || "/brand/logo-favicon.svg"}
                     width={"32"}
                     aspectRatio={"1/1"}
                 />

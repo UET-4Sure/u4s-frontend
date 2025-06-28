@@ -1,7 +1,7 @@
 export const siteConfig = {
     name: "Vinaswap",
-    description: "A decentralized exchange (DEX) for trading cryptocurrencies and tokens on the Vina Network.",
-    url: "https://vinaswap.org",
+    description: "Xây dựng trên Uniswap V4, VinaSwap cung cấp nền tảng DeFi hiện đại, minh bạch, an toàn, phục vụ cộng đồng Việt và thúc đẩy hệ sinh thái DeFi phát triển bền vững",
+    url: "https://vinaswap-release.vercel.app",
     paths: {
         home: {
             href: "/",

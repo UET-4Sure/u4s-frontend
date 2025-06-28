@@ -1,6 +1,7 @@
 import { VStack } from "@chakra-ui/react";
 import { DashboardNavbar } from "@/components/global/navbars";
 import { Provider } from "./provider";
+import { CoverBackground } from "./_components/CoverBackground";
 
 export default async function Layout({
     children,
@@ -14,6 +15,7 @@ export default async function Layout({
             <Provider>
                 {children}
             </Provider>
+            <CoverBackground/>
         </VStack>
     );
 }
