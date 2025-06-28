@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { SelectTokenDialog } from '@/components/widgets/components/SelectTokenDialog';
 import { Center, chakra, HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTokenList } from '@/hooks/data/useTokenList';
@@ -22,16 +22,10 @@ import { Position, Pool } from '@uniswap/v4-sdk';
 import { Token as UniswapToken } from '@uniswap/sdk-core';
 import { Token as LocalToken } from '@/components/widgets/type';
 import { PositionWidget } from '@/components/widgets/position/PositionWidget';
-import {
-    FeeAmount,
-    TickMath,
-    Pool as V3Pool,
-    Position as V3Position,
-    encodeSqrtRatioX96,
-} from '@uniswap/v3-sdk';
 import { queryPoolInfo } from '@/script/QuerySqrtPrice';
 import { useTokenBalance } from '@/components/widgets/swap/hooks';
-
+import { quoteAmmPrice } from '@/script/QuoteAmountOut';
+import { calculateTickFromPrice } from './utils';
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
@@ -46,6 +40,8 @@ interface CreatePositionFormValues {
     token0Amount: string;
     token1Amount: string;
     slippage: string;
+    minPrice: string;
+    maxPrice: string;
 }
 
 const DEFAULT_FEE = 3000; // 0.30%
@@ -58,7 +54,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     const [showAdvanced, setShowAdvanced] = useState(false);
     const steps = useSteps({
         defaultStep: 1,
-        count: 2,
+        count: 3,
         linear: true,
     })
     const [step, setStep] = useState(1)
@@ -169,10 +165,12 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             // const tickLower = Math.ceil(TickMath.MIN_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
             // const tickUpper = Math.floor(TickMath.MAX_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
 
-            const tickLower = -600;
-            const tickUpper = 600;
+            const tickLower = calculateTickFromPrice(Number(data.minPrice));
+            const tickUpper = calculateTickFromPrice(Number(data.maxPrice));
 
-            console.log(tickLower, tickUpper);
+            // console.log(data.minPrice, data.maxPrice);
+
+            console.log("tick: ", tickLower, tickUpper);
 
             const position = Position.fromAmounts({
                 pool: pool,
@@ -374,6 +372,132 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     const Step2 = useMemo(() => () => {
         const token0 = watch("token0");
         const token1 = watch("token1");
+        const [currentPrice, setCurrentPrice] = useState<number>(0);
+
+        const poolConfig = token0 && token1 ? getPoolConfig(token0.address, token1.address) : null;
+        
+        // Determine the display order based on pool config
+        const [displayToken0, displayToken1] = useMemo(() => {
+            if (!poolConfig || !token0 || !token1) return [token0, token1];
+            
+            // Check if the tokens are in the same order as the pool
+            if (token0.address.toLowerCase() === poolConfig.poolKey.currency0.toLowerCase()) {
+                return [token0, token1];
+            }
+            // If not, swap them for display
+            return [token1, token0];
+        }, [poolConfig, token0, token1]);
+
+        // Fetch current price and set default min/max prices when tokens change
+        useEffect(() => {
+            const fetchPrice = async () => {
+                if (displayToken0 && displayToken1) {
+                    try {
+                        // Reset price fields when tokens change
+                        setValue("minPrice", "");
+                        setValue("maxPrice", "");
+
+                        const amountOut = await quoteAmmPrice(displayToken0.address, displayToken1.address, 1);
+                        const price = Number(amountOut);
+                        setCurrentPrice(price);
+                        
+                        // Calculate default min and max prices (±30%)
+                        const minPricePercentage = 0.7;  // 1 - 0.3 (-30%)
+                        const maxPricePercentage = 1.3;  // 1 + 0.3 (+30%)
+                        
+                        const minPrice = price * minPricePercentage;
+                        const maxPrice = price * maxPricePercentage;
+                        
+                        // Set the default values
+                        setValue("minPrice", minPrice.toFixed(9));
+                        setValue("maxPrice", maxPrice.toFixed(9));
+                    } catch (error) {
+                        console.error("Error fetching price:", error);
+                        setCurrentPrice(0);
+                        setValue("minPrice", "");
+                        setValue("maxPrice", "");
+                    }
+                }
+            };
+            fetchPrice();
+        }, [displayToken0, displayToken1, setValue]);
+
+        return (
+            <MotionVStack
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                align={"start"}
+                w={"full"}
+                gap={4}
+            >
+                <FormFieldTitle
+                    title="Đặt khoảng giá"
+                    description="Chọn khoảng giá cho vị thế của bạn"
+                />
+
+                <VStack w="full" bg="bg.subtle" p={4} rounded="xl" gap={3}>
+                    <HStack w="full" justify="space-between" align="center">
+                        <Text fontSize="sm" color="fg.default">
+                            Giá (1 {displayToken0?.symbol} = {currentPrice.toLocaleString(undefined, { maximumFractionDigits: 9 })} {displayToken1?.symbol})
+                        </Text>
+                        <HStack gap={1}>
+                            <chakra.img src={displayToken0?.logoURI} w="4" h="4" rounded="full" />
+                            <chakra.img src={displayToken1?.logoURI} w="4" h="4" rounded="full" />
+                            <Text fontSize="sm" color="fg.default">
+                                {displayToken0?.symbol}/{displayToken1?.symbol}
+                            </Text>
+                        </HStack>
+                    </HStack>
+
+                    <HStack w="full" gap={4}>
+                        <VStack flex={1} align="start">
+                            <Text fontSize="sm" color="fg.subtle">Giá tối thiểu</Text>
+                            <Input
+                                {...register("minPrice", {
+                                    required: "Vui lòng nhập giá tối thiểu",
+                                    pattern: {
+                                        value: /^\d+(\.\d+)?$/,
+                                        message: "Giá không hợp lệ",
+                                    },
+                                })}
+                                placeholder="0.00"
+                                size="lg"
+                            />
+                        </VStack>
+                        <VStack flex={1} align="start">
+                            <Text fontSize="sm" color="fg.subtle">Giá tối đa</Text>
+                            <Input
+                                {...register("maxPrice", {
+                                    required: "Vui lòng nhập giá tối đa",
+                                    pattern: {
+                                        value: /^\d+(\.\d+)?$/,
+                                        message: "Giá không hợp lệ",
+                                    },
+                                })}
+                                placeholder="0.00"
+                                size="lg"
+                            />
+                        </VStack>
+                    </HStack>
+                </VStack>
+
+                <StepsNextTrigger asChild>
+                    <Button
+                        disabled={!watch("minPrice") || !watch("maxPrice")}
+                        w={"full"}
+                        size={"lg"}
+                    >
+                        Tiếp tục
+                    </Button>
+                </StepsNextTrigger>
+            </MotionVStack>
+        );
+    }, [watch("token0"), watch("token1")]);
+
+    const Step3 = useMemo(() => () => {
+        const token0 = watch("token0");
+        const token1 = watch("token1");
         const { address: userAddress } = useAccount();
 
         const { data: token0Balance } = useTokenBalance(token0, userAddress);
@@ -402,7 +526,17 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 token={field.value}
                                 amount={watch("token0Amount")}
                                 balance={token0Balance}
-                                onAmountChange={(value) => setValue("token0Amount", value)}
+                                onAmountChange={async (value) => {
+                                    setValue("token0Amount", value);
+                                    if (value && watch("token0")?.address && watch("token1")?.address) {
+                                        const amountOut = await quoteAmmPrice(
+                                            watch("token0").address,
+                                            watch("token1").address,
+                                            Number(value)
+                                        );
+                                        setValue("token1Amount", amountOut.toString());
+                                    }
+                                }}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
                                 userAddress={userAddress}
@@ -433,7 +567,17 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 token={field.value}
                                 amount={watch("token1Amount")}
                                 balance={token1Balance}
-                                onAmountChange={(value) => setValue("token1Amount", value)}
+                                onAmountChange={async (value) => {
+                                    setValue("token1Amount", value);
+                                    if (value && watch("token0")?.address && watch("token1")?.address) {
+                                        const amountOut = await quoteAmmPrice(
+                                            watch("token1").address,
+                                            watch("token0").address,
+                                            Number(value)
+                                        );
+                                        setValue("token0Amount", amountOut.toString());
+                                    }
+                                }}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
                                 userAddress={userAddress}
@@ -471,16 +615,21 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
     const stepRenders = [
         {
-            title: "Tạo vị thế",
+            title: "Chọn token",
             description: "Chọn token để tạo vị thế mới",
             content: <Step1 />
         },
         {
-            title: "Hoàn thành",
-            description: "Vị thế của bạn đã được tạo thành công",
+            title: "Đặt khoảng giá",
+            description: "Chọn khoảng giá cho vị thế",
             content: <Step2 />
+        },
+        {
+            title: "Số lượng token",
+            description: "Chọn số lượng token cung cấp",
+            content: <Step3 />
         }
-    ]
+    ];
 
     const isStep1Completed = !!(watch("token0") && watch("token1"));
 

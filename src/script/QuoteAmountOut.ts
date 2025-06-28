@@ -23,22 +23,7 @@ export async function quoteAmountOut(tokenIn: string, tokenOut: string, amountIn
         return 0;
     }
     if(volume >= 500) {
-        const poolInfo = await queryPoolInfo(tokenIn, tokenOut);
-        const poolConfig = getPoolConfig(tokenIn, tokenOut);
-        const sqrtPriceX96 = poolInfo.sqrtPriceX96;
-        const sqrtPriceX96Decimal = new Decimal(sqrtPriceX96.toString());
-        const numerator = sqrtPriceX96Decimal.pow(2);
-        const denominator = new Decimal(2).pow(192);
-        const priceDecimal = numerator.div(denominator);
-
-        let finalPrice = priceDecimal;
-
-        if(tokenIn.toLowerCase() === poolConfig?.poolKey.currency1) {
-            finalPrice = new Decimal(1).div(priceDecimal);
-        }
-
-        // console.log("amount out", amountIn * finalPrice.toNumber());
-        return amountIn * finalPrice.toNumber();
+        return quoteAmmPrice(tokenIn, tokenOut, amountIn);
     }
     
     const quoterContract = new ethers.Contract(
@@ -67,4 +52,23 @@ export async function quoteAmountOut(tokenIn: string, tokenOut: string, amountIn
         console.error("Error quoting amount out:", error);
         return 0;
     }
+}
+
+export async function quoteAmmPrice(tokenIn: string, tokenOut: string, amountIn: number) {
+    const poolInfo = await queryPoolInfo(tokenIn, tokenOut);
+    const poolConfig = getPoolConfig(tokenIn, tokenOut);
+    const sqrtPriceX96 = poolInfo.sqrtPriceX96;
+    const sqrtPriceX96Decimal = new Decimal(sqrtPriceX96.toString());
+    const numerator = sqrtPriceX96Decimal.pow(2);
+    const denominator = new Decimal(2).pow(192);
+    const priceDecimal = numerator.div(denominator);
+
+    let finalPrice = priceDecimal;
+
+    if(tokenIn.toLowerCase() === poolConfig?.poolKey.currency1) {
+        finalPrice = new Decimal(1).div(priceDecimal);
+    }
+
+    // console.log("amount out", amountIn * finalPrice.toNumber());
+    return amountIn * finalPrice.toNumber();
 }
