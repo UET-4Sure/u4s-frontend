@@ -8,6 +8,7 @@ import { ethers } from 'ethers'
 import QUOTER_ABI from '@/abis/V4Quoter.json'
 import { queryOraclePrice } from './QueryOraclePrice';
 import { queryPoolInfo } from './QuerySqrtPrice';
+import { Decimal } from 'decimal.js';
 
 const RPC_URL = process.env.NEXT_PUBLIC_RPC_URL || "";
 
@@ -23,11 +24,21 @@ export async function quoteAmountOut(tokenIn: string, tokenOut: string, amountIn
     }
     if(volume >= 500) {
         const poolInfo = await queryPoolInfo(tokenIn, tokenOut);
+        const poolConfig = getPoolConfig(tokenIn, tokenOut);
         const sqrtPriceX96 = poolInfo.sqrtPriceX96;
-        
-        // Convert sqrtPriceX96 to actual price
-        const price = (Number(sqrtPriceX96) * Number(sqrtPriceX96)) / (2 ** 192);
-        return amountIn * price;
+        const sqrtPriceX96Decimal = new Decimal(sqrtPriceX96.toString());
+        const numerator = sqrtPriceX96Decimal.pow(2);
+        const denominator = new Decimal(2).pow(192);
+        const priceDecimal = numerator.div(denominator);
+
+        let finalPrice = priceDecimal;
+
+        if(tokenIn.toLowerCase() === poolConfig?.poolKey.currency1) {
+            finalPrice = new Decimal(1).div(priceDecimal);
+        }
+
+        // console.log("amount out", amountIn * finalPrice.toNumber());
+        return amountIn * finalPrice.toNumber();
     }
     
     const quoterContract = new ethers.Contract(
@@ -50,21 +61,10 @@ export async function quoteAmountOut(tokenIn: string, tokenOut: string, amountIn
             exactAmount: ethers.utils.parseUnits(amountIn.toString(), 18),
             hookData: "0x00"
         });
+        console.log("quotedAmountOut", quotedAmountOut.amountOut.toString());
         return ethers.utils.formatUnits(quotedAmountOut.amountOut, 18);
     } catch (error) {
         console.error("Error quoting amount out:", error);
         return 0;
     }
 }
-
-// // Add test function
-// async function main() {
-//     try {
-//         const amountOut = await quoteAmountOut(TOKEN_ADDRESSES.USDC, TOKEN_ADDRESSES.WETH, 1);
-//         console.log("Amount out:", amountOut);
-//     } catch (error) {
-//         console.error("Error:", error);
-//     }
-// }
-
-// main();
