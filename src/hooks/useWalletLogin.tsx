@@ -16,18 +16,12 @@ export const useWalletLogin = () => {
     const { disconnect } = useDisconnect();
     const { setUser, user } = useUserStore();
     const { setToken, token } = useTokenStore();
+    const { signTypedDataAsync, isPending: isSignPending, error: signError } = useSignTypedData();
 
     const authQuery = useQuery({
-        queryKey: ["auth", address, token, user],
+        queryKey: ["auth", address],
         queryFn: async () => {
-            if (user && token) return;
-            if (!address) {
-                throw new Error("No wallet address found");
-            }
-
-            if (!address) {
-                throw new Error("No wallet address found");
-            }
+            if (user && token || !address) return;
 
             const domain = {
                 name: siteConfig.name,
@@ -76,11 +70,9 @@ export const useWalletLogin = () => {
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
         refetchOnMount: false,
-        retry: false,
-        staleTime: Infinity,
+        retry: true,
     });
 
-    const { signTypedDataAsync, isPending: isSignPending, error: signError } = useSignTypedData();
 
 
     // Handle disconnect
