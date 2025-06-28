@@ -8,6 +8,7 @@ import {
   TOKEN_LIST,
   getPoolConfig,
   getZeroForOne,
+  POOL_SWAP_TEST,
 } from "../config";
 import ERC20_ABI from "@/abis/ERC20.json";
 import POOL_SWAP_TEST_CONTRACT_ABI from "@/abis/PoolSwapTest.json";
@@ -77,7 +78,7 @@ export function Swap({ ...props }: Props) {
         address: swapData.fromToken.address as `0x${string}`,
         abi: ERC20_ABI.abi,
         functionName: "approve",
-        args: [poolConfig.poolAddress, ethers.utils.parseUnits(swapData.fromAmount.toString(), 18)],
+        args: [POOL_SWAP_TEST, ethers.utils.parseUnits(swapData.fromAmount.toString(), 18)],
       });
 
       const zeroForOne = getZeroForOne(swapData.fromToken.address, poolConfig.poolKey);
@@ -111,7 +112,7 @@ export function Swap({ ...props }: Props) {
 
       // Execute the swap
       await writeContractAsync({
-        address: poolConfig.poolAddress as `0x${string}`,
+        address: POOL_SWAP_TEST as `0x${string}`,
         abi: POOL_SWAP_TEST_CONTRACT_ABI.abi,
         functionName: "swap",
         args: [poolKeyArray, swapParams, testSettings, hookData],

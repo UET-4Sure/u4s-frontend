@@ -10,7 +10,7 @@ import { useTokenList } from '@/hooks/data/useTokenList';
 import { StepsContent, StepsItem, StepsList, StepsNextTrigger, StepsRoot } from '@/components/ui/steps';
 import { SwapInput, SwapWidget } from '@/components/widgets/swap/Swap';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
-import { getPoolConfig, POOL_ADDRESSES, TOKEN_ADDRESSES, HOOK_CONTRACT_ADDRESS } from '@/app/(dashboard)/(trade)/swap/config';
+import { getPoolConfig, HOOK_CONTRACT_ADDRESS } from '@/app/(dashboard)/(trade)/swap/config';
 import { errors, ethers } from 'ethers';
 import { parseUnits } from 'ethers/lib/utils';
 import { toaster } from '@/components/ui/toaster';
@@ -91,7 +91,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 return;
             }
 
-            const poolConfig = await getPoolConfig(data.token0.address, data.token1.address);
+            const poolConfig = getPoolConfig(data.token0.address, data.token1.address);
             if (!poolConfig) {
                 toaster.error({
                     title: "Lỗi tạo vị thế",
