@@ -341,6 +341,14 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 />
             </HStack>
 
+            <VStack align="start" w="full" bg="bg.subtle" p={4} rounded="xl" gap={1}>
+                <HStack w="full" justify="space-between">
+                    <Text fontSize="sm" color="fg.default">Mức phí giao dịch</Text>
+                    <Text fontSize="sm" color="fg.default">0,3%</Text>
+                </HStack>
+                <Text fontSize="sm" color="fg.subtle">Đây là phần trăm phí bạn sẽ nhận được khi có giao dịch</Text>
+            </VStack>
+
             <StepsNextTrigger asChild>
                 <Button
                     disabled={!watch("token0") || !watch("token1")}
