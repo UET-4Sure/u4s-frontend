@@ -1,5 +1,6 @@
 import { TickMath } from "@uniswap/v3-sdk";
 import JSBI from 'jsbi';
+import { queryOraclePrice } from '@/script/QueryOraclePrice';
 
 function calculateSqrtPriceX96FromPrice(price: number) {
     const sqrt = BigInt(Math.floor(Math.sqrt(price) * 2**40));
@@ -20,4 +21,12 @@ export function calculateTickFromPrice(price: number) {
     // Round to nearest multiple of 60
     const roundedTick = Math.round(tick / 60) * 60;
     return roundedTick;
+}
+
+export async function calculateVolumeLiquidity(token0: string, amount0: number, token1: string, amount1: number) {
+    const price0 = Number(await queryOraclePrice(token0));
+    const price1 = Number(await queryOraclePrice(token1));
+    const volume0 = amount0 * price0;
+    const volume1 = amount1 * price1;
+    return volume0 + volume1;
 }

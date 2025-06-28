@@ -25,7 +25,8 @@ import { PositionWidget } from '@/components/widgets/position/PositionWidget';
 import { queryPoolInfo } from '@/script/QuerySqrtPrice';
 import { useTokenBalance } from '@/components/widgets/swap/hooks';
 import { quoteAmmPrice } from '@/script/QuoteAmountOut';
-import { calculateTickFromPrice } from './utils';
+import * as utils from './utils';
+import { checkHasSBT } from '@/script/CheckHasSBT';
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
@@ -85,6 +86,35 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     description: "Vui lòng chọn cả hai token.",
                 });
                 return;
+            }
+
+            // Calculate total volume in USD
+            const totalVolume = await utils.calculateVolumeLiquidity(
+                data.token0.address,
+                Number(data.token0Amount),
+                data.token1.address,
+                Number(data.token1Amount)
+            );
+
+            // Check if volume exceeds 1M USD
+            if (totalVolume > 1000000) {
+                toaster.error({
+                    title: "Lỗi tạo vị thế",
+                    description: "Bạn không được phép tạo vị thế có tổng giá trị lớn hơn 1.000.000 USD.",
+                });
+                return;
+            }
+
+            // Check if volume > 500 USD and requires KYC
+            if (totalVolume > 500) {
+                const hasSBT = await checkHasSBT(userAddress as string);
+                if (!hasSBT) {
+                    toaster.error({
+                        title: "Yêu cầu KYC",
+                        description: "Bạn cần thực hiện KYC để tạo vị thế có tổng giá trị lớn hơn 500 USD.",
+                    });
+                    return;
+                }
             }
 
             const poolConfig = getPoolConfig(data.token0.address, data.token1.address);
@@ -165,8 +195,8 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             // const tickLower = Math.ceil(TickMath.MIN_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
             // const tickUpper = Math.floor(TickMath.MAX_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
 
-            const tickLower = calculateTickFromPrice(Number(data.minPrice));
-            const tickUpper = calculateTickFromPrice(Number(data.maxPrice));
+            const tickLower = utils.calculateTickFromPrice(Number(data.minPrice));
+            const tickUpper = utils.calculateTickFromPrice(Number(data.maxPrice));
 
             // console.log(data.minPrice, data.maxPrice);
 
