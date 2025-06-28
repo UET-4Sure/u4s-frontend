@@ -81,7 +81,6 @@ export const useWalletLogin = () => {
             setUser(null);
             setToken(null);
             delete vinaswapApi.defaults.headers.common["Authorization"];
-            queryClient.invalidateQueries({ queryKey: ["auth", "status"] });
         },
     });
 
