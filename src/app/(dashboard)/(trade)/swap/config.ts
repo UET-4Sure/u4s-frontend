@@ -21,8 +21,6 @@ const TOKEN_LIST: Token[] = [
     name: 'Wrapped Ether',
     decimals: 18,
     logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2/logo.png',
-    balance: '1.2345',
-    price: '2385.56',
   },
   {
     address: TOKEN_ADDRESSES.USDC,
@@ -30,8 +28,6 @@ const TOKEN_LIST: Token[] = [
     name: 'USD Coin',
     decimals: 18,
     logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48/logo.png',
-    balance: '200',
-    price: '1.00',
   },
   {
     address: TOKEN_ADDRESSES.WBTC,
@@ -39,8 +35,6 @@ const TOKEN_LIST: Token[] = [
     name: 'Wrapped Bitcoin',
     decimals: 18,
     logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599/logo.png',
-    balance: '0.1',
-    price: '107231.56',
   },
   {
     address: TOKEN_ADDRESSES.LINK,
@@ -48,8 +42,6 @@ const TOKEN_LIST: Token[] = [
     name: 'Chainlink',
     decimals: 18,
     logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x514910771AF9Ca656af840dff83E8264EcF986CA/logo.png',
-    balance: '234.56',
-    price: '13.56',
   },
   {
     address: TOKEN_ADDRESSES.EUR,
@@ -57,8 +49,6 @@ const TOKEN_LIST: Token[] = [
     name: 'Euro',
     decimals: 18,
     logoURI: 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0x1aBaEA1f7C830bD89Acc67eC4af516284b1bC33c/logo.png',
-    balance: '100',
-    price: '1.17',
   }
 ];
 
