@@ -16,14 +16,14 @@ export const useUserStore = create<UserState>()(
             clearUser: () => set({ user: null }),
         }),
         {
-            name: 'user-store', // tên key trong sessionStorage
+            name: 'user-store', // tên key trong localStorage
             storage: {
                 getItem: (name) => {
-                    const value = sessionStorage.getItem(name);
+                    const value = localStorage.getItem(name);
                     return value ? JSON.parse(value) : null;
                 },
-                setItem: (name, value) => sessionStorage.setItem(name, JSON.stringify(value)),
-                removeItem: (name) => sessionStorage.removeItem(name),
+                setItem: (name, value) => localStorage.setItem(name, JSON.stringify(value)),
+                removeItem: (name) => localStorage.removeItem(name),
             },
         }
     )
