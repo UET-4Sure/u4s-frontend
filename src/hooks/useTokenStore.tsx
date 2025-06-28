@@ -18,11 +18,11 @@ export const useTokenStore = create<TokenState>()(
             name: 'token-storage',
             storage: {
                 getItem: (name) => {
-                    const value = sessionStorage.getItem(name);
+                    const value = localStorage.getItem(name);
                     return value ? JSON.parse(value) : null;
                 },
-                setItem: (name, value) => sessionStorage.setItem(name, JSON.stringify(value)),
-                removeItem: (name) => sessionStorage.removeItem(name),
+                setItem: (name, value) => localStorage.setItem(name, JSON.stringify(value)),
+                removeItem: (name) => localStorage.removeItem(name),
             },
         }
     )
