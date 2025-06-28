@@ -49,3 +49,63 @@ export const USDC_EUR_CONFIG: PoolConfig = {
     hooks: HOOK_CONTRACT_ADDRESS.HOOK,
   }
 };
+
+export const WBTC_WETH_CONFIG: PoolConfig = {
+  poolKey: {
+    currency0: TOKEN_ADDRESSES.WBTC.toLowerCase(),
+    currency1: TOKEN_ADDRESSES.WETH.toLowerCase(),
+    fee: 3000,
+    tickSpacing: 60,
+    hooks: HOOK_CONTRACT_ADDRESS.HOOK,
+  }
+};
+
+export const WETH_LINK_CONFIG: PoolConfig = {
+  poolKey: {
+    currency0: TOKEN_ADDRESSES.WETH.toLowerCase(),
+    currency1: TOKEN_ADDRESSES.LINK.toLowerCase(),
+    fee: 3000,
+    tickSpacing: 60,
+    hooks: HOOK_CONTRACT_ADDRESS.HOOK,
+  }
+};
+
+export const EUR_WETH_CONFIG: PoolConfig = {
+  poolKey: {
+    currency0: TOKEN_ADDRESSES.EUR.toLowerCase(),
+    currency1: TOKEN_ADDRESSES.WETH.toLowerCase(),
+    fee: 3000,
+    tickSpacing: 60,
+    hooks: HOOK_CONTRACT_ADDRESS.HOOK,
+  }
+};
+
+export const WBTC_LINK_CONFIG: PoolConfig = {
+  poolKey: {
+    currency0: TOKEN_ADDRESSES.WBTC.toLowerCase(),
+    currency1: TOKEN_ADDRESSES.LINK.toLowerCase(),
+    fee: 3000,
+    tickSpacing: 60,
+    hooks: HOOK_CONTRACT_ADDRESS.HOOK,
+  }
+};
+
+export const WBTC_EUR_CONFIG: PoolConfig = {
+  poolKey: {
+    currency0: TOKEN_ADDRESSES.WBTC.toLowerCase(),
+    currency1: TOKEN_ADDRESSES.EUR.toLowerCase(),
+    fee: 3000,
+    tickSpacing: 60,
+    hooks: HOOK_CONTRACT_ADDRESS.HOOK,
+  }
+};
+
+export const EUR_LINK_CONFIG: PoolConfig = {
+  poolKey: {
+    currency0: TOKEN_ADDRESSES.EUR.toLowerCase(),
+    currency1: TOKEN_ADDRESSES.LINK.toLowerCase(),
+    fee: 3000,
+    tickSpacing: 60,
+    hooks: HOOK_CONTRACT_ADDRESS.HOOK,
+  }
+};
