@@ -1,6 +1,6 @@
 export const siteConfig = {
     name: "NolaSwap",
-    description: "Xây dựng trên Uniswap V4, VinaSwap cung cấp nền tảng DeFi hiện đại, minh bạch, an toàn, phục vụ cộng đồng Việt và thúc đẩy hệ sinh thái DeFi phát triển bền vững",
+    description: "Xây dựng trên Uniswap V4, NolaSwap cung cấp nền tảng DeFi hiện đại, minh bạch, an toàn, phục vụ cộng đồng Việt và thúc đẩy hệ sinh thái DeFi phát triển bền vững",
     url: "http://nolaswap.vercel.app/",
     paths: {
         home: {
