@@ -28,7 +28,7 @@ export const useWalletLogin = () => {
             };
             const message = {
                 address,
-                purpose: "Xác thực đăng nhập ví VinaSwap",
+                purpose: "Xác thực đăng nhập",
             };
             const primaryType = "Login";
             const types = {
@@ -63,7 +63,7 @@ export const useWalletLogin = () => {
             queryClient.invalidateQueries({ queryKey: ["auth:status"] });
             toaster.success({
                 title: "Đăng nhập thành công",
-                description: "Bạn đã đăng nhập thành công vào VinaSwap.",
+                description: "Hãy tận hưởng trải nghiệm trên " + siteConfig.name,
             })
         },
         enabled: !!address && !token && !user,
