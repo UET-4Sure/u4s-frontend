@@ -19,7 +19,7 @@ export const useWalletLogin = () => {
     const { signTypedDataAsync, isPending: isSignPending, error: signError } = useSignTypedData();
 
     const authQuery = useQuery({
-        queryKey: ["auth", address, JSON.stringify(user), JSON.stringify(token)],
+        queryKey: ["auth", address, user, token],
         queryFn: async () => {
             if (user && token || !address) return;
 
