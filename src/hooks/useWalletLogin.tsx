@@ -19,7 +19,7 @@ export const useWalletLogin = () => {
     const { signTypedDataAsync, isPending: isSignPending, error: signError } = useSignTypedData();
 
     const authQuery = useQuery({
-        queryKey: ["auth", address],
+        queryKey: ["auth", address, user, token],
         queryFn: async () => {
             if (user && token || !address) return;
 
@@ -81,7 +81,6 @@ export const useWalletLogin = () => {
             setUser(null);
             setToken(null);
             delete vinaswapApi.defaults.headers.common["Authorization"];
-            queryClient.invalidateQueries({ queryKey: ["auth", "status"] });
         },
     });
 
