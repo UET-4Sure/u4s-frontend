@@ -8,7 +8,7 @@ export const siteConfig = {
             label: "Trang chủ",
         },
         docs: {
-            href: "https://vinaswap.gitbook.io/vinaswap",
+            href: "https://nolaswap.gitbook.io/nolaswap",
             label: "Tài liệu",
         },
         about: {

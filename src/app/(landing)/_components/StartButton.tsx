@@ -16,7 +16,7 @@ export const StartButton: React.FC<StartButtonProps> = (props) => {
 
     return (
         <Button
-            onClick={() => { router.push("/dashboard") }}
+            onClick={() => { router.push("/trade") }}
             colorPalette={isAuthenticated ? "primary" : "gray"}
             {...props}
         >
