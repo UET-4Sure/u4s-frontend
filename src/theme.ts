@@ -41,16 +41,29 @@ const tokens = defineTokens({
             900: { value: "#301610" },
             950: { value: "#160704" },
         },
+        bg: {
+            50: { value: "#FFFFFF" },
+            100: { value: "#FDFBF7" },
+            200: { value: "#FBF8EF" },
+            300: { value: "#F9F4E6" },
+            400: { value: "#F7F0DE" },
+            500: { value: "#F5EDD6" },
+            600: { value: "#F3EBD8" },
+            700: { value: "#F0E7D1" },
+            800: { value: "#ECE2CA" },
+            900: { value: "#E9DEC4" },
+            950: { value: "#160704" },
+        }
     },
 });
 
 const semanticTokens = defineSemanticTokens({
     colors: {
         bg: {
-            DEFAULT: { value: "#F4E7C8" },
-            subtle: { value: "#FFF4D6" },
-            muted: { value: "#E9DEBF" },
-            emphasized: { value: "#E0D5B7" },
+            DEFAULT: { value: "#F5EDD6" },
+            subtle: { value: "#F7F0DE" },
+            muted: { value: "#923B25" },
+            emphasized: { value: "#F9F4E6" },
             inverted: { value: "#151004" },
         },
         fg: {
