@@ -57,6 +57,10 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
         },
         onError: (error) => {
             console.error('Error submitting KYC:', error);
+            toaster.error({
+                title: 'Xác minh thất bại',
+                description: error.message || 'Đã xảy ra lỗi khi xác minh KYC. Vui lòng thử lại sau.',
+            });
         },
     });
 
