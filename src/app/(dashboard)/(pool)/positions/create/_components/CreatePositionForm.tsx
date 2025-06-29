@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { SelectTokenDialog } from '@/components/widgets/components/SelectTokenDialog';
 import { Box, Center, chakra, HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Controller, SubmitHandler, useForm } from 'react-hook-form';
+import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTokenList } from '@/hooks/data/useTokenList';
 import { StepsContent, StepsItem, StepsList, StepsNextTrigger, StepsRoot } from '@/components/ui/steps';
@@ -72,6 +72,8 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
     const [step, setStep] = useState(1)
     const [openRequireKycDialog, setOpenRequireKycDialog] = useState(false);
+    const [isCalculating, setIsCalculating] = useState(false);
+    const sourceRef = useRef<'token0' | 'token1'>('token0');
 
     const {
         register,
@@ -79,12 +81,18 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         control,
         watch,
         setValue,
-        formState: { isLoading, errors }
+        formState: { isSubmitting, errors }
     } = useForm<CreatePositionFormValues>({
         defaultValues: {
             slippage: "0.5"
         }
     });
+
+    const token0 = useWatch({ control, name: "token0" });
+    const token1 = useWatch({ control, name: "token1" });
+
+    const { data: token0Balance } = useTokenBalance(token0, userAddress);
+    const { data: token1Balance } = useTokenBalance(token1, userAddress);
 
     const onSubmit = async (data: CreatePositionFormValues) => {
         try {
@@ -321,96 +329,96 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         }),
     };
 
-    const Step1 = useMemo(() => () => (
-        <MotionVStack
-            initial="hidden"
-            animate="visible"
-            exit="hidden"
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            align={"start"}
-            w={"full"}
-            gap={4}
-        >
-            <FormFieldTitle
-                title="Tạo vị thế"
-                description="Chọn token để tạo vị thế mới"
-            />
-            <HStack align={"start"} w={"full"}>
-                <Controller
-                    name="token0"
-                    control={control}
-                    render={({ field }) => (
-                        <SelectTokenDialog
-                            title={field.value?.symbol}
-                            triggerProps={{
-                                size: "lg",
-                                bg: field.value ? "bg.subtle" : "",
-                                color: field.value ? "bg.inverted" : "",
-                                flex: 1,
-                                justifyContent: "space-between",
-                            }}
-                            tokenList={tokenList || []}
-                            placeholder="Chọn token cung cấp"
-                            selectedToken={field.value}
-                            onSelectToken={(token) => {
-                                field.onChange(token);
-                            }}
-                        />
-                    )}
-                />
-                <Controller
-                    name="token1"
-                    control={control}
-                    render={({ field }) => (
-                        <SelectTokenDialog
-                            title={field.value?.symbol}
-                            tokenList={tokenList || []}
-                            placeholder="Chọn token nhận"
-                            selectedToken={field.value}
-                            triggerProps={{
-                                size: "lg",
-                                bg: field.value ? "bg.subtle" : "",
-                                color: field.value ? "bg.inverted" : "",
-                                flex: 1,
-                                justifyContent: "space-between",
-                            }}
-                            onSelectToken={(token) => {
-                                field.onChange(token);
-                            }}
-                        />
-                    )}
-                />
-            </HStack>
+    const Step1 = () => {
+        const token0 = useWatch({ control, name: "token0" });
+        const token1 = useWatch({ control, name: "token1" });
 
-            <VStack align="start" w="full" bg="bg.subtle" shadow={"md"} p={4} rounded="2xl" gap={1}>
-                <HStack w="full" justify="space-between">
-                    <Text fontSize="sm" color="fg.default">Mức phí giao dịch</Text>
-                    <Text fontSize="sm" color="fg.default">0,3%</Text>
+        return (
+            <MotionVStack
+                align={"start"}
+                w={"full"}
+                gap={4}
+            >
+                <FormFieldTitle
+                    title="Tạo vị thế"
+                    description="Chọn token để tạo vị thế mới"
+                />
+                <HStack align={"start"} w={"full"}>
+                    <Controller
+                        name="token0"
+                        control={control}
+                        render={({ field }) => (
+                            <SelectTokenDialog
+                                title={field.value?.symbol}
+                                triggerProps={{
+                                    size: "lg",
+                                    bg: field.value ? "bg.subtle" : "",
+                                    color: field.value ? "bg.inverted" : "",
+                                    flex: 1,
+                                    justifyContent: "space-between",
+                                }}
+                                tokenList={tokenList || []}
+                                placeholder="Chọn token cung cấp"
+                                selectedToken={field.value}
+                                onSelectToken={(token) => {
+                                    field.onChange(token);
+                                }}
+                            />
+                        )}
+                    />
+                    <Controller
+                        name="token1"
+                        control={control}
+                        render={({ field }) => (
+                            <SelectTokenDialog
+                                title={field.value?.symbol}
+                                tokenList={tokenList || []}
+                                placeholder="Chọn token nhận"
+                                selectedToken={field.value}
+                                triggerProps={{
+                                    size: "lg",
+                                    bg: field.value ? "bg.subtle" : "",
+                                    color: field.value ? "bg.inverted" : "",
+                                    flex: 1,
+                                    justifyContent: "space-between",
+                                }}
+                                onSelectToken={(token) => {
+                                    field.onChange(token);
+                                }}
+                            />
+                        )}
+                    />
                 </HStack>
-                <Text fontSize="sm" color="fg.subtle">Đây là phần trăm phí bạn sẽ nhận được khi có giao dịch</Text>
-            </VStack>
 
-            <StepsNextTrigger asChild>
-                <Button
-                    disabled={!watch("token0") || !watch("token1")}
-                    w={"full"}
-                    size={"lg"}
-                    onClick={() => {
-                        if (!watch("token0") || !watch("token1")) {
-                            toaster.error({
-                                title: "Lỗi tạo vị thế",
-                                description: "Vui lòng chọn cả hai token.",
-                            });
-                            return;
-                        }
-                        steps.setStep(1);
-                    }}
-                >
-                    Tiếp tục
-                </Button>
-            </StepsNextTrigger>
-        </MotionVStack >
-    ), [tokenList]);
+                <VStack align="start" w="full" bg="bg.subtle" shadow={"md"} p={4} rounded="2xl" gap={1}>
+                    <HStack w="full" justify="space-between">
+                        <Text fontSize="sm" color="fg.default">Mức phí giao dịch</Text>
+                        <Text fontSize="sm" color="fg.default">0,3%</Text>
+                    </HStack>
+                    <Text fontSize="sm" color="fg.subtle">Đây là phần trăm phí bạn sẽ nhận được khi có giao dịch</Text>
+                </VStack>
+
+                <StepsNextTrigger asChild>
+                    <Button
+                        disabled={!watch("token0") || !watch("token1")}
+                        w={"full"}
+                        size={"lg"}
+                        onClick={() => {
+                            if (!token0 || !token1) {
+                                toaster.error({
+                                    title: "Lỗi tạo vị thế",
+                                    description: "Vui lòng chọn cả hai token.",
+                                });
+                                return;
+                            }
+                        }}
+                    >
+                        Tiếp tục
+                    </Button>
+                </StepsNextTrigger>
+            </MotionVStack >
+        )
+    }
 
     const Step2 = useMemo(() => () => {
         const token0 = watch("token0");
@@ -469,9 +477,6 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             <>
                 <RequireKycApplicationDialog open={openRequireKycDialog} onOpenChange={(value) => setOpenRequireKycDialog(value.open)} />
                 <MotionVStack
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
                     align={"start"}
                     w={"full"}
                     gap={4}
@@ -597,16 +602,11 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         );
     }, [watch("token0"), watch("token1")]);
 
-    const Step3 = useMemo(() => () => {
-        const [isCalculating, setIsCalculating] = useState(false);
-        const sourceRef = useRef<'token0' | 'token1'>('token0');
-
-        const token0 = watch("token0");
-        const token1 = watch("token1");
-        const { address: userAddress } = useAccount();
-
-        const { data: token0Balance } = useTokenBalance(token0, userAddress);
-        const { data: token1Balance } = useTokenBalance(token1, userAddress);
+    const Step3 = () => {
+        const token0 = useWatch({ control, name: "token0" });
+        const token1 = useWatch({ control, name: "token1" });
+        const token0Amount = useWatch({ control, name: "token0Amount" });
+        const token1Amount = useWatch({ control, name: "token1Amount" });
 
         const getButtonState = () => {
             if (isCalculating) return {
@@ -614,14 +614,14 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 isDisabled: true
             }
 
-            if (isLoading) return {
+            if (isSubmitting) return {
                 text: "Đang tạo vị thế...",
                 isDisabled: true
             };
 
             return {
                 text: "Tạo vị thế",
-                isDisabled: isLoading,
+                isDisabled: isSubmitting,
             }
         }
 
@@ -677,9 +677,6 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
         return (
             <MotionVStack
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
                 align={"start"}
                 w={"full"}
                 gap={4}
@@ -696,7 +693,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                             <SwapInput
                                 label="Token 0"
                                 token={field.value}
-                                amount={watch("token0Amount")}
+                                amount={token0Amount}
                                 balance={token0Balance}
                                 onAmountChange={async (value) => {
                                     handleToken0InputChange(value);
@@ -734,7 +731,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                             <SwapInput
                                 label="Token 1"
                                 token={field.value}
-                                amount={watch("token1Amount")}
+                                amount={token1Amount}
                                 balance={token1Balance}
                                 onAmountChange={async (value) => {
                                     handleToken1InputChange(value);
@@ -771,7 +768,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     w={"full"}
                     type="submit"
                     size={"lg"}
-                    loading={isLoading || isCalculating}
+                    loading={isSubmitting || isCalculating}
                     loadingText={getButtonState().text}
                     disabled={getButtonState().isDisabled}
                 >
@@ -779,7 +776,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 </Button>
             </MotionVStack>
         );
-    }, [tokenList]);
+    };
 
     const stepRenders = [
         {
