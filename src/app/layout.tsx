@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { siteConfig } from "@/config/site";
 import { headers } from "next/headers";
 import { Provider } from "./provider";
+import { Footer } from "@/components/global/footer";
 
 const sora = Sora({
   subsets: ["latin"],
@@ -17,6 +18,28 @@ const sora = Sora({
 export const metadata: Metadata = {
   title: siteConfig.name,
   description: siteConfig.description,
+  openGraph: {
+    title: siteConfig.name,
+    description: siteConfig.description,
+    url: siteConfig.url,
+    countryName: "Vietnam",
+    type: "website",
+    siteName: siteConfig.name,
+    images: [
+      {
+        url: `${siteConfig.url}/brand/logo-presentation.svg`,
+        width: 973,
+        height: 512,
+        alt: "VinaSwap Presentation Image",
+      }
+    ],
+  },
+  twitter: {
+    title: siteConfig.name,
+    description: siteConfig.description,
+    card: "summary_large_image",
+    images: [`${siteConfig.url}/brand/logo-presentation.svg`],
+  },
 };
 
 export default async function RootLayout({
@@ -41,6 +64,7 @@ export default async function RootLayout({
         <Provider cookies={cookies}>
           <Toaster />
           {children}
+          <Footer />
         </Provider>
       </body>
     </html>
