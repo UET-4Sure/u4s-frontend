@@ -16,7 +16,7 @@ export const useUserStore = create<UserState>()(
             clearUser: () => set({ user: null }),
         }),
         {
-            name: 'user-store', // tên key trong sessionStorage
+            name: 'user-store', // tên key trong
             storage: {
                 getItem: (name) => {
                     const value = sessionStorage.getItem(name);

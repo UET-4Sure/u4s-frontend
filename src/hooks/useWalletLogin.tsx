@@ -14,8 +14,8 @@ export const useWalletLogin = () => {
     const queryClient = useQueryClient();
     const { address } = useAccount();
     const { disconnect } = useDisconnect();
-    const { setUser, user } = useUserStore();
-    const { setToken, token } = useTokenStore();
+    const { setUser, clearUser, user } = useUserStore();
+    const { setToken, clearToken, token } = useTokenStore();
     const { signTypedDataAsync, isPending: isSignPending, error: signError } = useSignTypedData();
 
     const authQuery = useQuery({
@@ -63,7 +63,7 @@ export const useWalletLogin = () => {
             queryClient.invalidateQueries({ queryKey: ["auth:status"] });
             toaster.success({
                 title: "Đăng nhập thành công",
-                description: "Bạn đã đăng nhập thành công vào VinaSwap.",
+                description: "Bạn đã đăng nhập thành công vào VinaSwap",
             })
         },
         enabled: !!address && !token && !user,
@@ -78,8 +78,8 @@ export const useWalletLogin = () => {
     // Handle disconnect
     useAccountEffect({
         onDisconnect: () => {
-            setUser(null);
-            setToken(null);
+            clearUser();
+            clearToken();
             delete vinaswapApi.defaults.headers.common["Authorization"];
         },
     });
