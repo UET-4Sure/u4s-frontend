@@ -16,8 +16,8 @@ import { SwapState } from "@/components/widgets/type";
 import { toaster } from "@/components/ui/toaster";
 import { checkHasSBT } from "@/script/CheckHasSBT";
 import { queryOraclePrice } from "@/script/QueryOraclePrice";
-import { RequireKycApplicationDialog } from "./RequireKycApplicationDialog";
 import { useState } from "react";
+import { RequireKycApplicationDialog } from "@/app/(dashboard)/_components/RequireKycApplicationDialog";
 
 interface Props extends StackProps { }
 
