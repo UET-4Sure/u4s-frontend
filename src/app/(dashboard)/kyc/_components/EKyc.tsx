@@ -1,7 +1,7 @@
 'use client'
 
 import { vinaswapApi } from '@/services/axios'
-import { CreateKycApplicationBody, DocumentTypeMap } from '@/types/core'
+import { CreateKycApplicationBody, DocumentTypeMap, KycProfileResponse } from '@/types/core'
 import { EkycResponse, EkycSdkConfig } from '@/types/vnpt-sdk'
 import { chakra } from '@chakra-ui/react'
 import { useAppKitAccount } from '@reown/appkit/react'
@@ -33,26 +33,30 @@ declare global {
 export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
     const { address } = useAppKitAccount();
     const queryClient = useQueryClient();
-    const [isEventEmitted, setIsEventEmitted] = useState(false);
-    const [sbtTokenId, setSbtTokenId] = useState<string>();
-    const [isProcessing, setIsProcessing] = useState(false);
+    const [sbtTokenId, setSbtTokenId] = useState<string | null>();
+    const [openProcessDialog, setOpenProcessDialog] = useState(false);
 
     const { mutate: submitKycApplication, isPending: isSubmiting } = useMutation({
         mutationKey: ['kyc:submit'],
         mutationFn: async (data: CreateKycApplicationBody) => {
+            setOpenProcessDialog(true);
+
             if (!address) {
                 throw new Error('Not connected to a wallet');
             }
 
-            await vinaswapApi.post(`/users/wallet/${address}/kyc/applications`, data);
+            const res = await vinaswapApi.post(`/users/wallet/${address}/kyc/applications`, data);
+
+            return res.data as KycProfileResponse;
         },
         onSuccess: (data) => {
+            setSbtTokenId(data.tokenId);
             queryClient.invalidateQueries({
                 queryKey: ['kyc:status', address],
             });
             toaster.success({
                 title: 'Xác minh thành công',
-                description: 'KYC của bạn đã được xác minh thành công. ID NFT sẽ được gửi đến ví của bạn.',
+                description: 'KYC của bạn đã được xác minh thành công',
             })
         },
         onError: (error) => {
@@ -64,31 +68,30 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
         },
     });
 
-    useWatchContractEvent({
-        address: IDENTITY_SBT_CONTRACT_ADDRESS,
-        eventName: 'Transfer',
-        abi: abis,
-        args: {
-            from: '0x0000000000000000000000000000000000000000',
-            to: address as `0x${string}`,
-        },
-        onLogs: (logs) => {
-            if (logs.length > 0 && !isEventEmitted) {
-                const sbtTokenId = logs[0].args.tokenId?.toString();
-                if (sbtTokenId) {
-                    setSbtTokenId(sbtTokenId);
-                    setIsEventEmitted(true);
-                    setIsProcessing(false);
-                }
-            }
-        }
-    })
+    //WARNING: Đang bị đần
+    // useWatchContractEvent({
+    //     address: IDENTITY_SBT_CONTRACT_ADDRESS,
+    //     eventName: 'Transfer',
+    //     abi: abis,
+    //     args: {
+    //         from: '0x0000000000000000000000000000000000000000',
+    //         to: address as `0x${string}`,
+    //     },
+    //     onLogs: (logs) => {
+    //         if (logs.length > 0 && !isEventEmitted) {
+    //             const sbtTokenId = logs[0].args.tokenId?.toString();
+    //             if (sbtTokenId) {
+    //                 setSbtTokenId(sbtTokenId);
+    //                 setIsEventEmitted(true);
+    //                 setIsProcessing(false);
+    //             }
+    //         }
+    //     }
+    // })
     const callBackEndFlow = async (data: EkycResponse) => {
         if (onResult) {
             onResult(data);
         }
-
-        setIsProcessing(true);
 
         submitKycApplication({
             documentType: DocumentTypeMap[data.type_document],
@@ -139,7 +142,11 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
     return (
         <>
             <chakra.div id="ekyc_sdk_intergrated" w={"full"} />
-            <SubmitKycApplicationDialog open={isProcessing} isProcessing={isProcessing} sbtTokenId={sbtTokenId} />
+            <SubmitKycApplicationDialog
+                open={openProcessDialog}
+                onOpenChange={(value) => setOpenProcessDialog(value.open)}
+                isProcessing={isSubmiting} sbtTokenId={sbtTokenId}
+            />
         </>
     )
 }

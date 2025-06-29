@@ -12,3 +12,5 @@ export const API_URL = process.env.NEXT_PUBLIC_VINSWAP_API_URL as string;
 
 export const QUOTER_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_QUOTER_CONTRACT_ADDRESS as `0x${string}`;
 export const IDENTITY_SBT_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_IDENTITY_SBT_CONTRACT_ADDRESS as `0x${string}`;
+
+export const ETHEREUM_TESTNET_EXPLORER_URL = process.env.NEXT_PUBLIC_ETHEREUM_TESTNET_EXPLORER_URL || "https://sepolia.etherscan.io";
