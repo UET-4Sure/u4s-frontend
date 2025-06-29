@@ -85,6 +85,8 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     });
 
     const onSubmit = async (data: CreatePositionFormValues) => {
+        console.log(parseUnits(data.token0Amount, data.token0.decimals).toString());
+        console.log(parseUnits(data.token1Amount, data.token1.decimals).toString());
         try {
             if (!data.token0 || !data.token1) {
                 toaster.error({
@@ -130,48 +132,48 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             }
 
 
-            // First approve tokens to Permit2
+            // First approve tokens to position manager
             await writeContractAsync({
                 address: data.token0.address as `0x${string}`,
                 abi: ERC20_ABI.abi,
                 functionName: "approve",
-                args: [PERMIT2_ADDRESS as `0x${string}`, ethers.constants.MaxUint256],
+                args: [POSITION_MANAGER_ADDRESS as `0x${string}`, parseUnits(data.token0Amount, data.token0.decimals).toString()],
             });
 
             await writeContractAsync({
                 address: data.token1.address as `0x${string}`,
                 abi: ERC20_ABI.abi,
                 functionName: "approve",
-                args: [PERMIT2_ADDRESS as `0x${string}`, ethers.constants.MaxUint256],
+                args: [POSITION_MANAGER_ADDRESS as `0x${string}`, parseUnits(data.token1Amount, data.token1.decimals).toString()],
             });
 
 
             const MAX_UINT48 = "281474976710655"; // 2^48 - 1
             const MAX_UINT160 = "1461501637330902918203684832716283019655932542975";
 
-            await writeContractAsync({
-                address: PERMIT2_ADDRESS as `0x${string}`,
-                abi: PERMIT2_ABI,
-                functionName: "approve",
-                args: [
-                    data.token0.address,
-                    POSITION_MANAGER_ADDRESS,
-                    MAX_UINT160,
-                    MAX_UINT48
-                ],
-            });
+            // await writeContractAsync({
+            //     address: PERMIT2_ADDRESS as `0x${string}`,
+            //     abi: PERMIT2_ABI,
+            //     functionName: "approve",
+            //     args: [
+            //         data.token0.address,
+            //         POSITION_MANAGER_ADDRESS,
+            //         MAX_UINT160,
+            //         MAX_UINT48
+            //     ],
+            // });
 
-            await writeContractAsync({
-                address: PERMIT2_ADDRESS as `0x${string}`,
-                abi: PERMIT2_ABI,
-                functionName: "approve",
-                args: [
-                    data.token1.address,
-                    POSITION_MANAGER_ADDRESS,
-                    MAX_UINT160,
-                    MAX_UINT48
-                ],
-            });
+            // await writeContractAsync({
+            //     address: PERMIT2_ADDRESS as `0x${string}`,
+            //     abi: PERMIT2_ABI,
+            //     functionName: "approve",
+            //     args: [
+            //         data.token1.address,
+            //         POSITION_MANAGER_ADDRESS,
+            //         MAX_UINT160,
+            //         MAX_UINT48
+            //     ],
+            // });
 
             if (!publicClient) {
                 throw new Error("Public client not available");
