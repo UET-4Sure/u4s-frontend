@@ -8,25 +8,53 @@ import {
   TOKEN_LIST,
   getPoolConfig,
   getZeroForOne,
+  POOL_SWAP_TEST,
 } from "../config";
 import ERC20_ABI from "@/abis/ERC20.json";
 import POOL_SWAP_TEST_CONTRACT_ABI from "@/abis/PoolSwapTest.json";
 import { ethers } from "ethers";
 import { SwapState } from "@/components/widgets/type";
 import { toaster } from "@/components/ui/toaster";
+import { checkHasSBT } from "@/script/CheckHasSBT";
+import { queryOraclePrice } from "@/script/QueryOraclePrice";
+import { useState } from "react";
+import { RequireKycApplicationDialog } from "@/app/(dashboard)/_components/RequireKycApplicationDialog";
 
-interface Props extends StackProps {}
+interface Props extends StackProps { }
 
-export const Swap: React.FC<Props> = ({ children, ...props }) => {
+export function Swap({ ...props }: Props) {
+  const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
-  const { address: userAddress } = useAccount();
+  const [openRequireKycDialog, setOpenRequireKycDialog] = useState(false);
 
   const handleSwap = async (swapData: SwapState) => {
     try {
+      // Get token price and calculate volume
+      const oraclePrice = await queryOraclePrice(swapData.fromToken?.address || "");
+      const volume = Number(swapData.fromAmount) * Number(oraclePrice);
+
+      // Check volume limits
+      if (volume > 10000) {
+        setOpenRequireKycDialog(true);
+        return;
+      }
+
+      // Check SBT requirement for high volume trades
+      if (volume >= 500) {
+        const hasSBT = await checkHasSBT(address || "");
+        if (!hasSBT) {
+          toaster.error({
+            title: "Xác thực KYC",
+            description: "Bạn cần xác thực KYC để thực hiện giao dịch lớn hơn 500 USD"
+          });
+          return;
+        }
+      }
+
       if (!swapData.fromToken || !swapData.toToken || !swapData.fromAmount) {
         toaster.error({
-            title: "Swap Error",
-            description: "Please ensure all fields are filled out correctly.",
+          title: "Swap Error",
+          description: "Please ensure all fields are filled out correctly.",
         })
         return;
       }
@@ -39,8 +67,8 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
 
       if (!poolConfig) {
         toaster.error({
-            title: "Swap Error",
-            description: "No pool found for the selected token pair.",
+          title: "Swap Error",
+          description: "No pool found for the selected token pair.",
         });
         return;
       }
@@ -50,13 +78,13 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
         address: swapData.fromToken.address as `0x${string}`,
         abi: ERC20_ABI.abi,
         functionName: "approve",
-        args: [poolConfig.poolAddress, ethers.utils.parseUnits(swapData.fromAmount.toString(), 18)],
+        args: [POOL_SWAP_TEST, ethers.utils.parseUnits(swapData.fromAmount.toString(), 18)],
       });
 
       const zeroForOne = getZeroForOne(swapData.fromToken.address, poolConfig.poolKey);
-      
+
       // CURRENTLY HARDCODED TO SWAP EXACT TOKEN IN FOR NOW
-      const amountSpecified = ethers.utils.parseUnits((-swapData.fromAmount).toString(), 18); 
+      const amountSpecified = ethers.utils.parseUnits((-swapData.fromAmount).toString(), 18);
 
       // Format pool key as array for contract call
       const poolKeyArray = [
@@ -84,23 +112,34 @@ export const Swap: React.FC<Props> = ({ children, ...props }) => {
 
       // Execute the swap
       await writeContractAsync({
-        address: poolConfig.poolAddress as `0x${string}`,
+        address: POOL_SWAP_TEST as `0x${string}`,
         abi: POOL_SWAP_TEST_CONTRACT_ABI.abi,
         functionName: "swap",
         args: [poolKeyArray, swapParams, testSettings, hookData],
       });
 
+      toaster.success({
+        title: "Swap successful",
+        description: "Your swap has been executed successfully",
+      });
     } catch (error) {
-      console.error("Error during swap:", error);
+      console.error("Swap error:", error);
+      toaster.error({
+        title: "Swap Error",
+        description: error instanceof Error ? error.message : "An error occurred during swap",
+      });
     }
   };
 
   return (
-    <SwapWidget
-      onSwap={handleSwap}
-      userAddress={userAddress}
-      tokenList={TOKEN_LIST}
-      {...props}
-    />
+    <>
+      <SwapWidget
+        onSwap={handleSwap}
+        userAddress={address}
+        tokenList={TOKEN_LIST}
+        {...props}
+      />
+      <RequireKycApplicationDialog open={openRequireKycDialog} onOpenChange={(value) => { setOpenRequireKycDialog(value.open) }} />
+    </>
   );
-};
+}
