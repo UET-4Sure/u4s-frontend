@@ -3,7 +3,7 @@
 import { useState, useCallback } from "react";
 import { VStack, Text } from "@chakra-ui/react";
 import { Button } from "@/components/ui/button";
-import { TOKEN_ADDRESSES } from "@/app/(dashboard)/(trade)/swap/config";
+import { TOKEN_ADDRESSES } from "@/app/(dashboard)/(trade)/swap/constants";
 import { ethers } from "ethers";
 import ERC20_MINTABLE_ABI from "@/abis/ERC20Mintable.json";
 import { useAccount, useWriteContract } from "wagmi";
