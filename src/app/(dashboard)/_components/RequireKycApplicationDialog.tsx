@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { DialogContent, DialogRoot, DialogHeader, DialogBody, DialogTitle } from "@/components/ui/dialog";
+import { DialogContent, DialogRoot, DialogHeader, DialogBody, DialogTitle, DialogCloseTrigger } from "@/components/ui/dialog";
 import { DialogFooter, DialogRootProps, Heading, Image, Spinner, Text, VStack } from "@chakra-ui/react";
 import NextImage from "next/image";
 import NextLink from "next/link";
@@ -37,9 +37,11 @@ export function RequireKycApplicationDialog(props: Partial<RequireKycApplication
                     </VStack>
                 </DialogBody>
                 <DialogFooter>
-                    <Button variant={"outline"} onClick={() => setOpen(false)}>
-                        Quay lại
-                    </Button>
+                    <DialogCloseTrigger asChild>
+                        <Button variant={"outline"}>
+                            Quay lại
+                        </Button>
+                    </DialogCloseTrigger>
                     <Button asChild>
                         <NextLink href={"/kyc"}>
                             Xác minh ngay
