@@ -3,7 +3,7 @@
 import { Button } from '@/components/ui/button';
 import { SelectTokenDialog } from '@/components/widgets/components/SelectTokenDialog';
 import { Box, Center, chakra, HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
-import { useMemo, useState, useEffect } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTokenList } from '@/hooks/data/useTokenList';
@@ -32,6 +32,7 @@ import numeral from 'numeral';
 import { Tag } from '@/components/ui/tag';
 import { Tooltip } from '@/components/ui/tooltip';
 import { RequireKycApplicationDialog } from '@/app/(dashboard)/_components/RequireKycApplicationDialog';
+import { useQueryClient } from '@tanstack/react-query';
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
@@ -67,6 +68,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     const { writeContractAsync } = useWriteContract();
     const { address: userAddress } = useAccount();
     const publicClient = usePublicClient();
+    const queryClient = useQueryClient();
 
     const [step, setStep] = useState(1)
     const [openRequireKycDialog, setOpenRequireKycDialog] = useState(false);
@@ -271,6 +273,14 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     encodedData,
                     deadline
                 ]
+            });
+
+            queryClient.invalidateQueries({
+                queryKey: ['token-balance', data.token0.address, userAddress],
+            });
+
+            queryClient.invalidateQueries({
+                queryKey: ['token-balance', data.token1.address, userAddress],
             });
 
             toaster.success({
@@ -589,6 +599,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
     const Step3 = useMemo(() => () => {
         const [isCalculating, setIsCalculating] = useState(false);
+        const sourceRef = useRef<'token0' | 'token1'>('token0');
 
         const token0 = watch("token0");
         const token1 = watch("token1");
@@ -614,6 +625,56 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             }
         }
 
+        const handleToken0InputChange = async (value: string) => {
+            setValue("token0Amount", value);
+        };
+
+        const handleToken1InputChange = async (value: string) => {
+            setValue("token1Amount", value);
+        };
+
+        const handleToken0Update = async (value: string) => {
+            if (sourceRef.current !== 'token0') return;
+
+            setIsCalculating(true);
+            try {
+                const token1 = watch("token1");
+                const amountOut = await quoteAmmPrice(
+                    watch("token0").address,
+                    token1.address,
+                    Number(value)
+                );
+                setValue("token1Amount", amountOut.toString());
+            } catch (error) {
+                console.error("Error calculating token1 amount:", error);
+                setValue("token1Amount", "");
+            } finally {
+                setIsCalculating(false);
+            }
+        }
+
+        const handleToken1Update = async (value: string) => {
+            console.log('Source:', sourceRef.current);
+            if (sourceRef.current !== 'token1') return;
+
+            setIsCalculating(true);
+            try {
+                const token0 = watch("token0");
+                const amountOut = await quoteAmmPrice(
+                    token0.address,
+                    watch("token1").address,
+                    Number(value)
+                );
+                setValue("token0Amount", amountOut.toString());
+            } catch (error) {
+                console.error("Error calculating token0 amount:", error);
+                setValue("token0Amount", "");
+            } finally {
+                setIsCalculating(false);
+            }
+        }
+
+
         return (
             <MotionVStack
                 initial={{ opacity: 0, y: 20 }}
@@ -638,23 +699,15 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 amount={watch("token0Amount")}
                                 balance={token0Balance}
                                 onAmountChange={async (value) => {
-                                    setValue("token0Amount", value);
+                                    handleToken0InputChange(value);
+                                    handleToken0Update(value);
                                 }}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
                                 userAddress={userAddress}
                                 inputProps={{
                                     onInput: async () => {
-                                        const token1 = watch("token1");
-
-                                        setIsCalculating(true);
-                                        const amountOut = await quoteAmmPrice(
-                                            watch("token0").address,
-                                            token1.address,
-                                            Number(watch("token0Amount"))
-                                        );
-                                        setValue("token1Amount", amountOut.toString());
-                                        setIsCalculating(false);
+                                        sourceRef.current = 'token0';
                                     }
                                 }}
                                 balanceProps={{
@@ -684,23 +737,15 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 amount={watch("token1Amount")}
                                 balance={token1Balance}
                                 onAmountChange={async (value) => {
-                                    setValue("token1Amount", value);
+                                    handleToken1InputChange(value);
+                                    handleToken1Update(value);
                                 }}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
                                 userAddress={userAddress}
                                 inputProps={{
                                     onInput: async () => {
-                                        const token0 = watch("token0");
-
-                                        setIsCalculating(true);
-                                        const amountOut = await quoteAmmPrice(
-                                            token0.address,
-                                            watch("token1").address,
-                                            Number(watch("token1Amount"))
-                                        );
-                                        setValue("token0Amount", amountOut.toString());
-                                        setIsCalculating(false);
+                                        sourceRef.current = 'token1';
                                     }
                                 }}
                                 balanceProps={{
