@@ -31,3 +31,21 @@ export interface CreateKycApplicationBody {
     documentFrontImage: string;
     documentBackImage: string;
 }
+
+export interface KycProfileResponse {
+    id: string;
+    user: User;
+    documentType: DocumentType;
+    documentNumber: string;
+    documentFrontImage: string | null;
+    documentBackImage: string | null;
+
+    verificationOutcome: KycStatus;
+    reviewNotes: string | null;
+    reviewedAt: Date | null;
+
+    tokenId: string | null;
+
+    createdAt: Date;
+    updatedAt: Date;
+}

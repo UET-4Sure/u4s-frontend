@@ -1,7 +1,7 @@
 import { config } from 'dotenv'
 config();
 
-import { TOKEN_ADDRESSES } from '@/app/(dashboard)/(trade)/swap/config'
+import { TOKEN_ADDRESSES } from '@/app/(dashboard)/(trade)/swap/constants'
 import { ethers } from 'ethers'
 import ERC20_ABI from '@/abis/ERC20.json'
 
