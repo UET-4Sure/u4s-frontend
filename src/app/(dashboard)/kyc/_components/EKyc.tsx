@@ -9,7 +9,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useState, useRef, RefObject } from 'react'
 import { SubmitKycApplicationDialog } from './SubmitKycApplicationDialog'
 import { toaster } from '@/components/ui/toaster'
-
+import { useWatchContractEvent } from 'wagmi'
+import { IDENTITY_SBT_CONTRACT_ADDRESS } from '@/config/constants'
+import abis from "@/abis/IdentitySBT"
 interface EkycProps {
     keysConfig: {
         tokenKey: string
@@ -31,6 +33,9 @@ declare global {
 export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
     const { address } = useAppKitAccount();
     const queryClient = useQueryClient();
+    const [isEventEmitted, setIsEventEmitted] = useState(false);
+    const [sbtTokenId, setSbtTokenId] = useState<string>();
+    const [isProcessing, setIsProcessing] = useState(false);
 
     const { mutate: submitKycApplication, isPending: isSubmiting } = useMutation({
         mutationKey: ['kyc:submit'],
@@ -54,12 +59,33 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
             console.error('Error submitting KYC:', error);
         },
     });
+
+    useWatchContractEvent({
+        address: IDENTITY_SBT_CONTRACT_ADDRESS,
+        eventName: 'Transfer',
+        abi: abis,
+        args: {
+            from: '0x0000000000000000000000000000000000000000',
+            to: address as `0x${string}`,
+        },
+        onLogs: (logs) => {
+            if (logs.length > 0 && !isEventEmitted) {
+                const sbtTokenId = logs[0].args.tokenId?.toString();
+                if (sbtTokenId) {
+                    setSbtTokenId(sbtTokenId);
+                    setIsEventEmitted(true);
+                    setIsProcessing(false);
+                }
+            }
+        }
+    })
     const callBackEndFlow = async (data: EkycResponse) => {
         if (onResult) {
             onResult(data);
         }
 
-        console.log('KYC Result:', data);
+        setIsProcessing(true);
+
         submitKycApplication({
             documentType: DocumentTypeMap[data.type_document],
             documentNumber: data.ocr.object.id,
@@ -109,7 +135,7 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
     return (
         <>
             <chakra.div id="ekyc_sdk_intergrated" w={"full"} />
-            <SubmitKycApplicationDialog open={isSubmiting} />
+            <SubmitKycApplicationDialog open={isProcessing} isProcessing={isProcessing} sbtTokenId={sbtTokenId} />
         </>
     )
 }

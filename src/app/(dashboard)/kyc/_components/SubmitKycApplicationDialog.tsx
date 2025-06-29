@@ -3,25 +3,48 @@ import { DialogRootProps, Heading, Image, Spinner, Text, VStack } from "@chakra-
 import NextImage from "next/image";
 
 interface SubmitKycApplicationDialogProps extends DialogRootProps {
-
+    isProcessing?: boolean;
+    sbtTokenId?: string;
 }
 export function SubmitKycApplicationDialog(props: Partial<SubmitKycApplicationDialogProps>) {
-    const { open, ...rest } = props;
+    const { open, isProcessing, sbtTokenId, ...rest } = props;
+    const getTitle = () => {
+        if (isProcessing) {
+            return "Đang gửi đơn";
+        }
+
+        if (sbtTokenId) {
+            return `Xác minh thành công`;
+        }
+
+        return "Đang xác minh";
+    };
+
+    const getDescription = () => {
+        if (isProcessing) {
+            return "Đang gửi đơn KYC của bạn. Vui lòng đợi trong giây lát và không đóng trình duyệt.";
+        }
+
+        if (sbtTokenId) {
+            return "KYC của bạn đã được xác minh thành công. ID NFT sẽ được gửi đến ví của bạn.";
+        }
+
+        return "Đang xác minh KYC của bạn. Vui lòng đợi trong giây lát.";
+    };
 
     return (
         <DialogRoot size={"md"} open={open} {...rest}>
             <DialogContent>
-                <DialogHeader>
+                <DialogHeader alignItems={"center"}>
                     <DialogTitle>
-                        Đang xác minh
+                        {getTitle()}
                     </DialogTitle>
-                    <Spinner size={"md"}/>
+                    <Spinner size={"md"} />
                 </DialogHeader>
                 <DialogBody>
                     <VStack gap={"4"}>
-                        
                         <Text>
-                            Quá trình KYC đang được hoàn tất. ID NFT sẽ được gửi đến ví của bạn. Vui lòng chờ trong giây lát.
+                            {getDescription()}
                         </Text>
                         <Image asChild>
                             <NextImage
@@ -31,6 +54,13 @@ export function SubmitKycApplicationDialog(props: Partial<SubmitKycApplicationDi
                                 height={173}
                             />
                         </Image>
+                        {sbtTokenId && (
+                            <Text>
+                                ID NFT của bạn: <b>{sbtTokenId}</b>
+                                <br />
+                                Bạn có thể xem NFT này trong ví của mình.
+                            </Text>
+                        )}
                     </VStack>
                 </DialogBody>
             </DialogContent>
