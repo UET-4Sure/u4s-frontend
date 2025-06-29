@@ -2,7 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { SelectTokenDialog } from '@/components/widgets/components/SelectTokenDialog';
-import { Center, chakra, HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
+import { Box, Center, chakra, HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
 import { useMemo, useState, useEffect } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { AnimatePresence, motion } from 'framer-motion';
@@ -27,6 +27,10 @@ import { useTokenBalance } from '@/components/widgets/swap/hooks';
 import { quoteAmmPrice } from '@/script/QuoteAmountOut';
 import * as utils from './utils';
 import { checkHasSBT } from '@/script/CheckHasSBT';
+import { NumericFormat } from 'react-number-format';
+import numeral from 'numeral';
+import { Tag } from '@/components/ui/tag';
+import { Tooltip } from '@/components/ui/tooltip';
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
@@ -369,7 +373,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 />
             </HStack>
 
-            <VStack align="start" w="full" bg="bg.subtle" p={4} rounded="xl" gap={1}>
+            <VStack align="start" w="full" bg="bg.subtle" shadow={"md"} p={4} rounded="2xl" gap={1}>
                 <HStack w="full" justify="space-between">
                     <Text fontSize="sm" color="fg.default">Mức phí giao dịch</Text>
                     <Text fontSize="sm" color="fg.default">0,3%</Text>
@@ -405,11 +409,11 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         const [currentPrice, setCurrentPrice] = useState<number>(0);
 
         const poolConfig = token0 && token1 ? getPoolConfig(token0.address, token1.address) : null;
-        
+
         // Determine the display order based on pool config
         const [displayToken0, displayToken1] = useMemo(() => {
             if (!poolConfig || !token0 || !token1) return [token0, token1];
-            
+
             // Check if the tokens are in the same order as the pool
             if (token0.address.toLowerCase() === poolConfig.poolKey.currency0.toLowerCase()) {
                 return [token0, token1];
@@ -430,14 +434,14 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                         const amountOut = await quoteAmmPrice(displayToken0.address, displayToken1.address, 1);
                         const price = Number(amountOut);
                         setCurrentPrice(price);
-                        
+
                         // Calculate default min and max prices (±30%)
                         const minPricePercentage = 0.7;  // 1 - 0.3 (-30%)
                         const maxPricePercentage = 1.3;  // 1 + 0.3 (+30%)
-                        
+
                         const minPrice = price * minPricePercentage;
                         const maxPrice = price * maxPricePercentage;
-                        
+
                         // Set the default values
                         setValue("minPrice", minPrice.toFixed(9));
                         setValue("maxPrice", maxPrice.toFixed(9));
@@ -465,48 +469,104 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     title="Đặt khoảng giá"
                     description="Chọn khoảng giá cho vị thế của bạn"
                 />
-
-                <VStack w="full" bg="bg.subtle" p={4} rounded="xl" gap={3}>
+                <Box w="full" bg="bg.subtle" p={"4"} rounded="2xl" shadow={"md"}>
+                    <HStack gap={"2"}>
+                        <Box position="relative" w="6" h="6" rounded="full" overflow="hidden" rotate={"15deg"}>
+                            <Box w="46%" position={"absolute"} overflow={"hidden"} h="6">
+                                <Box w={"6"} h={"6"} display={"flex"} alignItems={"center"} justifyContent={"center"}>
+                                    <chakra.img
+                                        src={displayToken0?.logoURI}
+                                        alt="Token 0"
+                                        objectFit={"fill"}
+                                        pointerEvents={"none"}
+                                    />
+                                </Box>
+                            </Box>
+                            <Box w="46%" right={"0"} position={"absolute"} overflow={"hidden"} h="6" zIndex={1}>
+                                <Box w={"6"} h={"6"} display={"flex"} alignItems={"center"} justifyContent={"center"}>
+                                    <chakra.img
+                                        src={displayToken1?.logoURI}
+                                        alt="Token 0"
+                                        objectFit={"fill"}
+                                        transform={"translateX(-50%)"}
+                                        pointerEvents={"none"}
+                                    />
+                                </Box>
+                            </Box>
+                        </Box>
+                        <Text fontSize="md" color="fg" fontWeight="semibold">
+                            {displayToken0?.symbol} / {displayToken1?.symbol}
+                        </Text>
+                        <Tooltip
+                            openDelay={0}
+                            closeDelay={100}
+                            content={"Phí giao dịch"}
+                        >
+                            <Tag variant={"solid"} colorPalette={"secondary"}>
+                                {poolConfig?.poolKey.fee! / 100}%
+                            </Tag>
+                        </Tooltip>
+                    </HStack>
+                </Box>
+                <VStack w="full" bg="bg.subtle" p={4} rounded="2xl" shadow={"md"} gap={3}>
                     <HStack w="full" justify="space-between" align="center">
                         <Text fontSize="sm" color="fg.default">
-                            Giá (1 {displayToken0?.symbol} = {currentPrice.toLocaleString(undefined, { maximumFractionDigits: 9 })} {displayToken1?.symbol})
+                            {/* Giá (1 {displayToken0?.symbol} = {currentPrice.toLocaleString(undefined, { maximumFractionDigits: 9 })} {displayToken1?.symbol}) */}
+                            1 {displayToken0?.symbol} = {numeral(currentPrice).format('0,0.[000000000]')} {displayToken1?.symbol}
                         </Text>
-                        <HStack gap={1}>
-                            <chakra.img src={displayToken0?.logoURI} w="4" h="4" rounded="full" />
-                            <chakra.img src={displayToken1?.logoURI} w="4" h="4" rounded="full" />
-                            <Text fontSize="sm" color="fg.default">
-                                {displayToken0?.symbol}/{displayToken1?.symbol}
-                            </Text>
-                        </HStack>
                     </HStack>
 
-                    <HStack w="full" gap={4}>
+                    <HStack w="full" gap={"4"}>
                         <VStack flex={1} align="start">
                             <Text fontSize="sm" color="fg.subtle">Giá tối thiểu</Text>
-                            <Input
-                                {...register("minPrice", {
-                                    required: "Vui lòng nhập giá tối thiểu",
-                                    pattern: {
-                                        value: /^\d+(\.\d+)?$/,
-                                        message: "Giá không hợp lệ",
-                                    },
-                                })}
-                                placeholder="0.00"
-                                size="lg"
+                            <Controller
+                                name="minPrice"
+                                control={control}
+                                render={({ field }) => (
+                                    <NumericFormat
+                                        inputMode="decimal"
+                                        value={numeral(field.value).format('0,0.[000000000]')}
+                                        onValueChange={(value) => { field.onChange(value.value) }}
+                                        thousandSeparator
+                                        allowNegative={false}
+                                        decimalScale={token0?.decimals || 18}
+                                        allowLeadingZeros={false}
+                                        placeholder="0.0"
+                                        allowedDecimalSeparators={[".", ","]}
+
+                                        // UI
+                                        rounded={"lg"}
+                                        customInput={Input}
+                                        variant={"subtle"}
+                                        _placeholder={{ color: "fg.muted" }}
+                                    />
+                                )}
                             />
                         </VStack>
                         <VStack flex={1} align="start">
                             <Text fontSize="sm" color="fg.subtle">Giá tối đa</Text>
-                            <Input
-                                {...register("maxPrice", {
-                                    required: "Vui lòng nhập giá tối đa",
-                                    pattern: {
-                                        value: /^\d+(\.\d+)?$/,
-                                        message: "Giá không hợp lệ",
-                                    },
-                                })}
-                                placeholder="0.00"
-                                size="lg"
+                            <Controller
+                                name="maxPrice"
+                                control={control}
+                                render={({ field }) => (
+                                    <NumericFormat
+                                        inputMode="decimal"
+                                        value={numeral(field.value).format('0,0.[000000000]')}
+                                        onValueChange={(value) => { field.onChange(value.value) }}
+                                        thousandSeparator
+                                        allowNegative={false}
+                                        decimalScale={token1?.decimals || 18}
+                                        allowLeadingZeros={false}
+                                        placeholder="0.0"
+                                        allowedDecimalSeparators={[".", ","]}
+
+                                        // UI
+                                        customInput={Input}
+                                        rounded={"lg"}
+                                        variant={"subtle"}
+                                        _placeholder={{ color: "fg.muted" }}
+                                    />
+                                )}
                             />
                         </VStack>
                     </HStack>
