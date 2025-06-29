@@ -31,6 +31,7 @@ import { NumericFormat } from 'react-number-format';
 import numeral from 'numeral';
 import { Tag } from '@/components/ui/tag';
 import { Tooltip } from '@/components/ui/tooltip';
+import { RequireKycApplicationDialog } from '@/app/(dashboard)/_components/RequireKycApplicationDialog';
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
@@ -68,6 +69,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     const publicClient = usePublicClient();
 
     const [step, setStep] = useState(1)
+    const [openRequireKycDialog, setOpenRequireKycDialog] = useState(false);
 
     const {
         register,
@@ -113,10 +115,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             if (totalVolume > 500) {
                 const hasSBT = await checkHasSBT(userAddress as string);
                 if (!hasSBT) {
-                    toaster.error({
-                        title: "Yêu cầu KYC",
-                        description: "Bạn cần thực hiện KYC để tạo vị thế có tổng giá trị lớn hơn 500 USD.",
-                    });
+                    setOpenRequireKycDialog(true);
                     return;
                 }
             }
@@ -457,131 +456,134 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         }, [displayToken0, displayToken1, setValue]);
 
         return (
-            <MotionVStack
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                align={"start"}
-                w={"full"}
-                gap={4}
-            >
-                <FormFieldTitle
-                    title="Đặt khoảng giá"
-                    description="Chọn khoảng giá cho vị thế của bạn"
-                />
-                <Box w="full" bg="bg.subtle" p={"4"} rounded="2xl" shadow={"md"}>
-                    <HStack gap={"2"}>
-                        <Box position="relative" w="6" h="6" rounded="full" overflow="hidden" rotate={"15deg"}>
-                            <Box w="46%" position={"absolute"} overflow={"hidden"} h="6">
-                                <Box w={"6"} h={"6"} display={"flex"} alignItems={"center"} justifyContent={"center"}>
-                                    <chakra.img
-                                        src={displayToken0?.logoURI}
-                                        alt="Token 0"
-                                        objectFit={"fill"}
-                                        pointerEvents={"none"}
-                                    />
+            <>
+                <RequireKycApplicationDialog open={openRequireKycDialog} onOpenChange={(value) => setOpenRequireKycDialog(value.open)} />
+                <MotionVStack
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    align={"start"}
+                    w={"full"}
+                    gap={4}
+                >
+                    <FormFieldTitle
+                        title="Đặt khoảng giá"
+                        description="Chọn khoảng giá cho vị thế của bạn"
+                    />
+                    <Box w="full" bg="bg.subtle" p={"4"} rounded="2xl" shadow={"md"}>
+                        <HStack gap={"2"}>
+                            <Box position="relative" w="6" h="6" rounded="full" overflow="hidden" rotate={"15deg"}>
+                                <Box w="46%" position={"absolute"} overflow={"hidden"} h="6">
+                                    <Box w={"6"} h={"6"} display={"flex"} alignItems={"center"} justifyContent={"center"}>
+                                        <chakra.img
+                                            src={displayToken0?.logoURI}
+                                            alt="Token 0"
+                                            objectFit={"fill"}
+                                            pointerEvents={"none"}
+                                        />
+                                    </Box>
+                                </Box>
+                                <Box w="46%" right={"0"} position={"absolute"} overflow={"hidden"} h="6" zIndex={1}>
+                                    <Box w={"6"} h={"6"} display={"flex"} alignItems={"center"} justifyContent={"center"}>
+                                        <chakra.img
+                                            src={displayToken1?.logoURI}
+                                            alt="Token 0"
+                                            objectFit={"fill"}
+                                            transform={"translateX(-50%)"}
+                                            pointerEvents={"none"}
+                                        />
+                                    </Box>
                                 </Box>
                             </Box>
-                            <Box w="46%" right={"0"} position={"absolute"} overflow={"hidden"} h="6" zIndex={1}>
-                                <Box w={"6"} h={"6"} display={"flex"} alignItems={"center"} justifyContent={"center"}>
-                                    <chakra.img
-                                        src={displayToken1?.logoURI}
-                                        alt="Token 0"
-                                        objectFit={"fill"}
-                                        transform={"translateX(-50%)"}
-                                        pointerEvents={"none"}
-                                    />
-                                </Box>
-                            </Box>
-                        </Box>
-                        <Text fontSize="md" color="fg" fontWeight="semibold">
-                            {displayToken0?.symbol} / {displayToken1?.symbol}
-                        </Text>
-                        <Tooltip
-                            openDelay={0}
-                            closeDelay={100}
-                            content={"Phí giao dịch"}
+                            <Text fontSize="md" color="fg" fontWeight="semibold">
+                                {displayToken0?.symbol} / {displayToken1?.symbol}
+                            </Text>
+                            <Tooltip
+                                openDelay={0}
+                                closeDelay={100}
+                                content={"Phí giao dịch"}
+                            >
+                                <Tag variant={"solid"} colorPalette={"secondary"}>
+                                    {poolConfig?.poolKey.fee! / 100}%
+                                </Tag>
+                            </Tooltip>
+                        </HStack>
+                    </Box>
+                    <VStack w="full" bg="bg.subtle" p={4} rounded="2xl" shadow={"md"} gap={3}>
+                        <HStack w="full" justify="space-between" align="center">
+                            <Text fontSize="sm" color="fg.default">
+                                {/* Giá (1 {displayToken0?.symbol} = {currentPrice.toLocaleString(undefined, { maximumFractionDigits: 9 })} {displayToken1?.symbol}) */}
+                                1 {displayToken0?.symbol} = {numeral(currentPrice).format('0,0.[000000000]')} {displayToken1?.symbol}
+                            </Text>
+                        </HStack>
+
+                        <HStack w="full" gap={"4"}>
+                            <VStack flex={1} align="start">
+                                <Text fontSize="sm" color="fg.subtle">Giá tối thiểu</Text>
+                                <Controller
+                                    name="minPrice"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <NumericFormat
+                                            inputMode="decimal"
+                                            value={numeral(field.value).format('0,0.[000000000]')}
+                                            onValueChange={(value) => { field.onChange(value.value) }}
+                                            thousandSeparator
+                                            allowNegative={false}
+                                            decimalScale={token0?.decimals || 18}
+                                            allowLeadingZeros={false}
+                                            placeholder="0.0"
+                                            allowedDecimalSeparators={[".", ","]}
+
+                                            // UI
+                                            rounded={"lg"}
+                                            customInput={Input}
+                                            variant={"subtle"}
+                                            _placeholder={{ color: "fg.muted" }}
+                                        />
+                                    )}
+                                />
+                            </VStack>
+                            <VStack flex={1} align="start">
+                                <Text fontSize="sm" color="fg.subtle">Giá tối đa</Text>
+                                <Controller
+                                    name="maxPrice"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <NumericFormat
+                                            inputMode="decimal"
+                                            value={numeral(field.value).format('0,0.[000000000]')}
+                                            onValueChange={(value) => { field.onChange(value.value) }}
+                                            thousandSeparator
+                                            allowNegative={false}
+                                            decimalScale={token1?.decimals || 18}
+                                            allowLeadingZeros={false}
+                                            placeholder="0.0"
+                                            allowedDecimalSeparators={[".", ","]}
+
+                                            // UI
+                                            customInput={Input}
+                                            rounded={"lg"}
+                                            variant={"subtle"}
+                                            _placeholder={{ color: "fg.muted" }}
+                                        />
+                                    )}
+                                />
+                            </VStack>
+                        </HStack>
+                    </VStack>
+
+                    <StepsNextTrigger asChild>
+                        <Button
+                            disabled={!watch("minPrice") || !watch("maxPrice")}
+                            w={"full"}
+                            size={"lg"}
                         >
-                            <Tag variant={"solid"} colorPalette={"secondary"}>
-                                {poolConfig?.poolKey.fee! / 100}%
-                            </Tag>
-                        </Tooltip>
-                    </HStack>
-                </Box>
-                <VStack w="full" bg="bg.subtle" p={4} rounded="2xl" shadow={"md"} gap={3}>
-                    <HStack w="full" justify="space-between" align="center">
-                        <Text fontSize="sm" color="fg.default">
-                            {/* Giá (1 {displayToken0?.symbol} = {currentPrice.toLocaleString(undefined, { maximumFractionDigits: 9 })} {displayToken1?.symbol}) */}
-                            1 {displayToken0?.symbol} = {numeral(currentPrice).format('0,0.[000000000]')} {displayToken1?.symbol}
-                        </Text>
-                    </HStack>
-
-                    <HStack w="full" gap={"4"}>
-                        <VStack flex={1} align="start">
-                            <Text fontSize="sm" color="fg.subtle">Giá tối thiểu</Text>
-                            <Controller
-                                name="minPrice"
-                                control={control}
-                                render={({ field }) => (
-                                    <NumericFormat
-                                        inputMode="decimal"
-                                        value={numeral(field.value).format('0,0.[000000000]')}
-                                        onValueChange={(value) => { field.onChange(value.value) }}
-                                        thousandSeparator
-                                        allowNegative={false}
-                                        decimalScale={token0?.decimals || 18}
-                                        allowLeadingZeros={false}
-                                        placeholder="0.0"
-                                        allowedDecimalSeparators={[".", ","]}
-
-                                        // UI
-                                        rounded={"lg"}
-                                        customInput={Input}
-                                        variant={"subtle"}
-                                        _placeholder={{ color: "fg.muted" }}
-                                    />
-                                )}
-                            />
-                        </VStack>
-                        <VStack flex={1} align="start">
-                            <Text fontSize="sm" color="fg.subtle">Giá tối đa</Text>
-                            <Controller
-                                name="maxPrice"
-                                control={control}
-                                render={({ field }) => (
-                                    <NumericFormat
-                                        inputMode="decimal"
-                                        value={numeral(field.value).format('0,0.[000000000]')}
-                                        onValueChange={(value) => { field.onChange(value.value) }}
-                                        thousandSeparator
-                                        allowNegative={false}
-                                        decimalScale={token1?.decimals || 18}
-                                        allowLeadingZeros={false}
-                                        placeholder="0.0"
-                                        allowedDecimalSeparators={[".", ","]}
-
-                                        // UI
-                                        customInput={Input}
-                                        rounded={"lg"}
-                                        variant={"subtle"}
-                                        _placeholder={{ color: "fg.muted" }}
-                                    />
-                                )}
-                            />
-                        </VStack>
-                    </HStack>
-                </VStack>
-
-                <StepsNextTrigger asChild>
-                    <Button
-                        disabled={!watch("minPrice") || !watch("maxPrice")}
-                        w={"full"}
-                        size={"lg"}
-                    >
-                        Tiếp tục
-                    </Button>
-                </StepsNextTrigger>
-            </MotionVStack>
+                            Tiếp tục
+                        </Button>
+                    </StepsNextTrigger>
+                </MotionVStack>
+            </>
         );
     }, [watch("token0"), watch("token1")]);
 
