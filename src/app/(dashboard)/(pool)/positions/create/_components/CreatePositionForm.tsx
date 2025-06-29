@@ -56,18 +56,18 @@ interface CreatePositionFormProps extends StackProps {
 }
 
 export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children, ...props }) => {
-    const [showAdvanced, setShowAdvanced] = useState(false);
     const steps = useSteps({
         defaultStep: 1,
         count: 3,
         linear: true,
     })
-    const [step, setStep] = useState(1)
 
     const { data: tokenList } = useTokenList();
     const { writeContractAsync } = useWriteContract();
     const { address: userAddress } = useAccount();
     const publicClient = usePublicClient();
+
+    const [step, setStep] = useState(1)
 
     const {
         register,
@@ -586,12 +586,31 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     }, [watch("token0"), watch("token1")]);
 
     const Step3 = useMemo(() => () => {
+        const [isCalculating, setIsCalculating] = useState(false);
+
         const token0 = watch("token0");
         const token1 = watch("token1");
         const { address: userAddress } = useAccount();
 
         const { data: token0Balance } = useTokenBalance(token0, userAddress);
         const { data: token1Balance } = useTokenBalance(token1, userAddress);
+
+        const getButtonState = () => {
+            if (isCalculating) return {
+                text: "Đang tính toán...",
+                isDisabled: true
+            }
+
+            if (isLoading) return {
+                text: "Đang tạo vị thế...",
+                isDisabled: true
+            };
+
+            return {
+                text: "Tạo vị thế",
+                isDisabled: isLoading,
+            }
+        }
 
         return (
             <MotionVStack
@@ -618,22 +637,27 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 balance={token0Balance}
                                 onAmountChange={async (value) => {
                                     setValue("token0Amount", value);
-                                    if (value && watch("token0")?.address && watch("token1")?.address) {
-                                        const amountOut = await quoteAmmPrice(
-                                            watch("token0").address,
-                                            watch("token1").address,
-                                            Number(value)
-                                        );
-                                        setValue("token1Amount", amountOut.toString());
-                                    }
                                 }}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
                                 userAddress={userAddress}
+                                inputProps={{
+                                    onInput: async () => {
+                                        const token1 = watch("token1");
+
+                                        setIsCalculating(true);
+                                        const amountOut = await quoteAmmPrice(
+                                            watch("token0").address,
+                                            token1.address,
+                                            Number(watch("token0Amount"))
+                                        );
+                                        setValue("token1Amount", amountOut.toString());
+                                        setIsCalculating(false);
+                                    }
+                                }}
                                 balanceProps={{
                                     color: "fg.muted",
                                 }}
-                                w={"full"}
                                 wrapperProps={{
                                     maxW: "full",
                                 }}
@@ -659,18 +683,24 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 balance={token1Balance}
                                 onAmountChange={async (value) => {
                                     setValue("token1Amount", value);
-                                    if (value && watch("token0")?.address && watch("token1")?.address) {
-                                        const amountOut = await quoteAmmPrice(
-                                            watch("token1").address,
-                                            watch("token0").address,
-                                            Number(value)
-                                        );
-                                        setValue("token0Amount", amountOut.toString());
-                                    }
                                 }}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
                                 userAddress={userAddress}
+                                inputProps={{
+                                    onInput: async () => {
+                                        const token0 = watch("token0");
+
+                                        setIsCalculating(true);
+                                        const amountOut = await quoteAmmPrice(
+                                            token0.address,
+                                            watch("token1").address,
+                                            Number(watch("token1Amount"))
+                                        );
+                                        setValue("token0Amount", amountOut.toString());
+                                        setIsCalculating(false);
+                                    }
+                                }}
                                 balanceProps={{
                                     color: "fg.muted",
                                 }}
@@ -691,13 +721,14 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     />
                 </VStack>
                 <Button
-                    loading={isLoading}
-                    loadingText={"Đang tạo vị thế..."}
                     w={"full"}
-                    size={"lg"}
                     type="submit"
+                    size={"lg"}
+                    loading={isLoading || isCalculating}
+                    loadingText={getButtonState().text}
+                    disabled={getButtonState().isDisabled}
                 >
-                    Tạo vị thế
+                    {getButtonState().text}
                 </Button>
             </MotionVStack>
         );
