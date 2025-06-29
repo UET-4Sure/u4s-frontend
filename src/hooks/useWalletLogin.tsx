@@ -14,8 +14,8 @@ export const useWalletLogin = () => {
     const queryClient = useQueryClient();
     const { address } = useAccount();
     const { disconnect } = useDisconnect();
-    const { setUser, user } = useUserStore();
-    const { setToken, token } = useTokenStore();
+    const { setUser, clearUser, user } = useUserStore();
+    const { setToken, clearToken, token } = useTokenStore();
     const { signTypedDataAsync, isPending: isSignPending, error: signError } = useSignTypedData();
 
     const authQuery = useQuery({
@@ -78,8 +78,8 @@ export const useWalletLogin = () => {
     // Handle disconnect
     useAccountEffect({
         onDisconnect: () => {
-            setUser(null);
-            setToken(null);
+            clearUser();
+            clearToken();
             delete vinaswapApi.defaults.headers.common["Authorization"];
         },
     });
