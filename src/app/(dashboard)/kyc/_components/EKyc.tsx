@@ -12,6 +12,7 @@ import { toaster } from '@/components/ui/toaster'
 import { useWatchContractEvent } from 'wagmi'
 import { IDENTITY_SBT_CONTRACT_ADDRESS } from '@/config/constants'
 import abis from "@/abis/IdentitySBT"
+import { AxiosError } from 'axios'
 interface EkycProps {
     keysConfig: {
         tokenKey: string
@@ -39,8 +40,6 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
     const { mutate: submitKycApplication, isPending: isSubmiting } = useMutation({
         mutationKey: ['kyc:submit'],
         mutationFn: async (data: CreateKycApplicationBody) => {
-            setOpenProcessDialog(true);
-
             if (!address) {
                 throw new Error('Not connected to a wallet');
             }
@@ -60,7 +59,22 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
             })
         },
         onError: (error) => {
-            console.error('Error submitting KYC:', error);
+            if (error instanceof AxiosError) {
+                if (error.response?.status === 401) {
+                    toaster.error({
+                        title: 'Xác minh thất bại',
+                        description: 'Không tìm thấy thông tin người dùng',
+                    });
+                    return;
+                }
+                if (error.response?.status === 404) {
+                    toaster.warning({
+                        title: 'Đã xác minh',
+                        description: 'Bạn đã xác minh thành công và không cần xác minh lại',
+                    });
+                    return;
+                }
+            }
             toaster.error({
                 title: 'Xác minh thất bại',
                 description: error.message || 'Đã xảy ra lỗi khi xác minh KYC. Vui lòng thử lại sau.',
@@ -92,6 +106,8 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
         if (onResult) {
             onResult(data);
         }
+        
+        setOpenProcessDialog(true);
 
         submitKycApplication({
             documentType: DocumentTypeMap[data.type_document],
