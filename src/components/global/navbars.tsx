@@ -15,10 +15,8 @@ import { Button } from "../ui/button";
 import { BrandLogo } from "./brand";
 import { useWalletLogin } from "@/hooks/useWalletLogin";
 import { useMotionValueEvent, useScroll } from "framer-motion";
-import { useEffect, useState } from "react";
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
-
 const ChakraHeader = chakra.header;
 
 const Brand = () => (
@@ -102,6 +100,9 @@ interface DashboardNavbarProps extends HtmlProps { }
 export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     const { scrollY } = useScroll();
     const [scrollYValue, setScrollYValue] = useState(0);
+    const pathname = usePathname();
+
+    const isActivePage = (path: string) => pathname.startsWith(path);
 
     const featLinks = [
         { label: "Trao đổi", href: "/swap" },
@@ -109,20 +110,23 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         { label: "Bán", href: "/sell" },
         { label: "Faucet", href: "/faucet" },
     ]
-    const NavLinks = () => (
-        <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
-            <For each={featLinks}>
-                {(path) => (
-                    <Link key={path.label} href={path.href}>{path.label}</Link>
-                )}
-            </For>
-        </HStack>
-    );
 
     const TradeMenu = () => (
         <HoverCardRoot openDelay={100}>
             <HoverCardTrigger asChild>
-                <Link asChild>
+                <Link
+                    href={featLinks[0].href}
+                    _hover={{
+                        color: "fg",
+                    }}
+                    transition={"color 0.3s ease-in-out"}
+                    color={
+                        isActivePage("/swap") || isActivePage("/buy") || isActivePage("/sell")
+                            ? "fg" : "fg.muted"
+                    }
+                    unstyled
+                    asChild
+                >
                     <NextLink href={featLinks[0].href}>
                         Giao dịch
                     </NextLink>
@@ -152,7 +156,17 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
         return (
             <HoverCardRoot openDelay={100}>
                 <HoverCardTrigger asChild>
-                    <Link asChild>
+                    <Link
+                        _hover={{
+                            color: "fg",
+                        }}
+                        transition={"color 0.3s ease-in-out"}
+                        color={
+                            pathname.startsWith("/positions") || pathname.startsWith("/pools")
+                                ? "fg" : "fg.muted"}
+                        unstyled
+                        asChild
+                    >
                         <NextLink href={featLinks[0].href}>
                             Pool
                         </NextLink>
@@ -162,8 +176,8 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
                     <VStack align={"start"}>
                         <For each={featLinks}>
                             {(path) => (
-                                <Button w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"} asChild>
-                                    <Link href={path.href} key={path.label}>
+                                <Button key={path.label} w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"} asChild>
+                                    <Link href={path.href}>
                                         {path.label}
                                     </Link>
                                 </Button>
@@ -176,7 +190,15 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     }
 
     const FaucetMenu = () => (
-        <Link asChild>
+        <Link
+            _hover={{
+                color: "fg",
+            }}
+            transition={"color 0.3s ease-in-out"}
+            color={isActivePage(featLinks[3].href) ? "fg" : "fg.muted"}
+            unstyled
+            asChild
+        >
             <NextLink
                 href={"/faucet"}
             >

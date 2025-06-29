@@ -128,6 +128,7 @@ export const SwapInput: React.FC<SwapInputProps> = ({ children,
                     _placeholder={{ color: inputProps?._placeholder?.color || "fg.muted" }}
                     fontWeight={"semibold"}
                     fontSize={"2xl"}
+                    onInput={inputProps?.onInput}
                 />
                 <SelectTokenDialog
                     title={token?.symbol}

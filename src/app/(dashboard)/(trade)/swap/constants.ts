@@ -1,0 +1,22 @@
+// Token Addresses
+export const TOKEN_ADDRESSES = {
+  USDC: "0x0ff5065E79c051c3D4C790BC9e8ebc9b4E56bbcc",
+  WETH: "0x342d6127609A5Ad63C93E10cb73b7d9dE9bC43Aa",
+  WBTC: "0x12Df3798C30532c068306372d24c9f2f451676e9",
+  LINK: "0x88B42E9E9E769F86ab499D8cb111fcb6f691F70E",
+  EUR: "0x336d87aEdF99d5Fb4F07132C8DbE4bea4c766eAc",
+} as const;
+
+// Contract Addresses
+export const HOOK_CONTRACT_ADDRESS = {
+  HOOK: "0x37fD86A65078c7C1e94c867165d2ff6328F54ac8",
+} as const;
+
+// Pool Swap Test Contract
+export const POOL_SWAP_TEST = "0x9B6b46e2c869aa39918Db7f52f5557FE577B6eEe" as const;
+
+// Price Limits
+export const PRICE_LIMITS = {
+  MIN: "4295128740", // 2^32
+  MAX: "1461446703485210103287273052203988822378723970341", // ~2^96
+} as const; 

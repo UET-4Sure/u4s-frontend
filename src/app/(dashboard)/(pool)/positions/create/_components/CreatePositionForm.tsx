@@ -2,15 +2,15 @@
 
 import { Button } from '@/components/ui/button';
 import { SelectTokenDialog } from '@/components/widgets/components/SelectTokenDialog';
-import { Center, chakra, HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
-import { useMemo, useState } from 'react';
+import { Box, Center, chakra, HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
+import { useMemo, useState, useEffect } from 'react';
 import { Controller, SubmitHandler, useForm } from 'react-hook-form';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTokenList } from '@/hooks/data/useTokenList';
 import { StepsContent, StepsItem, StepsList, StepsNextTrigger, StepsRoot } from '@/components/ui/steps';
 import { SwapInput, SwapWidget } from '@/components/widgets/swap/Swap';
 import { useAccount, useWriteContract, usePublicClient } from 'wagmi';
-import { getPoolConfig, POOL_ADDRESSES, TOKEN_ADDRESSES, HOOK_CONTRACT_ADDRESS } from '@/app/(dashboard)/(trade)/swap/config';
+import { getPoolConfig, HOOK_CONTRACT_ADDRESS } from '@/app/(dashboard)/(trade)/swap/config';
 import { errors, ethers } from 'ethers';
 import { parseUnits } from 'ethers/lib/utils';
 import { toaster } from '@/components/ui/toaster';
@@ -22,16 +22,16 @@ import { Position, Pool } from '@uniswap/v4-sdk';
 import { Token as UniswapToken } from '@uniswap/sdk-core';
 import { Token as LocalToken } from '@/components/widgets/type';
 import { PositionWidget } from '@/components/widgets/position/PositionWidget';
-import {
-    FeeAmount,
-    TickMath,
-    Pool as V3Pool,
-    Position as V3Position,
-    encodeSqrtRatioX96,
-} from '@uniswap/v3-sdk';
 import { queryPoolInfo } from '@/script/QuerySqrtPrice';
 import { useTokenBalance } from '@/components/widgets/swap/hooks';
-
+import { quoteAmmPrice } from '@/script/QuoteAmountOut';
+import * as utils from './utils';
+import { checkHasSBT } from '@/script/CheckHasSBT';
+import { NumericFormat } from 'react-number-format';
+import numeral from 'numeral';
+import { Tag } from '@/components/ui/tag';
+import { Tooltip } from '@/components/ui/tooltip';
+import { RequireKycApplicationDialog } from '@/app/(dashboard)/_components/RequireKycApplicationDialog';
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
@@ -46,6 +46,8 @@ interface CreatePositionFormValues {
     token0Amount: string;
     token1Amount: string;
     slippage: string;
+    minPrice: string;
+    maxPrice: string;
 }
 
 const DEFAULT_FEE = 3000; // 0.30%
@@ -55,18 +57,19 @@ interface CreatePositionFormProps extends StackProps {
 }
 
 export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children, ...props }) => {
-    const [showAdvanced, setShowAdvanced] = useState(false);
     const steps = useSteps({
         defaultStep: 1,
-        count: 2,
+        count: 3,
         linear: true,
     })
-    const [step, setStep] = useState(1)
 
     const { data: tokenList } = useTokenList();
     const { writeContractAsync } = useWriteContract();
     const { address: userAddress } = useAccount();
     const publicClient = usePublicClient();
+
+    const [step, setStep] = useState(1)
+    const [openRequireKycDialog, setOpenRequireKycDialog] = useState(false);
 
     const {
         register,
@@ -91,7 +94,33 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 return;
             }
 
-            const poolConfig = await getPoolConfig(data.token0.address, data.token1.address);
+            // Calculate total volume in USD
+            const totalVolume = await utils.calculateVolumeLiquidity(
+                data.token0.address,
+                Number(data.token0Amount),
+                data.token1.address,
+                Number(data.token1Amount)
+            );
+
+            // Check if volume exceeds 1M USD
+            if (totalVolume > 1000000) {
+                toaster.error({
+                    title: "Lỗi tạo vị thế",
+                    description: "Bạn không được phép tạo vị thế có tổng giá trị lớn hơn 1.000.000 USD.",
+                });
+                return;
+            }
+
+            // Check if volume > 500 USD and requires KYC
+            if (totalVolume > 500) {
+                const hasSBT = await checkHasSBT(userAddress as string);
+                if (!hasSBT) {
+                    setOpenRequireKycDialog(true);
+                    return;
+                }
+            }
+
+            const poolConfig = getPoolConfig(data.token0.address, data.token1.address);
             if (!poolConfig) {
                 toaster.error({
                     title: "Lỗi tạo vị thế",
@@ -169,10 +198,12 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             // const tickLower = Math.ceil(TickMath.MIN_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
             // const tickUpper = Math.floor(TickMath.MAX_TICK / DEFAULT_TICK_SPACING) * DEFAULT_TICK_SPACING;
 
-            const tickLower = -600;
-            const tickUpper = 600;
+            const tickLower = utils.calculateTickFromPrice(Number(data.minPrice));
+            const tickUpper = utils.calculateTickFromPrice(Number(data.maxPrice));
 
-            console.log(tickLower, tickUpper);
+            // console.log(data.minPrice, data.maxPrice);
+
+            console.log("tick: ", tickLower, tickUpper);
 
             const position = Position.fromAmounts({
                 pool: pool,
@@ -341,6 +372,14 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 />
             </HStack>
 
+            <VStack align="start" w="full" bg="bg.subtle" shadow={"md"} p={4} rounded="2xl" gap={1}>
+                <HStack w="full" justify="space-between">
+                    <Text fontSize="sm" color="fg.default">Mức phí giao dịch</Text>
+                    <Text fontSize="sm" color="fg.default">0,3%</Text>
+                </HStack>
+                <Text fontSize="sm" color="fg.subtle">Đây là phần trăm phí bạn sẽ nhận được khi có giao dịch</Text>
+            </VStack>
+
             <StepsNextTrigger asChild>
                 <Button
                     disabled={!watch("token0") || !watch("token1")}
@@ -366,10 +405,214 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     const Step2 = useMemo(() => () => {
         const token0 = watch("token0");
         const token1 = watch("token1");
+        const [currentPrice, setCurrentPrice] = useState<number>(0);
+
+        const poolConfig = token0 && token1 ? getPoolConfig(token0.address, token1.address) : null;
+
+        // Determine the display order based on pool config
+        const [displayToken0, displayToken1] = useMemo(() => {
+            if (!poolConfig || !token0 || !token1) return [token0, token1];
+
+            // Check if the tokens are in the same order as the pool
+            if (token0.address.toLowerCase() === poolConfig.poolKey.currency0.toLowerCase()) {
+                return [token0, token1];
+            }
+            // If not, swap them for display
+            return [token1, token0];
+        }, [poolConfig, token0, token1]);
+
+        // Fetch current price and set default min/max prices when tokens change
+        useEffect(() => {
+            const fetchPrice = async () => {
+                if (displayToken0 && displayToken1) {
+                    try {
+                        // Reset price fields when tokens change
+                        setValue("minPrice", "");
+                        setValue("maxPrice", "");
+
+                        const amountOut = await quoteAmmPrice(displayToken0.address, displayToken1.address, 1);
+                        const price = Number(amountOut);
+                        setCurrentPrice(price);
+
+                        // Calculate default min and max prices (±30%)
+                        const minPricePercentage = 0.7;  // 1 - 0.3 (-30%)
+                        const maxPricePercentage = 1.3;  // 1 + 0.3 (+30%)
+
+                        const minPrice = price * minPricePercentage;
+                        const maxPrice = price * maxPricePercentage;
+
+                        // Set the default values
+                        setValue("minPrice", minPrice.toFixed(9));
+                        setValue("maxPrice", maxPrice.toFixed(9));
+                    } catch (error) {
+                        console.error("Error fetching price:", error);
+                        setCurrentPrice(0);
+                        setValue("minPrice", "");
+                        setValue("maxPrice", "");
+                    }
+                }
+            };
+            fetchPrice();
+        }, [displayToken0, displayToken1, setValue]);
+
+        return (
+            <>
+                <RequireKycApplicationDialog open={openRequireKycDialog} onOpenChange={(value) => setOpenRequireKycDialog(value.open)} />
+                <MotionVStack
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    align={"start"}
+                    w={"full"}
+                    gap={4}
+                >
+                    <FormFieldTitle
+                        title="Đặt khoảng giá"
+                        description="Chọn khoảng giá cho vị thế của bạn"
+                    />
+                    <Box w="full" bg="bg.subtle" p={"4"} rounded="2xl" shadow={"md"}>
+                        <HStack gap={"2"}>
+                            <Box position="relative" w="6" h="6" rounded="full" overflow="hidden" rotate={"15deg"}>
+                                <Box w="46%" position={"absolute"} overflow={"hidden"} h="6">
+                                    <Box w={"6"} h={"6"} display={"flex"} alignItems={"center"} justifyContent={"center"}>
+                                        <chakra.img
+                                            src={displayToken0?.logoURI}
+                                            alt="Token 0"
+                                            objectFit={"fill"}
+                                            pointerEvents={"none"}
+                                        />
+                                    </Box>
+                                </Box>
+                                <Box w="46%" right={"0"} position={"absolute"} overflow={"hidden"} h="6" zIndex={1}>
+                                    <Box w={"6"} h={"6"} display={"flex"} alignItems={"center"} justifyContent={"center"}>
+                                        <chakra.img
+                                            src={displayToken1?.logoURI}
+                                            alt="Token 0"
+                                            objectFit={"fill"}
+                                            transform={"translateX(-50%)"}
+                                            pointerEvents={"none"}
+                                        />
+                                    </Box>
+                                </Box>
+                            </Box>
+                            <Text fontSize="md" color="fg" fontWeight="semibold">
+                                {displayToken0?.symbol} / {displayToken1?.symbol}
+                            </Text>
+                            <Tooltip
+                                openDelay={0}
+                                closeDelay={100}
+                                content={"Phí giao dịch"}
+                            >
+                                <Tag variant={"solid"} colorPalette={"secondary"}>
+                                    {poolConfig?.poolKey.fee! / 100}%
+                                </Tag>
+                            </Tooltip>
+                        </HStack>
+                    </Box>
+                    <VStack w="full" bg="bg.subtle" p={4} rounded="2xl" shadow={"md"} gap={3}>
+                        <HStack w="full" justify="space-between" align="center">
+                            <Text fontSize="sm" color="fg.default">
+                                {/* Giá (1 {displayToken0?.symbol} = {currentPrice.toLocaleString(undefined, { maximumFractionDigits: 9 })} {displayToken1?.symbol}) */}
+                                1 {displayToken0?.symbol} = {numeral(currentPrice).format('0,0.[000000000]')} {displayToken1?.symbol}
+                            </Text>
+                        </HStack>
+
+                        <HStack w="full" gap={"4"}>
+                            <VStack flex={1} align="start">
+                                <Text fontSize="sm" color="fg.subtle">Giá tối thiểu</Text>
+                                <Controller
+                                    name="minPrice"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <NumericFormat
+                                            inputMode="decimal"
+                                            value={numeral(field.value).format('0,0.[000000000]')}
+                                            onValueChange={(value) => { field.onChange(value.value) }}
+                                            thousandSeparator
+                                            allowNegative={false}
+                                            decimalScale={token0?.decimals || 18}
+                                            allowLeadingZeros={false}
+                                            placeholder="0.0"
+                                            allowedDecimalSeparators={[".", ","]}
+
+                                            // UI
+                                            rounded={"lg"}
+                                            customInput={Input}
+                                            variant={"subtle"}
+                                            _placeholder={{ color: "fg.muted" }}
+                                        />
+                                    )}
+                                />
+                            </VStack>
+                            <VStack flex={1} align="start">
+                                <Text fontSize="sm" color="fg.subtle">Giá tối đa</Text>
+                                <Controller
+                                    name="maxPrice"
+                                    control={control}
+                                    render={({ field }) => (
+                                        <NumericFormat
+                                            inputMode="decimal"
+                                            value={numeral(field.value).format('0,0.[000000000]')}
+                                            onValueChange={(value) => { field.onChange(value.value) }}
+                                            thousandSeparator
+                                            allowNegative={false}
+                                            decimalScale={token1?.decimals || 18}
+                                            allowLeadingZeros={false}
+                                            placeholder="0.0"
+                                            allowedDecimalSeparators={[".", ","]}
+
+                                            // UI
+                                            customInput={Input}
+                                            rounded={"lg"}
+                                            variant={"subtle"}
+                                            _placeholder={{ color: "fg.muted" }}
+                                        />
+                                    )}
+                                />
+                            </VStack>
+                        </HStack>
+                    </VStack>
+
+                    <StepsNextTrigger asChild>
+                        <Button
+                            disabled={!watch("minPrice") || !watch("maxPrice")}
+                            w={"full"}
+                            size={"lg"}
+                        >
+                            Tiếp tục
+                        </Button>
+                    </StepsNextTrigger>
+                </MotionVStack>
+            </>
+        );
+    }, [watch("token0"), watch("token1")]);
+
+    const Step3 = useMemo(() => () => {
+        const [isCalculating, setIsCalculating] = useState(false);
+
+        const token0 = watch("token0");
+        const token1 = watch("token1");
         const { address: userAddress } = useAccount();
 
         const { data: token0Balance } = useTokenBalance(token0, userAddress);
         const { data: token1Balance } = useTokenBalance(token1, userAddress);
+
+        const getButtonState = () => {
+            if (isCalculating) return {
+                text: "Đang tính toán...",
+                isDisabled: true
+            }
+
+            if (isLoading) return {
+                text: "Đang tạo vị thế...",
+                isDisabled: true
+            };
+
+            return {
+                text: "Tạo vị thế",
+                isDisabled: isLoading,
+            }
+        }
 
         return (
             <MotionVStack
@@ -394,14 +637,29 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 token={field.value}
                                 amount={watch("token0Amount")}
                                 balance={token0Balance}
-                                onAmountChange={(value) => setValue("token0Amount", value)}
+                                onAmountChange={async (value) => {
+                                    setValue("token0Amount", value);
+                                }}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
                                 userAddress={userAddress}
+                                inputProps={{
+                                    onInput: async () => {
+                                        const token1 = watch("token1");
+
+                                        setIsCalculating(true);
+                                        const amountOut = await quoteAmmPrice(
+                                            watch("token0").address,
+                                            token1.address,
+                                            Number(watch("token0Amount"))
+                                        );
+                                        setValue("token1Amount", amountOut.toString());
+                                        setIsCalculating(false);
+                                    }
+                                }}
                                 balanceProps={{
                                     color: "fg.muted",
                                 }}
-                                w={"full"}
                                 wrapperProps={{
                                     maxW: "full",
                                 }}
@@ -425,10 +683,26 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 token={field.value}
                                 amount={watch("token1Amount")}
                                 balance={token1Balance}
-                                onAmountChange={(value) => setValue("token1Amount", value)}
+                                onAmountChange={async (value) => {
+                                    setValue("token1Amount", value);
+                                }}
                                 tokenList={tokenList}
                                 onTokenSelect={(token) => field.onChange(token)}
                                 userAddress={userAddress}
+                                inputProps={{
+                                    onInput: async () => {
+                                        const token0 = watch("token0");
+
+                                        setIsCalculating(true);
+                                        const amountOut = await quoteAmmPrice(
+                                            token0.address,
+                                            watch("token1").address,
+                                            Number(watch("token1Amount"))
+                                        );
+                                        setValue("token0Amount", amountOut.toString());
+                                        setIsCalculating(false);
+                                    }
+                                }}
                                 balanceProps={{
                                     color: "fg.muted",
                                 }}
@@ -449,13 +723,14 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                     />
                 </VStack>
                 <Button
-                    loading={isLoading}
-                    loadingText={"Đang tạo vị thế..."}
                     w={"full"}
-                    size={"lg"}
                     type="submit"
+                    size={"lg"}
+                    loading={isLoading || isCalculating}
+                    loadingText={getButtonState().text}
+                    disabled={getButtonState().isDisabled}
                 >
-                    Tạo vị thế
+                    {getButtonState().text}
                 </Button>
             </MotionVStack>
         );
@@ -463,16 +738,21 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
     const stepRenders = [
         {
-            title: "Tạo vị thế",
+            title: "Chọn token",
             description: "Chọn token để tạo vị thế mới",
             content: <Step1 />
         },
         {
-            title: "Hoàn thành",
-            description: "Vị thế của bạn đã được tạo thành công",
+            title: "Đặt khoảng giá",
+            description: "Chọn khoảng giá cho vị thế",
             content: <Step2 />
+        },
+        {
+            title: "Số lượng token",
+            description: "Chọn số lượng token cung cấp",
+            content: <Step3 />
         }
-    ]
+    ];
 
     const isStep1Completed = !!(watch("token0") && watch("token1"));
 

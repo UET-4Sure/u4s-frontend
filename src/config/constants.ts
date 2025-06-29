@@ -9,3 +9,6 @@ export const AUTH_FACEBOOK_SECRET = process.env.AUTH_FACEBOOK_SECRET || "";
 export const AUTH_SECRET = process.env.NEXTAUTH_SECRET || "";
 
 export const API_URL = process.env.NEXT_PUBLIC_VINSWAP_API_URL || "http://localhost:3000/api";
+
+export const QUOTER_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_QUOTER_CONTRACT_ADDRESS as `0x${string}`;
+export const IDENTITY_SBT_CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_IDENTITY_SBT_CONTRACT_ADDRESS as `0x${string}`;

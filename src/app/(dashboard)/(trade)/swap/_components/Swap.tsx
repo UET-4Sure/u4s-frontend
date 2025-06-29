@@ -8,6 +8,7 @@ import {
   TOKEN_LIST,
   getPoolConfig,
   getZeroForOne,
+  POOL_SWAP_TEST,
 } from "../config";
 import ERC20_ABI from "@/abis/ERC20.json";
 import POOL_SWAP_TEST_CONTRACT_ABI from "@/abis/PoolSwapTest.json";
@@ -16,12 +17,15 @@ import { SwapState } from "@/components/widgets/type";
 import { toaster } from "@/components/ui/toaster";
 import { checkHasSBT } from "@/script/CheckHasSBT";
 import { queryOraclePrice } from "@/script/QueryOraclePrice";
+import { useState } from "react";
+import { RequireKycApplicationDialog } from "@/app/(dashboard)/_components/RequireKycApplicationDialog";
 
-interface Props extends StackProps {}
+interface Props extends StackProps { }
 
 export function Swap({ ...props }: Props) {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
+  const [openRequireKycDialog, setOpenRequireKycDialog] = useState(false);
 
   const handleSwap = async (swapData: SwapState) => {
     try {
@@ -31,10 +35,7 @@ export function Swap({ ...props }: Props) {
 
       // Check volume limits
       if (volume > 10000) {
-        toaster.error({
-          title: "Khối lượng giao dịch quá lớn",
-          description: "Bạn không được phép thực hiện giao dịch lớn hơn 10.000 USD"
-        });
+        setOpenRequireKycDialog(true);
         return;
       }
 
@@ -52,8 +53,8 @@ export function Swap({ ...props }: Props) {
 
       if (!swapData.fromToken || !swapData.toToken || !swapData.fromAmount) {
         toaster.error({
-            title: "Swap Error",
-            description: "Please ensure all fields are filled out correctly.",
+          title: "Swap Error",
+          description: "Please ensure all fields are filled out correctly.",
         })
         return;
       }
@@ -66,8 +67,8 @@ export function Swap({ ...props }: Props) {
 
       if (!poolConfig) {
         toaster.error({
-            title: "Swap Error",
-            description: "No pool found for the selected token pair.",
+          title: "Swap Error",
+          description: "No pool found for the selected token pair.",
         });
         return;
       }
@@ -77,13 +78,13 @@ export function Swap({ ...props }: Props) {
         address: swapData.fromToken.address as `0x${string}`,
         abi: ERC20_ABI.abi,
         functionName: "approve",
-        args: [poolConfig.poolAddress, ethers.utils.parseUnits(swapData.fromAmount.toString(), 18)],
+        args: [POOL_SWAP_TEST, ethers.utils.parseUnits(swapData.fromAmount.toString(), 18)],
       });
 
       const zeroForOne = getZeroForOne(swapData.fromToken.address, poolConfig.poolKey);
-      
+
       // CURRENTLY HARDCODED TO SWAP EXACT TOKEN IN FOR NOW
-      const amountSpecified = ethers.utils.parseUnits((-swapData.fromAmount).toString(), 18); 
+      const amountSpecified = ethers.utils.parseUnits((-swapData.fromAmount).toString(), 18);
 
       // Format pool key as array for contract call
       const poolKeyArray = [
@@ -111,7 +112,7 @@ export function Swap({ ...props }: Props) {
 
       // Execute the swap
       await writeContractAsync({
-        address: poolConfig.poolAddress as `0x${string}`,
+        address: POOL_SWAP_TEST as `0x${string}`,
         abi: POOL_SWAP_TEST_CONTRACT_ABI.abi,
         functionName: "swap",
         args: [poolKeyArray, swapParams, testSettings, hookData],
@@ -131,11 +132,14 @@ export function Swap({ ...props }: Props) {
   };
 
   return (
-    <SwapWidget
-      onSwap={handleSwap}
-      userAddress={address}
-      tokenList={TOKEN_LIST}
-      {...props}
-    />
+    <>
+      <SwapWidget
+        onSwap={handleSwap}
+        userAddress={address}
+        tokenList={TOKEN_LIST}
+        {...props}
+      />
+      <RequireKycApplicationDialog open={openRequireKycDialog} onOpenChange={(value) => { setOpenRequireKycDialog(value.open) }} />
+    </>
   );
 }
