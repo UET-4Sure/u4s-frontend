@@ -1,6 +1,6 @@
 "use client";
 
-import { AvatarFallback, AvatarImage, AvatarRoot, For, HStack, Spinner, StackProps, Text } from "@chakra-ui/react";
+import { AvatarFallback, AvatarImage, AvatarRoot, Float, For, HStack, Icon, Spinner, StackProps, Text } from "@chakra-ui/react";
 import { useDisconnect, useEnsAvatar, useEnsName } from "wagmi";
 import { useAppKit, useAppKitAccount } from "@reown/appkit/react";
 import NextImage from "next/image";
@@ -12,6 +12,10 @@ import { ConnectWalletButton } from "@/components/global/wallet";
 import { MenuContent, MenuItem, MenuRoot, MenuTrigger } from "@/components/ui/menu";
 import { motion } from "framer-motion";
 import { useWalletLogin } from "@/hooks/useWalletLogin";
+import { MdVerifiedUser } from "react-icons/md";
+import { KycStatus } from "@/types/core";
+import { Tag } from "@/components/ui/tag";
+import { useUserStore } from "@/hooks/useUserStore";
 
 const MotionMenuItem = motion.create(MenuItem);
 
@@ -22,6 +26,7 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
     const { open } = useAppKit();
     const { address, status } = useAppKitAccount();
     const { isLoading, isAuthenticated } = useWalletLogin();
+    const { user } = useUserStore();
 
     const { data: ensName } = useEnsName({
         address: address as `0x${string}`,
@@ -78,6 +83,20 @@ export const ProfileMenu: React.FC<Props> = ({ children, ...props }) => {
                     {...props}
                 >
                     <ProfileAvatar />
+                    {user?.kycStatus === KycStatus.APPROVED && (
+                        <Tag
+                            size={"sm"}
+                            variant={"solid"}
+                            colorPalette={"green"}
+                            rounded={"full"}
+                            alignItems={"center"}
+                            justifyContent={"center"}
+                            display={"flex"}
+                            startElement={<MdVerifiedUser/>}
+                        >
+                            Đã xác minh
+                        </Tag>
+                    )}
                     {isLoading &&
                         <>
                             <Text fontSize={"sm"} fontWeight={"semibold"} color={"fg.muted"}>Connecting</Text>

@@ -32,7 +32,7 @@ export function RequireKycApplicationDialog(props: Partial<RequireKycApplication
                             />
                         </Image>
                         <Text>
-                            Với các giao dịch lớn trên <b>10,000 USD</b> cần hoàn thành xác minh để đảm bảo an toàn và tuân thủ quy định.
+                            Với các giao dịch lớn trên <b>500 USD</b> cần hoàn thành xác minh để đảm bảo an toàn và tuân thủ quy định.
                         </Text>
                     </VStack>
                 </DialogBody>
