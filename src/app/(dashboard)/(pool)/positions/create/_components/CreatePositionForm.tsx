@@ -728,12 +728,12 @@ const Step3 = ({
     const { address } = useAccount();
     const sourceRef = useRef<'token0' | 'token1'>('token0');
 
-    const token0 = useWatch({ control, name: "token0" });
-    const token1 = useWatch({ control, name: "token1" });
-    const token0Amount = useWatch({ control, name: "token0Amount" });
-    const token1Amount = useWatch({ control, name: "token1Amount" });
-    const { data: token0Balance } = useTokenBalance(token0?.address, address);
-    const { data: token1Balance } = useTokenBalance(token1?.address, address);
+    const token0 = watch("token0");
+    const token1 = watch("token1");
+    const token0Amount = watch("token0Amount");
+    const token1Amount = watch("token1Amount");
+    const { data: token0Balance } = useTokenBalance(token0, address);
+    const { data: token1Balance } = useTokenBalance(token1, address);
 
     const getButtonState = () => {
         if (isCalculating) return { text: "Đang tính toán...", isDisabled: true };
