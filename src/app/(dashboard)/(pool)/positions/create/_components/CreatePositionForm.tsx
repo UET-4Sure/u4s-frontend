@@ -33,9 +33,7 @@ import { Tag } from '@/components/ui/tag';
 import { Tooltip } from '@/components/ui/tooltip';
 import { RequireKycApplicationDialog } from '@/app/(dashboard)/_components/RequireKycApplicationDialog';
 
-const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
-const POOL_MANAGER_ADDRESS = "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543";
 
 const MotionVStack = motion.create(VStack);
 const MotionStepContent = motion.create(StepsContent);
