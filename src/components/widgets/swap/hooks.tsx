@@ -143,7 +143,7 @@ export const useTokenBalance = (token: Token | null, userAddress?: string) => {
             }
         },
         enabled: !!token && !!userAddress,
-        staleTime: 5_000, // 5 seconds
+        staleTime: 1_000, // 1 second
         refetchOnWindowFocus: true,
         refetchOnReconnect: true,
         refetchOnMount: true,
