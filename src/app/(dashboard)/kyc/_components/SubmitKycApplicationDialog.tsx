@@ -13,7 +13,7 @@ interface SubmitKycApplicationDialogProps extends DialogRootProps {
     sbtTokenId: string | null;
 }
 export function SubmitKycApplicationDialog(props: Partial<SubmitKycApplicationDialogProps>) {
-    const { open, isProcessing, sbtTokenId, ...rest } = props;
+    const { isProcessing, sbtTokenId, ...rest } = props;
     const getTitle = () => {
         if (sbtTokenId) {
             return `Xác minh thành công`;

@@ -11,7 +11,7 @@ interface RequireKycApplicationDialogProps extends DialogRootProps {
 export function RequireKycApplicationDialog(props: Partial<RequireKycApplicationDialogProps>) {
 
     return (
-        <DialogRoot size={"md"}  {...props}>
+        <DialogRoot size={"md"} {...props}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>
@@ -37,11 +37,9 @@ export function RequireKycApplicationDialog(props: Partial<RequireKycApplication
                     </VStack>
                 </DialogBody>
                 <DialogFooter>
-                    <DialogCloseTrigger asChild>
-                        <Button variant={"outline"}>
-                            Quay lại
-                        </Button>
-                    </DialogCloseTrigger>
+                    <Button variant={"outline"} onClick={() => props.onOpenChange?.({ open: false })}>
+                        Quay lại
+                    </Button>
                     <Button asChild>
                         <NextLink href={"/kyc"}>
                             Xác minh ngay

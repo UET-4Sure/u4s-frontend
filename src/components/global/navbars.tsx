@@ -1,9 +1,10 @@
 "use client"
 
 import { siteConfig } from "@/config/site";
-import { chakra, For, HStack, HtmlProps, Image, Link, Text, VStack } from "@chakra-ui/react"
+import { chakra, For, HStack, HtmlProps, Icon, Image, Link, Text, VStack } from "@chakra-ui/react"
 import NextImage from "next/image";
 import NextLink from "next/link";
+import { FaRegEyeSlash } from "react-icons/fa";
 
 import { Tag } from "../ui/tag";
 import { APP_VERSION } from "@/config/constants";
@@ -17,6 +18,7 @@ import { useWalletLogin } from "@/hooks/useWalletLogin";
 import { useMotionValueEvent, useScroll } from "framer-motion";
 import { memo, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
+import { Tooltip } from "../ui/tooltip";
 const ChakraHeader = chakra.header;
 
 const Brand = () => (
@@ -37,14 +39,14 @@ const VersionTag = () => (
 );
 
 const BrandAndAppSnippet = () => (
-    <NextLink href={"/"}>
+    <NextLink href={"/dashboard"}>
         <HStack align={"start"} justify={"center"} gap={"1"}>
             <BrandLogo />
             <VStack align={"start"} justify={"center"} gap={"1"}>
                 <Text fontSize={"md"} fontWeight={"semibold"}>{siteConfig.name}</Text>
                 <VersionTag />
             </VStack>
-        </HStack>
+        </HStack >
     </NextLink>
 )
 
@@ -106,9 +108,11 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
 
     const featLinks = [
         { label: "Trao đổi", href: "/swap" },
-        { label: "Mua", href: "/buy" },
-        { label: "Bán", href: "/sell" },
-        { label: "Faucet", href: "/faucet" },
+        { label: "Mua", href: "/buy", isCommingSoon: true },
+        { label: "Bán", href: "/sell", isCommingSoon: true },
+        { label: "DCA", href: "/dca", isCommingSoon: true },
+        { label: "Limit", href: "/limit", isCommingSoon: true },
+        { label: "Perpetual", href: "/perpetual", isCommingSoon: true },
     ]
 
     const TradeMenu = () => (
@@ -135,13 +139,33 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
             <HoverCardContent p={"2"}>
                 <VStack align={"start"}>
                     <For each={featLinks}>
-                        {(path, index) => (
-                            <Button key={index} w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"} asChild>
-                                <Link href={path.href} key={path.label}>
-                                    {path.label}
-                                </Link>
-                            </Button>
-                        )}
+                        {(path, index) =>
+                            path.isCommingSoon ? (
+                                <Tooltip
+                                    key={index}
+                                    positioning={{
+                                        placement: "right",
+                                        offset: {
+                                            mainAxis: 16,
+                                            crossAxis: 0,
+                                        },
+                                    }}
+                                    content={`Tính năng sẽ sớm được ra mắt`}
+                                    openDelay={100}
+                                >
+                                    <Button disabled={path.isCommingSoon} w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"}>
+                                        {path.isCommingSoon && <Icon as={FaRegEyeSlash} />}
+                                        {path.label}
+                                    </Button>
+                                </Tooltip>
+                            ) : (
+                                <Button key={index} w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"} asChild>
+                                    <Link href={path.href} key={path.label}>
+                                        {path.label}
+                                    </Link>
+                                </Button>
+                            )
+                        }
                     </For>
                 </VStack>
             </HoverCardContent>
@@ -151,6 +175,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     const PoolMenu = () => {
         const featLinks = [
             { label: "Tạo vị thế", href: "/positions/create" },
+            { label: "Xem vị thế", href: "/positions/list" },
         ]
 
         return (
@@ -195,7 +220,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
                 color: "fg",
             }}
             transition={"color 0.3s ease-in-out"}
-            color={isActivePage(featLinks[3].href) ? "fg" : "fg.muted"}
+            color={isActivePage("/faucet") ? "fg" : "fg.muted"}
             unstyled
             asChild
         >
