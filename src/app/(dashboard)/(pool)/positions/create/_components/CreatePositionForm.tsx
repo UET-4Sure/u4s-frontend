@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { SelectTokenDialog } from '@/components/widgets/components/SelectTokenDialog';
 import { Box, Center, chakra, HStack, Input, StackProps, StepsTitle, Text, useSteps, VStack } from '@chakra-ui/react';
 import { useMemo, useState, useEffect, useRef } from 'react';
-import { Controller, SubmitHandler, useForm, useWatch } from 'react-hook-form';
+import { Controller, FormProvider, SubmitHandler, useForm, useFormContext, useWatch } from 'react-hook-form';
 import { AnimatePresence, motion } from 'framer-motion';
 import { useTokenList } from '@/hooks/data/useTokenList';
 import { StepsContent, StepsItem, StepsList, StepsNextTrigger, StepsRoot } from '@/components/ui/steps';
@@ -32,7 +32,7 @@ import numeral from 'numeral';
 import { Tag } from '@/components/ui/tag';
 import { Tooltip } from '@/components/ui/tooltip';
 import { RequireKycApplicationDialog } from '@/app/(dashboard)/_components/RequireKycApplicationDialog';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
@@ -53,6 +53,8 @@ interface CreatePositionFormValues {
 
 const DEFAULT_FEE = 3000; // 0.30%
 const DEFAULT_TICK_SPACING = 60;
+const MAX_VALUE_TO_CREATE_POSITION = 1000000; // 1,000,000 USD
+const MAX_VALUE_TO_CREATE_POSITION_NO_KYC = 500; // 500 USD
 
 interface CreatePositionFormProps extends StackProps {
 }
@@ -75,24 +77,40 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     const [isCalculating, setIsCalculating] = useState(false);
     const sourceRef = useRef<'token0' | 'token1'>('token0');
 
+    const methods = useForm<CreatePositionFormValues>({
+        defaultValues: {
+            slippage: "0.5"
+        }
+    });
     const {
         register,
         handleSubmit,
         control,
         watch,
         setValue,
-        formState: { isSubmitting, errors }
-    } = useForm<CreatePositionFormValues>({
-        defaultValues: {
-            slippage: "0.5"
-        }
-    });
+        formState: { isSubmitting, errors },
+    } = methods;
 
     const token0 = useWatch({ control, name: "token0" });
     const token1 = useWatch({ control, name: "token1" });
+    const token0Amount = useWatch({ control, name: "token0Amount" });
+    const token1Amount = useWatch({ control, name: "token1Amount" });
 
-    const { data: token0Balance } = useTokenBalance(token0, userAddress);
-    const { data: token1Balance } = useTokenBalance(token1, userAddress);
+
+    const { data: tradeVolume } = useQuery({
+        queryKey: ['trade-volume', token0?.address, token0Amount, token1?.address, token1Amount],
+        queryFn: async () => {
+            return await utils.calculateVolumeLiquidity(
+                token0.address,
+                Number(token0Amount),
+                token1.address,
+                Number(token1Amount)
+            );
+        },
+        enabled: !!token0Amount && !!token1Amount && !!token0 && !!token1,
+        refetchOnWindowFocus: false,
+        refetchOnMount: false,
+    })
 
     const onSubmit = async (data: CreatePositionFormValues) => {
         try {
@@ -113,7 +131,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             );
 
             // Check if volume exceeds 1M USD
-            if (totalVolume > 1000000) {
+            if (totalVolume > MAX_VALUE_TO_CREATE_POSITION) {
                 toaster.error({
                     title: "Lỗi tạo vị thế",
                     description: "Bạn không được phép tạo vị thế có tổng giá trị lớn hơn 1.000.000 USD.",
@@ -122,7 +140,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             }
 
             // Check if volume > 500 USD and requires KYC
-            if (totalVolume > 500) {
+            if (totalVolume > MAX_VALUE_TO_CREATE_POSITION_NO_KYC) {
                 const hasSBT = await checkHasSBT(userAddress as string);
                 if (!hasSBT) {
                     setOpenRequireKycDialog(true);
@@ -309,9 +327,17 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
     const registers = {
         token0: register("token0", {
             required: "Vui lòng chọn token cung cấp",
+            max: {
+                value: tradeVolume || Infinity,
+                message: "Tổng giá trị giao dịch không được vượt quá 1.000.000 USD",
+            }
         }),
         token1: register("token1", {
             required: "Vui lòng chọn token nhận",
+            max: {
+                value: tradeVolume || Infinity,
+                message: "Tổng giá trị giao dịch không được vượt quá 1.000.000 USD",
+            }
         }),
         token0Amount: register("token0Amount", {
             required: "Vui lòng nhập số lượng token cung cấp",
@@ -602,181 +628,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         );
     }, [watch("token0"), watch("token1")]);
 
-    const Step3 = () => {
-        const token0 = useWatch({ control, name: "token0" });
-        const token1 = useWatch({ control, name: "token1" });
-        const token0Amount = useWatch({ control, name: "token0Amount" });
-        const token1Amount = useWatch({ control, name: "token1Amount" });
 
-        const getButtonState = () => {
-            if (isCalculating) return {
-                text: "Đang tính toán...",
-                isDisabled: true
-            }
-
-            if (isSubmitting) return {
-                text: "Đang tạo vị thế...",
-                isDisabled: true
-            };
-
-            return {
-                text: "Tạo vị thế",
-                isDisabled: isSubmitting,
-            }
-        }
-
-        const handleToken0InputChange = async (value: string) => {
-            setValue("token0Amount", value);
-        };
-
-        const handleToken1InputChange = async (value: string) => {
-            setValue("token1Amount", value);
-        };
-
-        const handleToken0Update = async (value: string) => {
-            if (sourceRef.current !== 'token0') return;
-
-            setIsCalculating(true);
-            try {
-                const token1 = watch("token1");
-                const amountOut = await quoteAmmPrice(
-                    watch("token0").address,
-                    token1.address,
-                    Number(value)
-                );
-                setValue("token1Amount", amountOut.toString());
-            } catch (error) {
-                console.error("Error calculating token1 amount:", error);
-                setValue("token1Amount", "");
-            } finally {
-                setIsCalculating(false);
-            }
-        }
-
-        const handleToken1Update = async (value: string) => {
-            console.log('Source:', sourceRef.current);
-            if (sourceRef.current !== 'token1') return;
-
-            setIsCalculating(true);
-            try {
-                const token0 = watch("token0");
-                const amountOut = await quoteAmmPrice(
-                    token0.address,
-                    watch("token1").address,
-                    Number(value)
-                );
-                setValue("token0Amount", amountOut.toString());
-            } catch (error) {
-                console.error("Error calculating token0 amount:", error);
-                setValue("token0Amount", "");
-            } finally {
-                setIsCalculating(false);
-            }
-        }
-
-
-        return (
-            <MotionVStack
-                align={"start"}
-                w={"full"}
-                gap={4}
-            >
-                <FormFieldTitle
-                    title="Chọn số lượng token"
-                    description={`Nhập số lượng ${token0?.symbol} và ${token1?.symbol} bạn muốn cung cấp`}
-                />
-
-                <VStack w={"full"} gap={"2"} pos={"relative"}>
-                    <Controller
-                        control={control}
-                        render={({ field }) => (
-                            <SwapInput
-                                label="Token 0"
-                                token={field.value}
-                                amount={token0Amount}
-                                balance={token0Balance}
-                                onAmountChange={async (value) => {
-                                    handleToken0InputChange(value);
-                                    handleToken0Update(value);
-                                }}
-                                tokenList={tokenList}
-                                onTokenSelect={(token) => field.onChange(token)}
-                                userAddress={userAddress}
-                                inputProps={{
-                                    onInput: async () => {
-                                        sourceRef.current = 'token0';
-                                    }
-                                }}
-                                balanceProps={{
-                                    color: "fg.muted",
-                                }}
-                                wrapperProps={{
-                                    maxW: "full",
-                                }}
-                                selectTokenDialogProps={{
-                                    triggerProps: {
-                                        disabled: !!field.value,
-                                        _disabled: {
-                                            opacity: 1
-                                        }
-                                    }
-                                }}
-                            />
-                        )}
-                        {...registers.token0}
-                    />
-                    <Controller
-                        control={control}
-                        render={({ field }) => (
-                            <SwapInput
-                                label="Token 1"
-                                token={field.value}
-                                amount={token1Amount}
-                                balance={token1Balance}
-                                onAmountChange={async (value) => {
-                                    handleToken1InputChange(value);
-                                    handleToken1Update(value);
-                                }}
-                                tokenList={tokenList}
-                                onTokenSelect={(token) => field.onChange(token)}
-                                userAddress={userAddress}
-                                inputProps={{
-                                    onInput: async () => {
-                                        sourceRef.current = 'token1';
-                                    }
-                                }}
-                                balanceProps={{
-                                    color: "fg.muted",
-                                }}
-                                wrapperProps={{
-                                    maxW: "full",
-                                }}
-                                selectTokenDialogProps={{
-                                    triggerProps: {
-                                        disabled: !!field.value,
-                                        _disabled: {
-                                            opacity: 1
-                                        }
-                                    }
-                                }}
-                            />
-                        )}
-                        {...registers.token1}
-                    />
-                </VStack>
-                <Button
-                    w={"full"}
-                    type="submit"
-                    size={"lg"}
-                    loading={isSubmitting || isCalculating}
-                    loadingText={getButtonState().text}
-                    disabled={getButtonState().isDisabled}
-                >
-                    {getButtonState().text}
-                </Button>
-            </MotionVStack>
-        );
-    };
 
     const stepRenders = [
         {
@@ -792,54 +644,68 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
         {
             title: "Số lượng token",
             description: "Chọn số lượng token cung cấp",
-            content: <Step3 />
+            content: <Step3
+                tokenList={tokenList || []}
+                registers={registers}
+                tradeVolume={tradeVolume}
+                isCalculating={isCalculating}
+                setIsCalculating={setIsCalculating}
+            />
         }
     ];
 
     const isStep1Completed = !!(watch("token0") && watch("token1"));
 
     return (
-        <StepsRoot
-            colorPalette={"bg"}
-            orientation={["horizontal", "horizontal", "vertical"]}
-            defaultStep={0}
-            count={stepRenders.length}
-            linear={!isStep1Completed}
-            onStepChange={(e) => setStep(e.step)}
+        <FormProvider
+            {...methods}
         >
-            <StepsList>
-                {stepRenders.map((step, index) => (
-                    <StepsItem
-                        key={index}
-                        index={index}
-                        title={step.title}
-                        description={step.description}
-                    />
-                ))}
-            </StepsList>
-            <AnimatePresence mode="wait">
-                <Center flex={1} w={"full"} maxW={"lg"}>
-                    <chakra.form w={"full"} h={"full"} onSubmit={handleSubmit(onSubmit)}>
-                        {stepRenders.map((step, index) => (
-                            <StepsContent
-                                w={"full"}
-                                key={index}
-                                index={index}
-                                data-state="open"
-                                _open={{
-                                    animation: "fade-in-up 300ms ease-out",
-                                }}
-                                _closed={{
-                                    animation: "fade-in-out 300ms ease-in",
-                                }}
-                            >
-                                {step.content}
-                            </StepsContent>
-                        ))}
-                    </chakra.form>
-                </Center>
-            </AnimatePresence>
-        </StepsRoot>
+            <StepsRoot
+                colorPalette={"bg"}
+                orientation={["horizontal", "horizontal", "vertical"]}
+                defaultStep={0}
+                count={stepRenders.length}
+                linear={!isStep1Completed}
+                onStepChange={(e) => setStep(e.step)}
+            >
+                <StepsList>
+                    {stepRenders.map((step, index) => (
+                        <StepsItem
+                            key={index}
+                            index={index}
+                            title={step.title}
+                            description={step.description}
+                        />
+                    ))}
+                </StepsList>
+                <AnimatePresence mode="wait">
+                    <Center flex={1} w={"full"} maxW={"lg"}>
+                        <chakra.form w={"full"} h={"full"} onSubmit={handleSubmit(onSubmit)}>
+                            {stepRenders.map((step, index) => (
+                                <StepsContent
+                                    w={"full"}
+                                    key={index}
+                                    index={index}
+                                    data-state="open"
+                                    _open={{
+                                        animation: "fade-in-up 300ms ease-out",
+                                    }}
+                                    _closed={{
+                                        animation: "fade-in-out 300ms ease-in",
+                                    }}
+                                >
+                                    {step.content}
+                                </StepsContent>
+                            ))}
+                        </chakra.form>
+                    </Center>
+                </AnimatePresence>
+            </StepsRoot>
+            <RequireKycApplicationDialog
+                open={openRequireKycDialog}
+                onOpenChange={(value) => setOpenRequireKycDialog(value.open)}
+            />
+        </FormProvider>
     );
 };
 
@@ -849,3 +715,230 @@ const FormFieldTitle: React.FC<{ title: string, description?: string }> = ({ tit
         {description && <Text fontSize="sm" color="fg.subtle">{description}</Text>}
     </VStack>
 );
+
+const Step3 = ({
+    tokenList,
+    registers,
+    tradeVolume,
+    isCalculating,
+    setIsCalculating,
+}: {
+    tokenList: LocalToken[];
+    registers: any;
+    tradeVolume: number | undefined;
+    isCalculating: boolean;
+    setIsCalculating: (value: boolean) => void;
+}) => {
+    const {
+        control,
+        handleSubmit,
+        setValue,
+        watch,
+        formState: { isSubmitting, isValidating },
+        reset,
+    } = useFormContext();
+
+    const { address } = useAccount();
+
+    const token0 = useWatch({ control, name: "token0" });
+    const token1 = useWatch({ control, name: "token1" });
+    const token0Amount = useWatch({ control, name: "token0Amount" });
+    const token1Amount = useWatch({ control, name: "token1Amount" });
+    const { data: token0Balance } = useTokenBalance(token0?.address, address);
+    const { data: token1Balance } = useTokenBalance(token1?.address, address);
+
+    const sourceRef = useRef<'token0' | 'token1'>('token0');
+
+    const getButtonState = () => {
+        if (isCalculating) return {
+            text: "Đang tính toán...",
+            isDisabled: true
+        }
+
+        if (isSubmitting) return {
+            text: "Đang tạo vị thế...",
+            isDisabled: true
+        };
+
+        return {
+            text: "Tạo vị thế",
+            isDisabled: isSubmitting,
+        }
+    }
+
+    const handleToken0InputChange = async (value: string) => {
+        setValue("token0Amount", value);
+    };
+
+    const handleToken1InputChange = async (value: string) => {
+        setValue("token1Amount", value);
+    };
+
+    const handleToken0Update = async (value: string) => {
+        if (sourceRef.current !== 'token0') return;
+
+        setIsCalculating(true);
+        try {
+            const token1 = watch("token1");
+            const amountOut = await quoteAmmPrice(
+                watch("token0").address,
+                token1.address,
+                Number(value)
+            );
+            setValue("token1Amount", amountOut.toString());
+        } catch (error) {
+            console.error("Error calculating token1 amount:", error);
+            setValue("token1Amount", "");
+        } finally {
+            setIsCalculating(false);
+        }
+    }
+
+    const handleToken1Update = async (value: string) => {
+        console.log('Source:', sourceRef.current);
+        if (sourceRef.current !== 'token1') return;
+
+        setIsCalculating(true);
+        try {
+            const token0 = watch("token0");
+            const amountOut = await quoteAmmPrice(
+                token0.address,
+                watch("token1").address,
+                Number(value)
+            );
+            setValue("token0Amount", amountOut.toString());
+        } catch (error) {
+            console.error("Error calculating token0 amount:", error);
+            setValue("token0Amount", "");
+        } finally {
+            setIsCalculating(false);
+        }
+    }
+
+    const ErrorMessageText = useMemo(() => () => {
+        return (
+            <>
+                {tradeVolume! > MAX_VALUE_TO_CREATE_POSITION && (
+                    <Box
+                        data-state="open"
+                        _open={{
+                            animation: "fade-in-up 300ms ease-out",
+                        }}
+                        _closed={{
+                            animation: "fade-in-out 300ms ease-in",
+                        }}
+                        w={"full"} bg="red.700" p={3} rounded="2xl" shadow={"md"}>
+                        <Text w={"full"} color="red.contrast" fontSize="sm">
+                            Tổng giá trị giao dịch không được vượt quá 1.000.000 USD.
+                        </Text>
+                    </Box>
+                )}
+            </>
+        )
+    }, [tradeVolume]);
+
+    return (
+        <MotionVStack
+            align={"start"}
+            w={"full"}
+            gap={4}
+        >
+            <FormFieldTitle
+                title="Chọn số lượng token"
+                description={`Nhập số lượng ${token0?.symbol} và ${token1?.symbol} bạn muốn cung cấp`}
+            />
+
+            <VStack w={"full"} gap={"2"} pos={"relative"}>
+                <Controller
+                    control={control}
+                    render={({ field }) => (
+                        <SwapInput
+                            label="Token 0"
+                            token={field.value}
+                            amount={token0Amount}
+                            balance={token0Balance}
+                            onAmountChange={async (value) => {
+                                handleToken0InputChange(value);
+                                handleToken0Update(value);
+                            }}
+                            tokenList={tokenList}
+                            onTokenSelect={(token) => field.onChange(token)}
+                            userAddress={address}
+                            inputProps={{
+                                onInput: async () => {
+                                    sourceRef.current = 'token0';
+                                }
+                            }}
+                            balanceProps={{
+                                color: "fg.muted",
+                            }}
+                            wrapperProps={{
+                                maxW: "full",
+                            }}
+                            selectTokenDialogProps={{
+                                triggerProps: {
+                                    disabled: !!field.value,
+                                    _disabled: {
+                                        opacity: 1
+                                    }
+                                }
+                            }}
+                        />
+                    )}
+                    {...registers.token0}
+                />
+                <Controller
+                    control={control}
+                    render={({ field }) => (
+                        <SwapInput
+                            label="Token 1"
+                            token={field.value}
+                            amount={token1Amount}
+                            balance={token1Balance}
+                            onAmountChange={async (value) => {
+                                handleToken1InputChange(value);
+                                handleToken1Update(value);
+                            }}
+                            tokenList={tokenList}
+                            onTokenSelect={(token) => field.onChange(token)}
+                            userAddress={address}
+                            inputProps={{
+                                onInput: async () => {
+                                    sourceRef.current = 'token1';
+                                }
+                            }}
+                            balanceProps={{
+                                color: "fg.muted",
+                            }}
+                            wrapperProps={{
+                                maxW: "full",
+                            }}
+                            selectTokenDialogProps={{
+                                triggerProps: {
+                                    disabled: !!field.value,
+                                    _disabled: {
+                                        opacity: 1
+                                    }
+                                }
+                            }}
+                        />
+                    )}
+                    {...registers.token1}
+                />
+                {/* /error message */}
+                <ErrorMessageText />
+
+            </VStack>
+            <Button
+                w={"full"}
+                type="submit"
+                size={"lg"}
+                loading={isSubmitting || isCalculating}
+                loadingText={getButtonState().text}
+                disabled={getButtonState().isDisabled}
+            >
+                {getButtonState().text}
+            </Button>
+        </MotionVStack>
+    );
+};
