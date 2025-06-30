@@ -8,12 +8,18 @@ export const siteConfig = {
             label: "Trang chủ",
         },
         docs: {
-            href: "https://vinaswap.gitbook.io/vinaswap",
+            href: "https://nolaswap.gitbook.io/nolaswap",
             label: "Tài liệu",
         },
-        about: {
-            href: "/about",
-            label: "Về chúng tôi",
+        pitch: {
+            href: "https://gamma.app/docs/NolaSwap-a3tvnr98xpxf90t",
+            label: "Trình bày",
+        }
+    },
+    socials: {
+        twitter: {
+            href: "https://x.com/nolaswap_",
+            label: "Twitter",
         },
     }
 }
