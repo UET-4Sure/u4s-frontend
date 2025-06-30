@@ -1,5 +1,5 @@
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { quoteAmmPrice } from '@/script/QuoteAmountOut';
 import {
   USDC_WETH_CONFIG,
@@ -22,6 +22,7 @@ import {
   Button,
   chakra,
 } from '@chakra-ui/react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Tooltip } from '@/components/ui/tooltip';
 import { Tag } from '@/components/ui/tag';
 import { DataListRoot, DataListItem } from '@/components/ui/data-list';
@@ -47,164 +48,218 @@ const POOL_MANAGER_ADDRESS = "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543";
 
 export default function PoolList() {
   const router = useRouter();
-  const [pools, setPools] = useState<PoolInfo[]>([]);
-  const [totalTVL, setTotalTVL] = useState(0);
 
-  useEffect(() => {
-    const fetchPoolPrices = async () => {
-      const getTokenInfo = (symbol: string) => {
-        return TOKEN_LIST.find(token => token.symbol === symbol);
-      };
-
-      const poolConfigs = [
-        { 
-          config: USDC_WETH_CONFIG, 
-          name: 'USDC-WETH',
-          token0Symbol: 'USDC',
-          token1Symbol: 'WETH',
-          token0LogoURI: getTokenInfo('USDC')?.logoURI,
-          token1LogoURI: getTokenInfo('WETH')?.logoURI
-        },
-        { 
-          config: USDC_WBTC_CONFIG, 
-          name: 'USDC-WBTC',
-          token0Symbol: 'USDC',
-          token1Symbol: 'WBTC',
-          token0LogoURI: getTokenInfo('USDC')?.logoURI,
-          token1LogoURI: getTokenInfo('WBTC')?.logoURI
-        },
-        { 
-          config: USDC_LINK_CONFIG, 
-          name: 'USDC-LINK',
-          token0Symbol: 'USDC',
-          token1Symbol: 'LINK',
-          token0LogoURI: getTokenInfo('USDC')?.logoURI,
-          token1LogoURI: getTokenInfo('LINK')?.logoURI
-        },
-        { 
-          config: USDC_EUR_CONFIG, 
-          name: 'USDC-EUR',
-          token0Symbol: 'USDC',
-          token1Symbol: 'EUR',
-          token0LogoURI: getTokenInfo('USDC')?.logoURI,
-          token1LogoURI: getTokenInfo('EUR')?.logoURI
-        },
-        { 
-          config: WBTC_WETH_CONFIG, 
-          name: 'WBTC-WETH',
-          token0Symbol: 'WBTC',
-          token1Symbol: 'WETH',
-          token0LogoURI: getTokenInfo('WBTC')?.logoURI,
-          token1LogoURI: getTokenInfo('WETH')?.logoURI
-        },
-        { 
-          config: WETH_LINK_CONFIG, 
-          name: 'WETH-LINK',
-          token0Symbol: 'WETH',
-          token1Symbol: 'LINK',
-          token0LogoURI: getTokenInfo('WETH')?.logoURI,
-          token1LogoURI: getTokenInfo('LINK')?.logoURI
-        },
-        { 
-          config: EUR_WETH_CONFIG, 
-          name: 'EUR-WETH',
-          token0Symbol: 'EUR',
-          token1Symbol: 'WETH',
-          token0LogoURI: getTokenInfo('EUR')?.logoURI,
-          token1LogoURI: getTokenInfo('WETH')?.logoURI
-        },
-        { 
-          config: WBTC_LINK_CONFIG, 
-          name: 'WBTC-LINK',
-          token0Symbol: 'WBTC',
-          token1Symbol: 'LINK',
-          token0LogoURI: getTokenInfo('WBTC')?.logoURI,
-          token1LogoURI: getTokenInfo('LINK')?.logoURI
-        },
-        { 
-          config: WBTC_EUR_CONFIG, 
-          name: 'WBTC-EUR',
-          token0Symbol: 'WBTC',
-          token1Symbol: 'EUR',
-          token0LogoURI: getTokenInfo('WBTC')?.logoURI,
-          token1LogoURI: getTokenInfo('EUR')?.logoURI
-        },
-        { 
-          config: EUR_LINK_CONFIG, 
-          name: 'EUR-LINK',
-          token0Symbol: 'EUR',
-          token1Symbol: 'LINK',
-          token0LogoURI: getTokenInfo('EUR')?.logoURI,
-          token1LogoURI: getTokenInfo('LINK')?.logoURI
-        },
-      ];
-
-      const poolsWithPrices = await Promise.all(
-        poolConfigs.map(async ({ config, name, token0Symbol, token1Symbol, token0LogoURI, token1LogoURI }) => {
-          let price = 0;
-          let tvl = '$0';
-          let tvlNumber = 0;
-          
-          try {
-            price = await quoteAmmPrice(
-              config.poolKey.currency0,
-              config.poolKey.currency1,
-              1
-            );
-
-            // Get balances
-            const balance0 = Number(await queryBalance(config.poolKey.currency0, POOL_MANAGER_ADDRESS));
-            const balance1 = Number(await queryBalance(config.poolKey.currency1, POOL_MANAGER_ADDRESS));
-
-            // Calculate TVL
-            tvlNumber = await calculateVolumeLiquidity(
-              config.poolKey.currency0,
-              balance0,
-              config.poolKey.currency1,
-              balance1
-            );
-
-            tvl = `$${numeral(tvlNumber).format('0,0.00')}`;
-          } catch (error) {
-            console.error(`Error fetching data for ${name}:`, error);
-          }
-
-          return {
-            name,
-            fee: '0.3%',
-            tvl,
-            tvlNumber,
-            price,
-            token0: config.poolKey.currency0,
-            token1: config.poolKey.currency1,
-            token0Symbol,
-            token1Symbol,
-            token0LogoURI,
-            token1LogoURI,
-          };
-        })
-      );
-
-      // Calculate total TVL
-      const total = poolsWithPrices.reduce((sum, pool) => sum + pool.tvlNumber, 0);
-      setTotalTVL(total);
-      setPools(poolsWithPrices);
+  const fetchPoolData = async () => {
+    const getTokenInfo = (symbol: string) => {
+      return TOKEN_LIST.find(token => token.symbol === symbol);
     };
 
-    fetchPoolPrices();
-  }, []);
+    const poolConfigs = [
+      {
+        config: USDC_WETH_CONFIG,
+        name: 'USDC-WETH',
+        token0Symbol: 'USDC',
+        token1Symbol: 'WETH',
+        token0LogoURI: getTokenInfo('USDC')?.logoURI,
+        token1LogoURI: getTokenInfo('WETH')?.logoURI
+      },
+      {
+        config: USDC_WBTC_CONFIG,
+        name: 'USDC-WBTC',
+        token0Symbol: 'USDC',
+        token1Symbol: 'WBTC',
+        token0LogoURI: getTokenInfo('USDC')?.logoURI,
+        token1LogoURI: getTokenInfo('WBTC')?.logoURI
+      },
+      {
+        config: USDC_LINK_CONFIG,
+        name: 'USDC-LINK',
+        token0Symbol: 'USDC',
+        token1Symbol: 'LINK',
+        token0LogoURI: getTokenInfo('USDC')?.logoURI,
+        token1LogoURI: getTokenInfo('LINK')?.logoURI
+      },
+      {
+        config: USDC_EUR_CONFIG,
+        name: 'USDC-EUR',
+        token0Symbol: 'USDC',
+        token1Symbol: 'EUR',
+        token0LogoURI: getTokenInfo('USDC')?.logoURI,
+        token1LogoURI: getTokenInfo('EUR')?.logoURI
+      },
+      {
+        config: WBTC_WETH_CONFIG,
+        name: 'WBTC-WETH',
+        token0Symbol: 'WBTC',
+        token1Symbol: 'WETH',
+        token0LogoURI: getTokenInfo('WBTC')?.logoURI,
+        token1LogoURI: getTokenInfo('WETH')?.logoURI
+      },
+      {
+        config: WETH_LINK_CONFIG,
+        name: 'WETH-LINK',
+        token0Symbol: 'WETH',
+        token1Symbol: 'LINK',
+        token0LogoURI: getTokenInfo('WETH')?.logoURI,
+        token1LogoURI: getTokenInfo('LINK')?.logoURI
+      },
+      {
+        config: EUR_WETH_CONFIG,
+        name: 'EUR-WETH',
+        token0Symbol: 'EUR',
+        token1Symbol: 'WETH',
+        token0LogoURI: getTokenInfo('EUR')?.logoURI,
+        token1LogoURI: getTokenInfo('WETH')?.logoURI
+      },
+      {
+        config: WBTC_LINK_CONFIG,
+        name: 'WBTC-LINK',
+        token0Symbol: 'WBTC',
+        token1Symbol: 'LINK',
+        token0LogoURI: getTokenInfo('WBTC')?.logoURI,
+        token1LogoURI: getTokenInfo('LINK')?.logoURI
+      },
+      {
+        config: WBTC_EUR_CONFIG,
+        name: 'WBTC-EUR',
+        token0Symbol: 'WBTC',
+        token1Symbol: 'EUR',
+        token0LogoURI: getTokenInfo('WBTC')?.logoURI,
+        token1LogoURI: getTokenInfo('EUR')?.logoURI
+      },
+      {
+        config: EUR_LINK_CONFIG,
+        name: 'EUR-LINK',
+        token0Symbol: 'EUR',
+        token1Symbol: 'LINK',
+        token0LogoURI: getTokenInfo('EUR')?.logoURI,
+        token1LogoURI: getTokenInfo('LINK')?.logoURI
+      },
+    ];
+
+    const poolsWithPrices = await Promise.all(
+      poolConfigs.map(async ({ config, name, token0Symbol, token1Symbol, token0LogoURI, token1LogoURI }) => {
+        let price = 0;
+        let tvl = '$0';
+        let tvlNumber = 0;
+
+        try {
+          price = await quoteAmmPrice(
+            config.poolKey.currency0,
+            config.poolKey.currency1,
+            1
+          );
+
+          // Get balances
+          const balance0 = Number(await queryBalance(config.poolKey.currency0, POOL_MANAGER_ADDRESS));
+          const balance1 = Number(await queryBalance(config.poolKey.currency1, POOL_MANAGER_ADDRESS));
+
+          // Calculate TVL
+          tvlNumber = await calculateVolumeLiquidity(
+            config.poolKey.currency0,
+            balance0,
+            config.poolKey.currency1,
+            balance1
+          );
+
+          tvl = `$${numeral(tvlNumber).format('0,0.00')}`;
+        } catch (error) {
+          console.error(`Error fetching data for ${name}:`, error);
+        }
+
+        return {
+          name,
+          fee: '0.3%',
+          tvl,
+          tvlNumber,
+          price,
+          token0: config.poolKey.currency0,
+          token1: config.poolKey.currency1,
+          token0Symbol,
+          token1Symbol,
+          token0LogoURI,
+          token1LogoURI,
+        };
+      })
+    );
+
+    // Calculate total TVL
+    const totalTVL = poolsWithPrices.reduce((sum, pool) => sum + pool.tvlNumber, 0);
+
+    return { pools: poolsWithPrices, totalTVL };
+  };
+
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['pool-list'],
+    queryFn: fetchPoolData,
+    refetchOnWindowFocus: false,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+
+  const pools = data?.pools || [];
+  const totalTVL = data?.totalTVL || 0;
+
+  if (isLoading) {
+    return (
+      <VStack gap={6} width="full">
+        <Box w="full" bg="bg.subtle" p={6} rounded="2xl" shadow="md">
+          <VStack align="start" gap={2}>
+            <Skeleton height="6" width="200px" />
+            <Skeleton height="10" width="150px" />
+          </VStack>
+        </Box>
+
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Box
+            key={index}
+            w="full"
+            bg="bg.subtle"
+            p={4}
+            rounded="2xl"
+            shadow="md"
+          >
+            <VStack gap={4} align="stretch">
+              <HStack justify="space-between">
+                <HStack gap={2}>
+                  <Skeleton height="6" width="6" rounded="full" />
+                  <Skeleton height="6" width="120px" />
+                  <Skeleton height="6" width="50px" />
+                </HStack>
+                <HStack gap={2}>
+                  <Skeleton height="8" width="60px" />
+                  <Skeleton height="8" width="100px" />
+                </HStack>
+              </HStack>
+              <HStack justify="space-between">
+                <VStack align="start" gap={1}>
+                  <Skeleton height="4" width="40px" />
+                  <Skeleton height="5" width="150px" />
+                </VStack>
+                <VStack align="start" gap={1}>
+                  <Skeleton height="4" width="30px" />
+                  <Skeleton height="5" width="80px" />
+                </VStack>
+              </HStack>
+            </VStack>
+          </Box>
+        ))}
+      </VStack>
+    );
+  }
 
   return (
     <VStack gap={6} width="full">
-      <Box w="full" bg="bg.subtle" p={6} rounded="2xl" shadow="md">
+      <Box w="full" bg="bg.subtle" p={6} rounded="2xl" shadow="md"
+        bgImage={"radial-gradient(100% 100% at 50.1% 0%, #FFA103 0%, #BC2D29 41.35%, #450E14 100%)"}
+      >
         <VStack align="start" gap={2}>
-          <Text fontSize="lg" color="gray.500">Total Value Locked (TVL)</Text>
-          <Text fontSize="3xl" fontWeight="bold" color="fg">
+          <Text fontSize="lg" color="secondary.muted">Total Value Locked (TVL)</Text>
+          <Text fontSize="3xl" fontWeight="bold" color="secondary.contrast">
             ${numeral(totalTVL).format('0,0.00')}
           </Text>
         </VStack>
       </Box>
-      
+
       {pools.map((pool, index) => (
         <Box
           key={index}

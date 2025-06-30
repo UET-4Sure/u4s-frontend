@@ -42,7 +42,7 @@ const parsePositionTitle = (title: string): ParsedTitle | null => {
 const TokenWithLogo = ({ symbol }: { symbol: string }) => {
     const token = TOKEN_LIST.find(t => t.symbol === symbol);
     const [hasError, setHasError] = useState(false);
-    
+
     return (
         <HStack gap={1}>
             {token?.logoURI && !hasError ? (
@@ -65,7 +65,7 @@ const TokenWithLogo = ({ symbol }: { symbol: string }) => {
 
 export default function PositionsList() {
     const { address } = useAccount()
-    const { positions, loading, error } = usePositions(address)
+    const { data: positions, isLoading, error } = usePositions(address)
 
     const renderContent = () => {
         if (!address) {
@@ -76,7 +76,7 @@ export default function PositionsList() {
             )
         }
 
-        if (loading) {
+        if (isLoading) {
             return (
                 <Center flex={1}>
                     <Text>Đang tải vị thế...</Text>
@@ -87,12 +87,12 @@ export default function PositionsList() {
         if (error) {
             return (
                 <Center flex={1}>
-                    <Text color="red.500">{error}</Text>
+                    <Text color="red.500">{error.message}</Text>
                 </Center>
             )
         }
 
-        if (positions.length === 0) {
+        if (positions?.length === 0) {
             return (
                 <Center flex={1}>
                     <Text>Không có vị thế nào</Text>
@@ -102,7 +102,7 @@ export default function PositionsList() {
 
         return (
             <VStack gap={4} width="full">
-                {positions.map((position) => {
+                {positions?.map((position) => {
                     const parsedTitle = position.metadata?.title ? parsePositionTitle(position.metadata.title) : null;
 
                     return (
@@ -119,8 +119,8 @@ export default function PositionsList() {
                             <HStack gap={6} align="start">
                                 {position.metadata?.mediaUrl && (
                                     <Box boxSize="100px" rounded="lg" overflow="hidden">
-                                        <Image 
-                                            src={position.metadata.mediaUrl} 
+                                        <Image
+                                            src={position.metadata.mediaUrl}
                                             alt={position.metadata?.title || `Position #${position.tokenId}`}
                                             objectFit="cover"
                                             w="full"
@@ -143,7 +143,7 @@ export default function PositionsList() {
                                                 </Tag>
                                             </HStack>
                                         </HStack>
-                                        
+
                                         {parsedTitle && (
                                             <>
                                                 <HStack gap={2}>
@@ -170,7 +170,8 @@ export default function PositionsList() {
     };
 
     return (
-        <Container maxW="container.xl" py={8}>
+        <Container maxW="container.xl" py={8} 
+        >
             <VStack gap={6} align="stretch">
                 <Box>
                     <Heading size="lg" mb={2}>Vị thế của bạn</Heading>
