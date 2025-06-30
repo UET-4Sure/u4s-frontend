@@ -53,6 +53,10 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
             queryClient.invalidateQueries({
                 queryKey: ['kyc:status', address],
             });
+            queryClient.invalidateQueries({
+                queryKey: ["wallet", address],
+            });
+
             toaster.success({
                 title: 'Xác minh thành công',
                 description: 'KYC của bạn đã được xác minh thành công',
@@ -106,7 +110,7 @@ export function Ekyc({ keysConfig, onResult, onFinalResult }: EkycProps) {
         if (onResult) {
             onResult(data);
         }
-        
+
         setOpenProcessDialog(true);
 
         submitKycApplication({
