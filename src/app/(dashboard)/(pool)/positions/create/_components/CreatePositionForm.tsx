@@ -34,6 +34,10 @@ import { Tooltip } from '@/components/ui/tooltip';
 import { RequireKycApplicationDialog } from '@/app/(dashboard)/_components/RequireKycApplicationDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
+const DEFAULT_FEE = 3000; // 0.30%
+const DEFAULT_TICK_SPACING = 60;
+const MAX_VALUE_TO_CREATE_POSITION = 1000000; // 1,000,000 USD
+const MAX_VALUE_TO_CREATE_POSITION_NO_KYC = 500; // 500 USD
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
 const POOL_MANAGER_ADDRESS = "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543";
@@ -51,13 +55,31 @@ interface CreatePositionFormValues {
     maxPrice: string;
 }
 
-const DEFAULT_FEE = 3000; // 0.30%
-const DEFAULT_TICK_SPACING = 60;
-const MAX_VALUE_TO_CREATE_POSITION = 1000000; // 1,000,000 USD
-const MAX_VALUE_TO_CREATE_POSITION_NO_KYC = 500; // 500 USD
-
 interface CreatePositionFormProps extends StackProps {
 }
+
+// Helper functions
+const showErrorToast = (description: string) => {
+    toaster.error({
+        title: "Lỗi",
+        description,
+    });
+};
+
+const showSuccessToast = (description: string) => {
+    toaster.success({
+        title: "Thành công",
+        description,
+    });
+};
+
+const validateTokenSelection = (token0: LocalToken, token1: LocalToken) => {
+    if (!token0 || !token1) {
+        showErrorToast("Chọn đủ 2 token.");
+        return false;
+    }
+    return true;
+};
 
 export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children, ...props }) => {
     const steps = useSteps({
@@ -114,13 +136,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
     const onSubmit = async (data: CreatePositionFormValues) => {
         try {
-            if (!data.token0 || !data.token1) {
-                toaster.error({
-                    title: "Lỗi tạo vị thế",
-                    description: "Vui lòng chọn cả hai token.",
-                });
-                return;
-            }
+            if (!validateTokenSelection(data.token0, data.token1)) return;
 
             // Calculate total volume in USD
             const totalVolume = await utils.calculateVolumeLiquidity(
@@ -132,10 +148,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
             // Check if volume exceeds 1M USD
             if (totalVolume > MAX_VALUE_TO_CREATE_POSITION) {
-                toaster.error({
-                    title: "Lỗi tạo vị thế",
-                    description: "Bạn không được phép tạo vị thế có tổng giá trị lớn hơn 1.000.000 USD.",
-                });
+                showErrorToast("Vượt quá 1.000.000 USD.");
                 return;
             }
 
@@ -150,10 +163,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
 
             const poolConfig = getPoolConfig(data.token0.address, data.token1.address);
             if (!poolConfig) {
-                toaster.error({
-                    title: "Lỗi tạo vị thế",
-                    description: "Không tìm thấy pool cho token của bạn.",
-                });
+                showErrorToast("Không tìm thấy pool.");
                 return;
             }
 
@@ -309,45 +319,31 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                 queryKey: ['token-balance', data.token1.address, userAddress],
             });
 
-            toaster.success({
-                title: "Vị thế đã được tạo",
-                description: "Vị thế của bạn đã được tạo thành công.",
-            });
+            showSuccessToast("Tạo vị thế thành công.");
 
             steps.goToNextStep();
         } catch (error) {
             console.error("Error creating position:", error);
-            toaster.error({
-                title: "Position Creation Error",
-                description: "Failed to create position. Please try again.",
-            });
+            showErrorToast("Tạo vị thế thất bại.");
         }
     }
 
     const registers = {
         token0: register("token0", {
-            required: "Vui lòng chọn token cung cấp",
-            max: {
-                value: tradeVolume || Infinity,
-                message: "Tổng giá trị giao dịch không được vượt quá 1.000.000 USD",
-            }
+            required: "Chọn token cung cấp",
         }),
         token1: register("token1", {
-            required: "Vui lòng chọn token nhận",
-            max: {
-                value: tradeVolume || Infinity,
-                message: "Tổng giá trị giao dịch không được vượt quá 1.000.000 USD",
-            }
+            required: "Chọn token nhận",
         }),
         token0Amount: register("token0Amount", {
-            required: "Vui lòng nhập số lượng token cung cấp",
+            required: "Nhập số lượng token",
             pattern: {
                 value: /^\d+(\.\d+)?$/,
                 message: "Số lượng không hợp lệ",
             },
         }),
         token1Amount: register("token1Amount", {
-            required: "Vui lòng nhập số lượng token nhận",
+            required: "Nhập số lượng token",
             pattern: {
                 value: /^\d+(\.\d+)?$/,
                 message: "Số lượng không hợp lệ",
@@ -430,13 +426,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                         w={"full"}
                         size={"lg"}
                         onClick={() => {
-                            if (!token0 || !token1) {
-                                toaster.error({
-                                    title: "Lỗi tạo vị thế",
-                                    description: "Vui lòng chọn cả hai token.",
-                                });
-                                return;
-                            }
+                            if (!validateTokenSelection(token0, token1)) return;
                         }}
                     >
                         Tiếp tục
@@ -731,14 +721,13 @@ const Step3 = ({
 }) => {
     const {
         control,
-        handleSubmit,
         setValue,
         watch,
-        formState: { isSubmitting, isValidating },
-        reset,
+        formState: { isSubmitting },
     } = useFormContext();
 
     const { address } = useAccount();
+    const sourceRef = useRef<'token0' | 'token1'>('token0');
 
     const token0 = useWatch({ control, name: "token0" });
     const token1 = useWatch({ control, name: "token1" });
@@ -747,73 +736,38 @@ const Step3 = ({
     const { data: token0Balance } = useTokenBalance(token0?.address, address);
     const { data: token1Balance } = useTokenBalance(token1?.address, address);
 
-    const sourceRef = useRef<'token0' | 'token1'>('token0');
-
     const getButtonState = () => {
-        if (isCalculating) return {
-            text: "Đang tính toán...",
-            isDisabled: true
+        if (isCalculating) return { text: "Đang tính toán...", isDisabled: true };
+        if (isSubmitting) return { text: "Đang tạo vị thế...", isDisabled: true };
+        return { text: "Tạo vị thế", isDisabled: false };
+    };
+
+    const calculateTokenAmount = async (fromToken: string, toToken: string, amount: string, targetField: string) => {
+        setIsCalculating(true);
+        try {
+            const amountOut = await quoteAmmPrice(fromToken, toToken, Number(amount));
+            setValue(targetField, amountOut.toString());
+        } catch (error) {
+            console.error("Error calculating amount:", error);
+            setValue(targetField, "");
+        } finally {
+            setIsCalculating(false);
         }
+    };
 
-        if (isSubmitting) return {
-            text: "Đang tạo vị thế...",
-            isDisabled: true
-        };
-
-        return {
-            text: "Tạo vị thế",
-            isDisabled: isSubmitting,
-        }
-    }
-
-    const handleToken0InputChange = async (value: string) => {
+    const handleToken0InputChange = (value: string) => {
         setValue("token0Amount", value);
+        if (sourceRef.current === 'token0') {
+            calculateTokenAmount(token0.address, token1.address, value, "token1Amount");
+        }
     };
 
-    const handleToken1InputChange = async (value: string) => {
+    const handleToken1InputChange = (value: string) => {
         setValue("token1Amount", value);
+        if (sourceRef.current === 'token1') {
+            calculateTokenAmount(token1.address, token0.address, value, "token0Amount");
+        }
     };
-
-    const handleToken0Update = async (value: string) => {
-        if (sourceRef.current !== 'token0') return;
-
-        setIsCalculating(true);
-        try {
-            const token1 = watch("token1");
-            const amountOut = await quoteAmmPrice(
-                watch("token0").address,
-                token1.address,
-                Number(value)
-            );
-            setValue("token1Amount", amountOut.toString());
-        } catch (error) {
-            console.error("Error calculating token1 amount:", error);
-            setValue("token1Amount", "");
-        } finally {
-            setIsCalculating(false);
-        }
-    }
-
-    const handleToken1Update = async (value: string) => {
-        console.log('Source:', sourceRef.current);
-        if (sourceRef.current !== 'token1') return;
-
-        setIsCalculating(true);
-        try {
-            const token0 = watch("token0");
-            const amountOut = await quoteAmmPrice(
-                token0.address,
-                watch("token1").address,
-                Number(value)
-            );
-            setValue("token0Amount", amountOut.toString());
-        } catch (error) {
-            console.error("Error calculating token0 amount:", error);
-            setValue("token0Amount", "");
-        } finally {
-            setIsCalculating(false);
-        }
-    }
 
     const ErrorMessageText = useMemo(() => () => {
         return (
@@ -829,7 +783,7 @@ const Step3 = ({
                         }}
                         w={"full"} bg="red.700" p={3} rounded="2xl" shadow={"md"}>
                         <Text w={"full"} color="red.contrast" fontSize="sm">
-                            Tổng giá trị giao dịch không được vượt quá 1.000.000 USD.
+                            Vượt quá 1.000.000 USD.
                         </Text>
                     </Box>
                 )}
@@ -857,17 +811,12 @@ const Step3 = ({
                             token={field.value}
                             amount={token0Amount}
                             balance={token0Balance}
-                            onAmountChange={async (value) => {
-                                handleToken0InputChange(value);
-                                handleToken0Update(value);
-                            }}
+                            onAmountChange={handleToken0InputChange}
                             tokenList={tokenList}
                             onTokenSelect={(token) => field.onChange(token)}
                             userAddress={address}
                             inputProps={{
-                                onInput: async () => {
-                                    sourceRef.current = 'token0';
-                                }
+                                onInput: () => { sourceRef.current = 'token0'; }
                             }}
                             balanceProps={{
                                 color: "fg.muted",
@@ -895,17 +844,12 @@ const Step3 = ({
                             token={field.value}
                             amount={token1Amount}
                             balance={token1Balance}
-                            onAmountChange={async (value) => {
-                                handleToken1InputChange(value);
-                                handleToken1Update(value);
-                            }}
+                            onAmountChange={handleToken1InputChange}
                             tokenList={tokenList}
                             onTokenSelect={(token) => field.onChange(token)}
                             userAddress={address}
                             inputProps={{
-                                onInput: async () => {
-                                    sourceRef.current = 'token1';
-                                }
+                                onInput: () => { sourceRef.current = 'token1'; }
                             }}
                             balanceProps={{
                                 color: "fg.muted",
