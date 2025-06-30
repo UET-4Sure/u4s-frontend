@@ -1,3 +1,5 @@
+"use client";
+
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { quoteAmmPrice } from '@/script/QuoteAmountOut';
@@ -19,7 +21,6 @@ import {
   VStack,
   HStack,
   Text,
-  Button,
   chakra,
 } from '@chakra-ui/react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -29,6 +30,10 @@ import { DataListRoot, DataListItem } from '@/components/ui/data-list';
 import numeral from 'numeral';
 import { calculateVolumeLiquidity } from '@/app/(dashboard)/(pool)/positions/create/_components/utils';
 import { queryBalance } from '@/script/QueryBalance';
+import { motion } from 'framer-motion';
+import { Button } from './ui/button';
+
+const MotionBox = motion.create(Box);
 
 interface PoolInfo {
   name: string;
@@ -261,14 +266,22 @@ export default function PoolList() {
       </Box>
 
       {pools.map((pool, index) => (
-        <Box
+        <MotionBox
           key={index}
           w="full"
           bg="bg.subtle"
           p={4}
           rounded="2xl"
           shadow="md"
-          transition="all 0.2s"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{
+            opacity: 1, y: 0,
+            transition: { duration: 0.25, delay: index * 0.125 }
+          }}
+          transition={{ duration: 0.25 }}
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+          cursor="pointer"
           _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }}
         >
           <VStack gap={4} align="stretch">
@@ -309,14 +322,13 @@ export default function PoolList() {
               <HStack gap={2}>
                 <Button
                   size="sm"
-                  colorScheme="blue"
                   onClick={() => router.push(`/swap?token0=${pool.token0}&token1=${pool.token1}`)}
                 >
                   Swap
                 </Button>
                 <Button
                   size="sm"
-                  colorScheme="green"
+                  colorPalette="primary"
                   onClick={() => router.push('/position/create')}
                 >
                   Add Liquidity
@@ -337,7 +349,7 @@ export default function PoolList() {
               </VStack>
             </HStack>
           </VStack>
-        </Box>
+        </MotionBox>
       ))}
     </VStack>
   );

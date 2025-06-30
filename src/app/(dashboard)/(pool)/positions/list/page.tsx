@@ -6,6 +6,9 @@ import { Box, VStack, Text, HStack, Heading, Image, Container, Center, Flex } fr
 import { usePositions } from '@/hooks/usePositions'
 import { Tag } from '@/components/ui/tag'
 import { TOKEN_LIST } from '@/app/(dashboard)/(trade)/swap/config'
+import { motion } from 'framer-motion'
+
+const MotionBox = motion.create(Box);
 
 interface ParsedTitle {
     protocol: string;
@@ -102,18 +105,23 @@ export default function PositionsList() {
 
         return (
             <VStack gap={4} width="full">
-                {positions?.map((position) => {
+                {positions?.map((position, index) => {
                     const parsedTitle = position.metadata?.title ? parsePositionTitle(position.metadata.title) : null;
 
                     return (
-                        <Box
+                        <MotionBox
                             key={position.tokenId}
                             w="full"
                             bg="bg.subtle"
                             p={4}
                             rounded="2xl"
                             shadow="md"
-                            transition="all 0.2s"
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.3, delay: index * 0.05 }}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
+                            cursor="pointer"
                             _hover={{ transform: 'translateY(-2px)', shadow: 'lg' }}
                         >
                             <HStack gap={6} align="start">
@@ -162,7 +170,7 @@ export default function PositionsList() {
                                     </VStack>
                                 </VStack>
                             </HStack>
-                        </Box>
+                        </MotionBox>
                     );
                 })}
             </VStack>
@@ -170,7 +178,7 @@ export default function PositionsList() {
     };
 
     return (
-        <Container maxW="container.xl" py={8} 
+        <Container maxW="container.xl" py={8}
         >
             <VStack gap={6} align="stretch">
                 <Box>
