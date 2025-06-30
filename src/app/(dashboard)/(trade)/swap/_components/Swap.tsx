@@ -19,6 +19,7 @@ import { checkHasSBT } from "@/script/CheckHasSBT";
 import { queryOraclePrice } from "@/script/QueryOraclePrice";
 import { useState } from "react";
 import { RequireKycApplicationDialog } from "@/app/(dashboard)/_components/RequireKycApplicationDialog";
+import { ContractFunctionExecutionError, TransactionExecutionError } from "viem";
 
 interface Props extends StackProps { }
 
@@ -33,9 +34,11 @@ export function Swap({ ...props }: Props) {
       const oraclePrice = await queryOraclePrice(swapData.fromToken?.address || "");
       const volume = Number(swapData.fromAmount) * Number(oraclePrice);
 
-      // Check volume limits
-      if (volume > 10000) {
-        setOpenRequireKycDialog(true);
+      if (volume >= 10000) {
+        toaster.warning({
+          title: "Đã đạt giới hạn giao dịch",
+          description: "Không thể thực hiện giao dịch với khối lượng này.",
+        });
         return;
       }
 
@@ -43,10 +46,7 @@ export function Swap({ ...props }: Props) {
       if (volume >= 500) {
         const hasSBT = await checkHasSBT(address || "");
         if (!hasSBT) {
-          toaster.error({
-            title: "Xác thực KYC",
-            description: "Bạn cần xác thực KYC để thực hiện giao dịch lớn hơn 500 USD"
-          });
+          setOpenRequireKycDialog(true);
           return;
         }
       }
@@ -123,7 +123,15 @@ export function Swap({ ...props }: Props) {
         description: "Your swap has been executed successfully",
       });
     } catch (error) {
-      console.error("Swap error:", error);
+      // if error is instance error of wallet (sign, ...), show error message
+      if (error instanceof TransactionExecutionError || error instanceof ContractFunctionExecutionError) {
+        toaster.error({
+          title: "Lỗi giao dịch",
+          description: "Giao dịch không thành công. Vui lòng kiểm tra lại thông tin và thử lại.",
+        });
+        return;
+      }
+
       toaster.error({
         title: "Swap Error",
         description: error instanceof Error ? error.message : "An error occurred during swap",

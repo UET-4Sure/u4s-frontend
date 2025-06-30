@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { DialogContent, DialogRoot, DialogHeader, DialogBody, DialogTitle } from "@/components/ui/dialog";
+import { DialogContent, DialogRoot, DialogHeader, DialogBody, DialogTitle, DialogCloseTrigger } from "@/components/ui/dialog";
 import { DialogFooter, DialogRootProps, Heading, Image, Spinner, Text, VStack } from "@chakra-ui/react";
 import NextImage from "next/image";
 import NextLink from "next/link";
@@ -11,7 +11,7 @@ interface RequireKycApplicationDialogProps extends DialogRootProps {
 export function RequireKycApplicationDialog(props: Partial<RequireKycApplicationDialogProps>) {
 
     return (
-        <DialogRoot size={"md"}  {...props}>
+        <DialogRoot size={"md"} {...props}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>
@@ -37,7 +37,7 @@ export function RequireKycApplicationDialog(props: Partial<RequireKycApplication
                     </VStack>
                 </DialogBody>
                 <DialogFooter>
-                    <Button variant={"outline"} onClick={() => setOpen(false)}>
+                    <Button variant={"outline"} onClick={() => props.onOpenChange?.({ open: false })}>
                         Quay lại
                     </Button>
                     <Button asChild>

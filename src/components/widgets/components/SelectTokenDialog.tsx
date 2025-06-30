@@ -1,6 +1,6 @@
 import { Badge, Box, DialogRootProps, Flex, IconButton, VStack, Text, Input, Spinner, HStack, DialogTrigger, Icon, AvatarRoot, AvatarImage, AvatarFallback, Center, CenterProps } from "@chakra-ui/react";
 import { LuSearch, LuStar } from "react-icons/lu";
-import { useCallback, useMemo, useState } from "react";
+import { memo, useCallback, useMemo, useState } from "react";
 import { DialogBackdrop, DialogBody, DialogCloseTrigger, DialogContent, DialogHeader, DialogRoot, DialogTitle } from "@/components/ui/dialog";
 import { IoChevronDownOutline } from "react-icons/io5";
 import { FixedSizeList as List, ListChildComponentProps } from 'react-window';
@@ -200,7 +200,7 @@ export function VirtualList({ items, itemHeight, maxHeight, renderItem, ...props
         </Center>
     );
 }
-export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
+export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = memo(({
     tokenList,
     selectedToken,
     onSelectToken,
@@ -450,4 +450,4 @@ export const SelectTokenDialog: React.FC<SelectTokenDialogProps> = ({
             </DialogContent>
         </DialogRoot>
     );
-};
+})
