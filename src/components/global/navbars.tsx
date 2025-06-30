@@ -16,7 +16,7 @@ import { Button } from "../ui/button";
 import { BrandLogo } from "./brand";
 import { useWalletLogin } from "@/hooks/useWalletLogin";
 import { useMotionValueEvent, useScroll } from "framer-motion";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import { Tooltip } from "../ui/tooltip";
 const ChakraHeader = chakra.header;
@@ -50,15 +50,31 @@ const BrandAndAppSnippet = () => (
     </NextLink>
 )
 
-interface LandingNavbarProps extends HtmlProps { }
-export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
+const ConnectWalletButtonWrapper = () => {
     const { isAuthenticated } = useWalletLogin();
+    if (isAuthenticated) return null;
+    return <ConnectWalletButton />;
+};
+
+interface LandingNavbarProps extends HtmlProps { }
+export const LandingNavbar: React.FC<LandingNavbarProps> = memo((props) => {
+    const pathname = usePathname();
+    const isActive = (path: string) => pathname === path || pathname.startsWith(path);
 
     const NavLinks = () => (
-        <HStack flex={"1"} as={"nav"} align={"center"} justify={"center"} gap={"8"}>
+        <HStack flex={"1"} as={"nav"} align={"center"} justify={"start"} gap={"4"}>
             <For each={Object.entries(siteConfig.paths)}>
                 {([key, path]) => (
-                    <Link key={key} href={path.href}>{path.label}</Link>
+                    <Link key={key} href={path.href}
+                        target={path.label !== "Trang chủ" ? "_blank" : "_self"}
+                        unstyled
+                        color={isActive(path.href) ? "fg" : "fg.muted"}
+                        transition="all 0.3s ease-in-out"
+                        _hover={{
+                            color: "fg",
+                        }}>
+                        {path.label}
+                    </Link>
                 )}
             </For>
         </HStack>
@@ -76,11 +92,11 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = (props) => {
             <HStack gap={"8"} justify={"space-between"} align={"center"} p={4}>
                 <BrandAndAppSnippet />
                 <NavLinks />
-                {!isAuthenticated && <ConnectWalletButton />}
+                <ConnectWalletButtonWrapper />
             </HStack>
         </ChakraHeader>
     );
-}
+});
 
 interface DashboardNavbarProps extends HtmlProps { }
 export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
