@@ -20,6 +20,7 @@ import { queryOraclePrice } from "@/script/QueryOraclePrice";
 import { useState } from "react";
 import { RequireKycApplicationDialog } from "@/app/(dashboard)/_components/RequireKycApplicationDialog";
 import { ContractFunctionExecutionError, TransactionExecutionError } from "viem";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Props extends StackProps { }
 
@@ -27,7 +28,7 @@ export function Swap({ ...props }: Props) {
   const { address } = useAccount();
   const { writeContractAsync } = useWriteContract();
   const [openRequireKycDialog, setOpenRequireKycDialog] = useState(false);
-
+  const queryClient = useQueryClient();
   const handleSwap = async (swapData: SwapState) => {
     try {
       // Get token price and calculate volume
@@ -116,6 +117,14 @@ export function Swap({ ...props }: Props) {
         abi: POOL_SWAP_TEST_CONTRACT_ABI.abi,
         functionName: "swap",
         args: [poolKeyArray, swapParams, testSettings, hookData],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ['token-balance', swapData.fromToken.address, address],
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: ['token-balance', swapData.toToken.address, address],
       });
 
       toaster.success({
