@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
+import CountUp from 'react-countup';
 import { quoteAmmPrice } from '@/script/QuoteAmountOut';
 import {
   USDC_WETH_CONFIG,
@@ -254,13 +255,25 @@ export default function PoolList() {
 
   return (
     <VStack gap={6} width="full">
-      <Box w="full" bg="bg.subtle" p={6} rounded="2xl" shadow="md"
+      <Box w="full" bg="bg.subtle" p={"6"} rounded="3xl" shadow="md"
         bgImage={"radial-gradient(100% 100% at 50.1% 0%, #FFA103 0%, #BC2D29 41.35%, #450E14 100%)"}
       >
         <VStack align="start" gap={2}>
           <Text fontSize="lg" color="secondary.muted">Total Value Locked (TVL)</Text>
           <Text fontSize="3xl" fontWeight="bold" color="secondary.contrast">
-            ${numeral(totalTVL).format('0,0.00')}
+            $   <CountUp
+              enableScrollSpy
+              useEasing
+              easingFn={(t: number, b: number, c: number, d: number) => {
+                t /= d;
+                return c * (1 - Math.pow(1 - t, 5)) + b;
+              }}
+              end={totalTVL}
+              duration={1.5}
+              separator=","
+              decimals={2}
+              decimal="."
+            />
           </Text>
         </VStack>
       </Box>
@@ -270,8 +283,8 @@ export default function PoolList() {
           key={index}
           w="full"
           bg="bg.subtle"
-          p={4}
-          rounded="2xl"
+          p={"4"}
+          rounded="3xl"
           shadow="md"
           initial={{ opacity: 0, y: 10 }}
           animate={{
