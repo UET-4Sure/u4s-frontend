@@ -329,7 +329,7 @@ export default function PoolList() {
                 <Button
                   size="sm"
                   colorPalette="primary"
-                  onClick={() => router.push('/position/create')}
+                  onClick={() => router.push('/positions/create')}
                 >
                   Add Liquidity
                 </Button>
