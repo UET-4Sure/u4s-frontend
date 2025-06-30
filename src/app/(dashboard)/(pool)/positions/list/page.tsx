@@ -97,8 +97,8 @@ export default function PositionsList() {
 
         if (positions?.length === 0) {
             return (
-                <Center flex={1}>
-                    <Text>Không có vị thế nào</Text>
+                <Center h={"full"} flex={1}>
+                    <Text color={"fg.muted"}>Không có vị thế nào</Text>
                 </Center>
             )
         }
@@ -113,8 +113,8 @@ export default function PositionsList() {
                             key={position.tokenId}
                             w="full"
                             bg="bg.subtle"
-                            p={4}
-                            rounded="2xl"
+                            p={"4"}
+                            rounded="3xl"
                             shadow="md"
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -182,8 +182,8 @@ export default function PositionsList() {
         >
             <VStack gap={6} align="stretch">
                 <Box>
-                    <Heading size="lg" mb={2}>Vị thế của bạn</Heading>
-                    <Text color="gray.600">Xem và quản lý vị thế của bạn</Text>
+                    <Heading size="4xl">Vị thế của bạn</Heading>
+                    <Text color="fg">Xem và quản lý vị thế của bạn</Text>
                 </Box>
                 <Box flex="1" w="full" maxW="container.lg" mx="auto">
                     {renderContent()}
