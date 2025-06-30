@@ -15,7 +15,7 @@ import { Button } from "../ui/button";
 import { BrandLogo } from "./brand";
 import { useWalletLogin } from "@/hooks/useWalletLogin";
 import { useMotionValueEvent, useScroll } from "framer-motion";
-import { useEffect, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 const ChakraHeader = chakra.header;
 
@@ -64,7 +64,7 @@ export const LandingNavbar: React.FC<LandingNavbarProps> = memo((props) => {
             <For each={Object.entries(siteConfig.paths)}>
                 {([key, path]) => (
                     <Link key={key} href={path.href}
-                        target="_blank"
+                        target={path.label !== "Trang chủ" ? "_blank" : "_self"}
                         unstyled
                         color={isActive(path.href) ? "fg" : "fg.muted"}
                         transition="all 0.3s ease-in-out"

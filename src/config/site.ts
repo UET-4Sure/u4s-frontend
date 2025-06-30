@@ -12,7 +12,7 @@ export const siteConfig = {
             label: "Tài liệu",
         },
         pitch: {
-            href: "/https://gamma.app/docs/NolaSwap-a3tvnr98xpxf90t",
+            href: "https://gamma.app/docs/NolaSwap-a3tvnr98xpxf90t",
             label: "Trình bày",
         }
     },
