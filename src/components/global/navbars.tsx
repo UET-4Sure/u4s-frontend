@@ -39,13 +39,15 @@ const VersionTag = () => (
 );
 
 const BrandAndAppSnippet = () => (
-    <HStack align={"start"} justify={"center"} gap={"1"}>
-        <BrandLogo />
-        <VStack align={"start"} justify={"center"} gap={"1"}>
-            <Text fontSize={"md"} fontWeight={"semibold"}>{siteConfig.name}</Text>
-            <VersionTag />
-        </VStack>
-    </HStack >
+    <NextLink href={"/dashboard"}>
+        <HStack align={"start"} justify={"center"} gap={"1"}>
+            <BrandLogo />
+            <VStack align={"start"} justify={"center"} gap={"1"}>
+                <Text fontSize={"md"} fontWeight={"semibold"}>{siteConfig.name}</Text>
+                <VersionTag />
+            </VStack>
+        </HStack >
+    </NextLink>
 )
 
 interface LandingNavbarProps extends HtmlProps { }
@@ -141,7 +143,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
                                     </Button>
                                 </Tooltip>
                             ) : (
-                                <Button w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"} asChild>
+                                <Button key={index} w="full" rounded={"lg"} bg={"bg.muted"} color={"fg"} asChild>
                                     <Link href={path.href} key={path.label}>
                                         {path.label}
                                     </Link>
