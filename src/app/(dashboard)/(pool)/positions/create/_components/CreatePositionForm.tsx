@@ -40,7 +40,6 @@ const MAX_VALUE_TO_CREATE_POSITION = 1000000; // 1,000,000 USD
 const MAX_VALUE_TO_CREATE_POSITION_NO_KYC = 500; // 500 USD
 const PERMIT2_ADDRESS = "0x000000000022D473030F116dDEE9F6B43aC78BA3";
 const POSITION_MANAGER_ADDRESS = "0x429ba70129df741B2Ca2a85BC3A2a3328e5c09b4";
-const POOL_MANAGER_ADDRESS = "0xE03A1074c86CFeDd5C142C4F04F1a1536e203543";
 
 const MotionVStack = motion.create(VStack);
 const MotionStepContent = motion.create(StepsContent);
@@ -168,48 +167,48 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
             }
 
 
-            // First approve tokens to Permit2
+            // First approve tokens to position manager
             await writeContractAsync({
                 address: data.token0.address as `0x${string}`,
                 abi: ERC20_ABI.abi,
                 functionName: "approve",
-                args: [PERMIT2_ADDRESS as `0x${string}`, ethers.constants.MaxUint256],
+                args: [POSITION_MANAGER_ADDRESS as `0x${string}`, parseUnits(data.token0Amount, data.token0.decimals).toString()],
             });
 
             await writeContractAsync({
                 address: data.token1.address as `0x${string}`,
                 abi: ERC20_ABI.abi,
                 functionName: "approve",
-                args: [PERMIT2_ADDRESS as `0x${string}`, ethers.constants.MaxUint256],
+                args: [POSITION_MANAGER_ADDRESS as `0x${string}`, parseUnits(data.token1Amount, data.token1.decimals).toString()],
             });
 
 
             const MAX_UINT48 = "281474976710655"; // 2^48 - 1
             const MAX_UINT160 = "1461501637330902918203684832716283019655932542975";
 
-            await writeContractAsync({
-                address: PERMIT2_ADDRESS as `0x${string}`,
-                abi: PERMIT2_ABI,
-                functionName: "approve",
-                args: [
-                    data.token0.address,
-                    POSITION_MANAGER_ADDRESS,
-                    MAX_UINT160,
-                    MAX_UINT48
-                ],
-            });
+            // await writeContractAsync({
+            //     address: PERMIT2_ADDRESS as `0x${string}`,
+            //     abi: PERMIT2_ABI,
+            //     functionName: "approve",
+            //     args: [
+            //         data.token0.address,
+            //         POSITION_MANAGER_ADDRESS,
+            //         MAX_UINT160,
+            //         MAX_UINT48
+            //     ],
+            // });
 
-            await writeContractAsync({
-                address: PERMIT2_ADDRESS as `0x${string}`,
-                abi: PERMIT2_ABI,
-                functionName: "approve",
-                args: [
-                    data.token1.address,
-                    POSITION_MANAGER_ADDRESS,
-                    MAX_UINT160,
-                    MAX_UINT48
-                ],
-            });
+            // await writeContractAsync({
+            //     address: PERMIT2_ADDRESS as `0x${string}`,
+            //     abi: PERMIT2_ABI,
+            //     functionName: "approve",
+            //     args: [
+            //         data.token1.address,
+            //         POSITION_MANAGER_ADDRESS,
+            //         MAX_UINT160,
+            //         MAX_UINT48
+            //     ],
+            // });
 
             if (!publicClient) {
                 throw new Error("Public client not available");

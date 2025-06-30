@@ -157,6 +157,7 @@ export const DashboardNavbar: React.FC<DashboardNavbarProps> = (props) => {
     const PoolMenu = () => {
         const featLinks = [
             { label: "Tạo vị thế", href: "/positions/create" },
+            { label: "Xem vị thế", href: "/positions/list" },
         ]
 
         return (
