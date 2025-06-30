@@ -534,7 +534,7 @@ export const CreatePositionForm: React.FC<CreatePositionFormProps> = ({ children
                                 content={"Phí giao dịch"}
                             >
                                 <Tag variant={"solid"} colorPalette={"secondary"}>
-                                    {poolConfig?.poolKey.fee! / 100}%
+                                    0.3%
                                 </Tag>
                             </Tooltip>
                         </HStack>
