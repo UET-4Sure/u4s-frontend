@@ -21,6 +21,8 @@ import { useState } from "react";
 import { RequireKycApplicationDialog } from "@/app/(dashboard)/_components/RequireKycApplicationDialog";
 import { ContractFunctionExecutionError, TransactionExecutionError } from "viem";
 import { useQueryClient } from "@tanstack/react-query";
+import { waitForTransactionReceipt } from "@wagmi/core";
+import reown from "@/utils/reown";
 
 interface Props extends StackProps { }
 
@@ -29,6 +31,7 @@ export function Swap({ ...props }: Props) {
   const { writeContractAsync } = useWriteContract();
   const [openRequireKycDialog, setOpenRequireKycDialog] = useState(false);
   const queryClient = useQueryClient();
+
   const handleSwap = async (swapData: SwapState) => {
     try {
       // Get token price and calculate volume
@@ -112,13 +115,14 @@ export function Swap({ ...props }: Props) {
       const hookData = "0x";
 
       // Execute the swap
-      await writeContractAsync({
+      const hash = await writeContractAsync({
         address: POOL_SWAP_TEST as `0x${string}`,
         abi: POOL_SWAP_TEST_CONTRACT_ABI.abi,
         functionName: "swap",
         args: [poolKeyArray, swapParams, testSettings, hookData],
       });
-
+      await waitForTransactionReceipt(reown.wagmiAdapter.wagmiConfig, { hash });
+      
       queryClient.invalidateQueries({
         queryKey: ['token-balance', swapData.fromToken.address, address],
       });
